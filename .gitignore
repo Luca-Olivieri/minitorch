@@ -1,0 +1,9 @@
+# MacOS
+.DS_Store
+
+# VS Code
+.vscode
+
+# C++
+*.dSYM
+main
