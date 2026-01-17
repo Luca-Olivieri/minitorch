@@ -1,64 +1,110 @@
-#ifndef OPS_H // 1. Check if the token is NOT defined
-#define OPS_H // 2. Define the token
+#ifndef OPS_H
+#define OPS_H
 
-class Operation {
-    public:
-    // 2. Initialize variables to avoid garbage values
-    float value = 0.0f;
-    float grad = 0.0f;
+#include <iostream>
+
+class Node {
+public:
+    float m_value { 0.0f };
+    float m_grad { 0.0f };
+
+    Node();
     
-    // 3. Keep the virtual destructor (this is correct!)
-    virtual ~Operation() = default; 
+    Node(
+        float value
+    );
     
-    // 4. Make these "Pure Virtual" (= 0)
-    // This forces children classes to implement them 
-    // and prevents creating an instance of this base class.
-    virtual void forward() = 0;
+    virtual void backprop();
+    
+    virtual void reset_grads();
+    
+    virtual ~Node() = default;
+    
+    friend std::ostream& operator<<(std::ostream& os, const Node& node);
 };
 
-// 1. Inherit publicly
+class Operation: public Node {
+    public:
+    // Subclasses MUST implement the destructor
+    virtual ~Operation() = default;
+    
+    virtual void forward() = 0;
+    void backward();
+};
+
+class UnaryOperation : public Operation {
+    public:
+    // 2. USE POINTERS (Critical)
+    // We cannot store abstract classes by value. 
+    // We use pointers to point to other operations in the graph.
+    Node& m_x;
+    
+    // 3. Constructor
+    // We need a way to connect these pointers when creating the object.
+    UnaryOperation(
+        Node& x
+    ): m_x(x) {}
+    
+    void reset_grads() override;
+};
+
 class BinaryOperation : public Operation {
     public:
     // 2. USE POINTERS (Critical)
     // We cannot store abstract classes by value. 
     // We use pointers to point to other operations in the graph.
-    Operation* x;
-    Operation* y;
+    Node& m_x;
+    Node& m_y;
     
     // 3. Constructor
     // We need a way to connect these pointers when creating the object.
     BinaryOperation(
-        Operation* input_x,
-        Operation* input_y
-    ): x(input_x), y(input_y) {}
+        Node& x,
+        Node& y
+    ): m_x(x), m_y(y) {}
     
-    // Note: We do NOT implement forward/backprop here.
-    // This keeps BinaryOperation abstract.
-};
-
-class Variable {
-public:
-    float value_ { 0.0f };
-    float grad_ { 0.0f };
-
-    Variable(
-        float x
-    );
-
-    void forward();
+    void reset_grads() override;
 };
 
 class Addition : public BinaryOperation {
-public:
-    // 4. Constructor
-    // Pass the inputs up to the parent (BinaryOperation)
+    public:
     Addition(
-        Operation* x,
-        Operation* y
+        Node& x,
+        Node& y
     ): BinaryOperation(x, y) {}
-
+    
     // 5. Override methods
     void forward() override;
+
+private:
+    void backprop() override;
+};
+
+class Multiplication : public BinaryOperation {
+public:
+    Multiplication(
+        Node& x,
+        Node& y
+    ): BinaryOperation(x, y) {}
+    
+    // 5. Override methods
+    void forward() override;
+    
+private:
+    void backprop() override;
+};
+
+class Squaration : public UnaryOperation {
+public:
+    Squaration(
+        Node& x
+    ): UnaryOperation(x) {}
+    
+    // 5. Override methods
+    void forward() override;
+    
+private:
+    void backprop() override;
 };
 
 #endif
