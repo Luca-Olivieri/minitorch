@@ -6,29 +6,21 @@
 
 #include "tensors.h"
 
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector){
-    std::string out_string = "[";
-    for (size_t i { 0 }; i < vector.size(); i++) {
-        out_string += std::to_string(vector[i]);
-        if (i != vector.size()-1) {
-            out_string += ", ";
-        }
-    }
-    out_string += "]";
-    return os << out_string;
-}
-
 Tensor::Tensor(
     std::initializer_list<size_t> shape
 ): m_shape(shape) {
-    size_t size { 1 };
-    for (size_t dim : shape) {
-        size *= dim; 
+    size_t numel { 1 };
+    if (m_shape.empty()) {
+        m_numel = 1;
     }
-    m_size = size;
+    else {
+        for (size_t dim : shape) {
+            numel *= dim;
+        }
+        m_numel = numel;
+    }
     m_strides = Tensor::init_strides(m_shape);
-    m_flat_data = std::vector<float>(size, 0.0f);
+    m_flat_data = std::vector<float>(numel, 0.0f);
 }
 
 std::vector<size_t> Tensor::init_strides(
@@ -47,23 +39,13 @@ std::vector<size_t> Tensor::init_strides(
 size_t Tensor::get_flat_index(
     const std::vector<size_t>& md_index
 ) {
-    // Error checking
-    if (md_index.size() != m_shape.size()) {
-        throw std::runtime_error(std::format("\nTensor of shape {} accessed at partial index {}", m_shape, md_index));
-    }
-    for (size_t i { 0 }; i < m_shape.size(); i++) {
-        if (md_index[i] >= m_shape[i]) {
-            throw std::out_of_range(std::format("\nTensor of shape {} accessed out-of-bounds at index {}", m_shape, md_index));
-        }
-        if (md_index[i] < 0) {
-            // TODO: right now, indices cannot be negative because size_t rolls up.
-            throw std::out_of_range(std::format("\nTensor accessed at negative index {}", md_index));
-        }
-    }
     // Flat index computation
     size_t flat_index { 0 };
     for (size_t i { 0 }; i < m_shape.size(); i++) {
         flat_index += m_strides[i]*md_index[i];
+    }
+    if (flat_index >= m_numel) {
+        throw std::out_of_range(std::format("Tensor flat data of size{} accessed at depth {}, of index {}.", m_numel, flat_index, md_index));
     }
     return flat_index;
 }
@@ -71,9 +53,16 @@ size_t Tensor::get_flat_index(
 void Tensor::fill(
     float value
 ) {
-    for (size_t i = 0; i < m_size; i++) {
+    for (size_t i = 0; i < m_numel; i++) {
         m_flat_data[i] = value;
     }
+}
+
+float Tensor::item() {
+    if (m_numel != 1) {
+        throw std::runtime_error(std::format("Cannot call item() on a non-singleton tensor (shape {}).", m_shape));
+    }
+    return m_flat_data[0];
 }
 
 // Helper functoin for the Tensor cout print
@@ -119,12 +108,12 @@ void print_recursive(
 }
 
 std::ostream& operator<<(std::ostream& os, const Tensor& tensor){
-    os << std::format("Tensor(shape={}, dtype=float,\n       ", tensor.m_shape);
+    os << std::format("Tensor(shape={}, dtype=float,\n       data=", tensor.m_shape);
     if (tensor.m_shape.empty()) {
         if (!tensor.m_flat_data.empty())
              os << std::fixed << std::setprecision(4) << tensor.m_flat_data[0];
     } else {
-        print_recursive(os, tensor, 0, 0, 7);
+        print_recursive(os, tensor, 0, 0, 12);
     }
     os << ")";
     return os;
