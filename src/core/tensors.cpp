@@ -12,8 +12,8 @@ Tensor::Tensor(
     // shape validation
     
     for (size_t dim : shape) {
-        if (dim <= 0) {
-            throw std::runtime_error(std::format("\nTensor shape must have non-negative dimensions. Got {}.", m_shape));
+        if (dim == 0) {
+            throw std::invalid_argument(std::format("\nTensor shape must have positive dimensions. Got {}.", m_shape));
         }
     }
     
@@ -34,7 +34,7 @@ Tensor::Tensor(
 std::vector<size_t> Tensor::init_strides(
     const std::vector<size_t>& shape
 ) {
-    std::vector<size_t> strides(shape.size(), 0.0f);
+    std::vector<size_t> strides(shape.size(), 0);
     size_t curr_stride {1};
     // very clunky loop signature to have an unsigned int check for >= 0
     for (size_t i { shape.size() }; i-- > 0; ) {
@@ -47,9 +47,15 @@ std::vector<size_t> Tensor::init_strides(
 size_t Tensor::get_flat_index(
     const std::vector<size_t>& md_index
 ) {
+    if (md_index.size() != m_shape.size()) {
+       throw std::invalid_argument(std::format("Index size {} does not match tensor shape size {}.", md_index.size(), m_shape.size()));
+    }
     // Flat index computation
     size_t flat_index { 0 };
     for (size_t i { 0 }; i < m_shape.size(); i++) {
+        if (md_index[i] >= m_shape[i]) {
+            throw std::out_of_range(std::format("Index {} out of bounds for dimension {} of size {}.", md_index[i], i, m_shape[i]));
+        }
         flat_index += m_strides[i]*md_index[i];
     }
     if (flat_index >= m_numel) {
@@ -58,29 +64,12 @@ size_t Tensor::get_flat_index(
     return flat_index;
 }
 
-float Tensor::operator[](const std::vector<size_t>& md_index) {
+float& Tensor::operator[](const std::vector<size_t>& md_index) {
         // Scalar case
         if (m_shape.empty()) {
-            throw std::runtime_error(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
+            throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
         }
-        // Bounds check
-        if (md_index.size() > m_shape.size()) {
-            throw std::runtime_error(std::format("\nTensor of shape {} accessed at larger index {}", m_shape, md_index));
-        }
-        if (md_index.size() < m_shape.size()) {
-            throw std::runtime_error(std::format("\nTensor of shape {} accessed at partial index {}", m_shape, md_index));
-        }
-        for (size_t i { 0 }; i < m_shape.size(); i++) {
-            if (md_index[i] >= m_shape[i]) {
-                throw std::out_of_range(std::format("\nTensor of shape {} accessed out-of-bounds at index {}", m_shape, md_index));
-            }
-            if (md_index[i] < 0) {
-                // TODO: right now, indices cannot be negative because size_t rolls up.
-                throw std::out_of_range(std::format("\nTensor accessed at negative index {}", md_index));
-            }
-        }
-        float value = m_flat_data[get_flat_index(md_index)];
-        return value;
+        return m_flat_data[get_flat_index(md_index)];
     }
 
 void Tensor::fill(
@@ -99,7 +88,7 @@ float Tensor::item() {
 }
 
 // Helper functoin for the Tensor cout print
-void print_recursive(
+static void print_recursive(
     std::ostream& os,
     const Tensor& tensor,
     size_t dim_index,

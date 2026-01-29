@@ -37,7 +37,7 @@ public:
         const std::vector<size_t>& md_index
     );
     
-    float operator[](const std::vector<size_t>& md_index);
+    float& operator[](const std::vector<size_t>& md_index);
 
     void fill(
         float value
