@@ -8,7 +8,7 @@
 
 Tensor::Tensor(
     std::vector<size_t> shape
-): m_shape(shape) {
+): m_shape(shape), m_offset(0) {
     // shape validation
     
     for (size_t dim : shape) {
@@ -61,7 +61,7 @@ size_t Tensor::get_flat_index(
     if (flat_index >= m_numel) {
         throw std::out_of_range(std::format("Tensor flat data of size{} accessed at depth {}, of index {}.", m_numel, flat_index, md_index));
     }
-    return flat_index;
+    return m_offset + flat_index;
 }
 
 float& Tensor::operator[](const std::vector<size_t>& md_index) {
@@ -94,27 +94,38 @@ float Tensor::item() {
     if (m_numel != 1) {
         throw std::runtime_error(std::format("Cannot call item() on a non-singleton tensor (shape {}).", m_shape));
     }
-    return m_flat_data[0];
+    return m_flat_data[m_offset];
 }
 
-Tensor Tensor::get_slice(
+void Tensor::slice(
+    size_t dim,
     size_t slice_index
 ) {
     if (m_shape.empty()) {
         throw std::runtime_error("Cannot slice a scalar tensor.");
     }
-    if (slice_index >= m_shape[0]) {
-        throw std::out_of_range(std::format("Slice index {} out of bounds for dimension 0 of size {}.", slice_index, m_shape[0]));
+    if (dim >= m_shape.size()) {
+        throw std::out_of_range(std::format("Tensor has {} dimensions. Got slicing of dimension {}", m_shape.size(), dim));
     }
-    
-    std::vector<size_t> shape_without_first(m_shape.begin() + 1, m_shape.end());
-    Tensor sliced_tensor(shape_without_first);
-    
-    size_t start_offset = slice_index * m_strides[0];
-    for (size_t i = 0; i < m_strides[0]; i++) {
-        sliced_tensor.m_flat_data[i] = m_flat_data[start_offset + i];
+    if (slice_index >= m_shape[dim]) {
+        throw std::out_of_range(std::format("Slice index {} out of bounds for dimension {} of size {}.", slice_index, dim, m_shape[dim]));
     }
-    return sliced_tensor;
+
+    m_offset += slice_index*m_strides[dim];
+    m_numel /= m_shape[dim];
+
+    std::vector<size_t> new_shape(m_shape.size()-1); 
+    std::vector<size_t> new_strides(m_strides.size()-1); 
+    size_t j { 0 };
+    for (size_t i = 0; i < m_shape.size(); i++) {
+        if (i != dim) {
+            new_shape[j] = m_shape[i];
+            new_strides[j] = m_strides[i];
+            j++;
+        }
+    }
+    m_shape = new_shape;
+    m_strides = new_strides;
 }
 
 void Tensor::reshape(
@@ -157,18 +168,19 @@ void Tensor::transpose(
 // Helper functoin for the Tensor cout print
 static void print_recursive(
     std::ostream& os,
-    const Tensor& tensor,
+    Tensor& tensor,
     size_t dim_index,
-    size_t offset,
+    std::vector<size_t>& current_indices,
     int indent
 ) {
     size_t dim_size = tensor.m_shape[dim_index];
-    size_t stride = tensor.m_strides[dim_index];
     
     if (dim_index == tensor.m_shape.size() - 1) {
         os << "[";
         for (size_t i = 0; i < dim_size; ++i) {
-            float val = tensor.m_flat_data[offset + i * stride];
+            current_indices.push_back(i);
+            float val = tensor[current_indices];
+            current_indices.pop_back();
             os << std::fixed << std::setprecision(4) << val;
             if (i < dim_size - 1) {
                 os << ", ";
@@ -184,13 +196,15 @@ static void print_recursive(
                 for (size_t nl = 0; nl < newlines; ++nl) os << "\n";
                 for (int k = 0; k < indent + 1; ++k) os << " ";
             }
+            current_indices.push_back(i);
             print_recursive(
                 os,
                 tensor,
                 dim_index + 1,
-                offset + i * stride,
+                current_indices,
                 indent + 1
             );
+            current_indices.pop_back();
         }
         os << "]";
     }
@@ -202,7 +216,8 @@ std::ostream& operator<<(std::ostream& os, const Tensor& tensor){
         if (!tensor.m_flat_data.empty())
              os << std::fixed << std::setprecision(4) << tensor.m_flat_data[0];
     } else {
-        print_recursive(os, tensor, 0, 0, 12);
+        std::vector<size_t> current_indices;
+        print_recursive(os, const_cast<Tensor&>(tensor), 0, current_indices, 12);
     }
     os << ")";
     return os;

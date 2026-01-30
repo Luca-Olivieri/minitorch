@@ -26,6 +26,7 @@ public:
     size_t m_numel;
     std::vector<size_t> m_strides;
     std::vector<float> m_flat_data;
+    size_t m_offset;
 
     Tensor(
         std::vector<size_t> shape
@@ -45,7 +46,8 @@ public:
     
     float item();
     
-    Tensor get_slice(
+    void slice(
+        size_t dim,
         size_t slice_index
     );
     
