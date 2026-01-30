@@ -48,7 +48,7 @@ size_t Tensor::get_flat_index(
     const std::vector<size_t>& md_index
 ) {
     if (md_index.size() != m_shape.size()) {
-       throw std::invalid_argument(std::format("Index size {} does not match tensor shape size {}.", md_index.size(), m_shape.size()));
+        throw std::invalid_argument(std::format("Index size {} does not match tensor shape size {}.", md_index.size(), m_shape.size()));
     }
     // Flat index computation
     size_t flat_index { 0 };
@@ -65,18 +65,28 @@ size_t Tensor::get_flat_index(
 }
 
 float& Tensor::operator[](const std::vector<size_t>& md_index) {
-        // Scalar case
-        if (m_shape.empty()) {
-            throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
-        }
-        return m_flat_data[get_flat_index(md_index)];
+    // Scalar case
+    if (m_shape.empty()) {
+        throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
+    return m_flat_data[get_flat_index(md_index)];
+}
 
 void Tensor::fill(
     float value
 ) {
     for (size_t i = 0; i < m_numel; i++) {
         m_flat_data[i] = value;
+    }
+}
+
+void Tensor::linspace(
+    float start,
+    float end
+) {
+    float delta = (end-start)/(static_cast<float>(m_numel-1));
+    for (size_t i = 0; i < m_numel; i++) {
+        m_flat_data[i] = start + static_cast<float>(i)*delta;
     }
 }
 
@@ -96,7 +106,7 @@ Tensor Tensor::get_slice(
     if (slice_index >= m_shape[0]) {
         throw std::out_of_range(std::format("Slice index {} out of bounds for dimension 0 of size {}.", slice_index, m_shape[0]));
     }
-
+    
     std::vector<size_t> shape_without_first(m_shape.begin() + 1, m_shape.end());
     Tensor sliced_tensor(shape_without_first);
     
@@ -105,6 +115,43 @@ Tensor Tensor::get_slice(
         sliced_tensor.m_flat_data[i] = m_flat_data[start_offset + i];
     }
     return sliced_tensor;
+}
+
+void Tensor::reshape(
+    std::vector<size_t> shape
+) {
+    for (size_t dim : shape) {
+        if (dim == 0) {
+            throw std::invalid_argument(std::format("\nTensor shape must have positive dimensions. Got {}.", shape));
+        }
+    }
+
+    size_t new_numel { 1 };
+    if (!shape.empty()) {
+        for (size_t dim : shape) {
+            new_numel *= dim;
+        }
+    }
+
+    if (new_numel != m_numel) {
+        throw std::invalid_argument(std::format("Cannot reshape tensor of size {} into shape {}.", m_numel, shape));
+    }
+    
+    m_shape = shape;
+    m_strides = Tensor::init_strides(m_shape);
+}
+
+void Tensor::transpose(
+    size_t dim_1,
+    size_t dim_2
+) {
+    size_t temp_stride = m_strides[dim_1];
+    m_strides[dim_1] = m_strides[dim_2];
+    m_strides[dim_2] = temp_stride;
+
+    size_t temp_dim = m_shape[dim_1];
+    m_shape[dim_1] = m_shape[dim_2];
+    m_shape[dim_2] = temp_dim;
 }
 
 // Helper functoin for the Tensor cout print

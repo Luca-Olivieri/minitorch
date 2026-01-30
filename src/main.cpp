@@ -13,7 +13,8 @@ int do_nothing(
 
 int main()
 {   
-    Tensor t({2, 3, 5});
+    Tensor t({2, 4});
+    t.linspace(2, 4);
     // Tensor t({});
 
     // std::cout << t << '\n';
@@ -22,7 +23,12 @@ int main()
     // std::cout << t.item() << '\n';
     // std::cout << t[{0}] << '\n';
 
-    std::cout << t.get_slice(0).m_shape;
+    
+    std::cout << t;
+    // t.reshape({4, 2});
+    // std::cout << t;
+    t.transpose(0, 1);
+    std::cout << t;
 
     return 0;
 }

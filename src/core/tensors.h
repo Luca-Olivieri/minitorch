@@ -30,23 +30,37 @@ public:
     Tensor(
         std::vector<size_t> shape
     );
-
+    
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
-
+    
     size_t get_flat_index(
         const std::vector<size_t>& md_index
     );
     
     float& operator[](const std::vector<size_t>& md_index);
-
+    
     void fill(
         float value
     );
-
+    
     float item();
-
+    
     Tensor get_slice(
         size_t slice_index
+    );
+    
+    void linspace(
+        float start,
+        float end
+    );
+    
+    void reshape(
+        std::vector<size_t> shape
+    );
+
+    void transpose(
+        size_t dim_1,
+        size_t dim_2
     );
     
 private:
