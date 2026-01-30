@@ -7,7 +7,7 @@
 #include "tensors.h"
 
 Tensor::Tensor(
-    std::initializer_list<size_t> shape
+    std::vector<size_t> shape
 ): m_shape(shape) {
     // shape validation
     
@@ -85,6 +85,26 @@ float Tensor::item() {
         throw std::runtime_error(std::format("Cannot call item() on a non-singleton tensor (shape {}).", m_shape));
     }
     return m_flat_data[0];
+}
+
+Tensor Tensor::get_slice(
+    size_t slice_index
+) {
+    if (m_shape.empty()) {
+        throw std::runtime_error("Cannot slice a scalar tensor.");
+    }
+    if (slice_index >= m_shape[0]) {
+        throw std::out_of_range(std::format("Slice index {} out of bounds for dimension 0 of size {}.", slice_index, m_shape[0]));
+    }
+
+    std::vector<size_t> shape_without_first(m_shape.begin() + 1, m_shape.end());
+    Tensor sliced_tensor(shape_without_first);
+    
+    size_t start_offset = slice_index * m_strides[0];
+    for (size_t i = 0; i < m_strides[0]; i++) {
+        sliced_tensor.m_flat_data[i] = m_flat_data[start_offset + i];
+    }
+    return sliced_tensor;
 }
 
 // Helper functoin for the Tensor cout print

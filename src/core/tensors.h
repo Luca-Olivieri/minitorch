@@ -28,7 +28,7 @@ public:
     std::vector<float> m_flat_data;
 
     Tensor(
-        std::initializer_list<size_t> shape
+        std::vector<size_t> shape
     );
 
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
@@ -44,10 +44,15 @@ public:
     );
 
     float item();
+
+    Tensor get_slice(
+        size_t slice_index
+    );
+    
 private:
     static std::vector<size_t> init_strides(
         const std::vector<size_t>& shape
-    );    
+    );
 };
 
 #endif
