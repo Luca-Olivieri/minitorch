@@ -6,6 +6,9 @@
 #include <mdspan>
 #include <iomanip>
 #include <string>
+#include <memory>
+
+#include "ops.h"
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector){
@@ -27,6 +30,9 @@ public:
     std::vector<size_t> m_strides;
     std::vector<float> m_flat_data;
     size_t m_offset;
+    
+    std::vector<float> m_flat_grad;
+    std::shared_ptr<BackwardOp> m_grad_fn;
 
     Tensor(
         std::vector<size_t> shape
@@ -81,9 +87,21 @@ public:
         Tensor& other
     );
     
+    Tensor operator+(
+        Tensor& other
+    );
+    
+    Tensor operator-();
+    
     Tensor pow(
         Tensor& exp
     );
+
+    void reset_grads();
+
+    void backward();
+
+    void backprop();
     
 private:
     static std::vector<size_t> init_strides(

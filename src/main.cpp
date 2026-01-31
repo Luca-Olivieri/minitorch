@@ -13,8 +13,14 @@ int do_nothing(
 
 int main()
 {   
-    Tensor t({2, 3, 4});
-    t.linspace(1, 24);
+    Tensor x({2, 3});
+    x.linspace(1, 6);
+    
+    Tensor exp({2, 3});
+    exp.fill(2.0f);
+    
+    // Tensor c({2, 3, 4});
+    // c.fill(2.0f);
     // Tensor t({});
 
     // std::cout << t << '\n';
@@ -23,14 +29,35 @@ int main()
     // std::cout << t.item() << '\n';
     // std::cout << t[{0}] << '\n';
 
-    std::cout << t.is_contiguous() << '\n';
-    t.slice(1, 1);
-    std::cout << t.is_contiguous() << '\n';
+    // Tensor d = t * c;
 
-    Tensor c({});
-    c.item() = 2.0f;
+    // std::cout << *(d.m_grad_fn) << '\n';
+    
+    // d.backward();
+    
+    // std::cout << d.m_flat_grad << '\n';
 
-    std::cout << (t * c).pow(c).is_contiguous();
+    // std::cout << t.m_flat_grad << '\n';
+
+    // Tensor z = -x;
+    // std::cout << z << '\n';
+
+    float lr = 1e-2f;
+
+    for (int i = 0; i < 1000; i++) {
+        x.reset_grads();
+        Tensor p = x.pow(exp);
+        Tensor m = -x;
+        Tensor y = p + m;
+        y.backward();
+        for (size_t j = 0; j < x.m_numel; j++) {
+            size_t x_logic_idx = x.get_flat_index_from_logical(j);
+            x.m_flat_data[x_logic_idx] -= lr*x.m_flat_grad[x_logic_idx];
+        }
+        
+        std::cout << x.m_flat_data << '\n';
+        std::cout << y.m_flat_data << '\n' << '\n';
+    }
 
     return 0;
 }
