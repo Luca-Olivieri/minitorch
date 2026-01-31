@@ -23,13 +23,14 @@ int main()
     // std::cout << t.item() << '\n';
     // std::cout << t[{0}] << '\n';
 
+    std::cout << t.is_contiguous() << '\n';
+    t.slice(1, 1);
+    std::cout << t.is_contiguous() << '\n';
+
     Tensor c({});
     c.item() = 2.0f;
 
-    t * c;
-    t.pow(c);
-
-    std::cout << t;
+    std::cout << (t * c).pow(c).is_contiguous();
 
     return 0;
 }

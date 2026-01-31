@@ -81,6 +81,15 @@ size_t Tensor::get_flat_index_from_logical(
     return offset;
 }
 
+bool Tensor::is_contiguous() {
+    std::vector<size_t> contiguous_strides = Tensor::init_strides(m_shape);
+    for (size_t i = 0; i < m_shape.size(); ++i) {
+        if (m_shape[i] == 1) continue; // singleton dimensions do not affect contiguity
+        if (m_strides[i] != contiguous_strides[i]) return false;
+    }
+    return true;
+}
+
 float& Tensor::operator[](const std::vector<size_t>& md_index) {
     // Scalar case
     if (m_shape.empty()) {
@@ -207,30 +216,35 @@ void Tensor::transpose(
     m_shape[dim_2] = temp_dim;
 }
 
-void Tensor::operator*(
+Tensor Tensor::operator*(
     Tensor& other
 ) {
-    if (other.m_shape.empty()) {
-        for (size_t i = 0; i < m_numel; i++) {
-            m_flat_data[get_flat_index_from_logical(i)] *= other.item();
-        }
+    if (!other.m_shape.empty()) {
+        throw std::invalid_argument(std::format("For now, other operand must be a scalar tensor. Got shape {}", other.m_shape));
     }
+
+    Tensor new_tensor(m_shape);
+    for (size_t i = 0; i < m_numel; i++) {
+        new_tensor.m_flat_data[i] = other.item() * m_flat_data[get_flat_index_from_logical(i)];
+    }
+    return new_tensor;
 }
 
-void Tensor::pow(
+Tensor Tensor::pow(
     Tensor& exp
 ) {
     if (!exp.m_shape.empty()) {
         throw std::invalid_argument(std::format("exp must be a scalar tensor. Got shape {}", exp.m_shape));
     }
-    if (exp.m_shape.empty()) {
-        for (size_t i = 0; i < m_numel; i++) {
-            m_flat_data[get_flat_index_from_logical(i)] = std::pow(
-                m_flat_data[get_flat_index_from_logical(i)],
-                exp.item()
-            );
-        }
+    
+    Tensor new_tensor(m_shape);
+    for (size_t i = 0; i < m_numel; i++) {
+        new_tensor.m_flat_data[i] = std::pow(
+            m_flat_data[get_flat_index_from_logical(i)],
+            exp.item()
+        );
     }
+    return new_tensor;
 }
 
 // Helper function for the Tensor cout print

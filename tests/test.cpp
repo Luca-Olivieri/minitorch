@@ -102,6 +102,32 @@ void test_dice() {
     ASSERT_THROWS(t2.dice(0, 3, 2), std::out_of_range); // start > end
 }
 
+void test_is_contiguous() {
+    std::cout << "\nRunning is_contiguous tests...\n";
+    
+    // Default contiguous
+    Tensor t1({2, 3});
+    ASSERT_EQ(t1.is_contiguous(), true, "New tensor should be contiguous");
+
+    // Transpose (1, 4) -> (4, 1) (Contiguous despite stride swap because dim is 1)
+    Tensor t2({1, 4}); 
+    t2.fill(1.0);
+    t2.transpose(0, 1);
+    ASSERT_EQ(t2.is_contiguous(), true, "Transposed (1,4) -> (4,1) should be contiguous");
+    
+    // Non-contiguous slice
+    Tensor t3({4, 4});
+    // Slice columns (dim 1)
+    t3.slice(1, 0); // shape (4), stride (4)
+    ASSERT_EQ(t3.is_contiguous(), false, "Column slice of (4,4) should be non-contiguous");
+    
+    // Contiguous slice
+    Tensor t4({4, 4});
+    // Slice rows (dim 0)
+    t4.slice(0, 0); // shape (4), stride (1)
+    ASSERT_EQ(t4.is_contiguous(), true, "Row slice of (4,4) should be contiguous");
+}
+
 // --- Main ---
 int main() {
     // Test 1: Should pass
@@ -121,6 +147,7 @@ int main() {
     test_tensors_with_dims0();
     test_tensor_access_errors();
     test_dice();
+    test_is_contiguous();
     
     if (failed_tests == 0) {
         std::cout << "\nAll tests passed!\n";

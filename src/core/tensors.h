@@ -41,6 +41,8 @@ public:
     size_t get_flat_index_from_logical(
         size_t logical_index
     ) const;
+
+    bool is_contiguous();
     
     float& operator[](const std::vector<size_t>& md_index);
     
@@ -75,11 +77,11 @@ public:
         size_t dim_2
     );
 
-    void operator*(
+    Tensor operator*(
         Tensor& other
     );
     
-    void pow(
+    Tensor pow(
         Tensor& exp
     );
     
