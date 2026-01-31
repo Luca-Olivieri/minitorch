@@ -74,6 +74,14 @@ public:
         size_t dim_1,
         size_t dim_2
     );
+
+    void operator*(
+        Tensor& other
+    );
+    
+    void pow(
+        Tensor& exp
+    );
     
 private:
     static std::vector<size_t> init_strides(

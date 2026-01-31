@@ -3,6 +3,7 @@
 #include <string>
 #include <iomanip>
 #include <stdexcept>
+#include <cmath>
 
 #include "tensors.h"
 
@@ -206,7 +207,33 @@ void Tensor::transpose(
     m_shape[dim_2] = temp_dim;
 }
 
-// Helper functoin for the Tensor cout print
+void Tensor::operator*(
+    Tensor& other
+) {
+    if (other.m_shape.empty()) {
+        for (size_t i = 0; i < m_numel; i++) {
+            m_flat_data[get_flat_index_from_logical(i)] *= other.item();
+        }
+    }
+}
+
+void Tensor::pow(
+    Tensor& exp
+) {
+    if (!exp.m_shape.empty()) {
+        throw std::invalid_argument(std::format("exp must be a scalar tensor. Got shape {}", exp.m_shape));
+    }
+    if (exp.m_shape.empty()) {
+        for (size_t i = 0; i < m_numel; i++) {
+            m_flat_data[get_flat_index_from_logical(i)] = std::pow(
+                m_flat_data[get_flat_index_from_logical(i)],
+                exp.item()
+            );
+        }
+    }
+}
+
+// Helper function for the Tensor cout print
 static void print_recursive(
     std::ostream& os,
     Tensor& tensor,

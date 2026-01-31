@@ -23,14 +23,13 @@ int main()
     // std::cout << t.item() << '\n';
     // std::cout << t[{0}] << '\n';
 
-    
-    std::cout << t << '\n';
-    t.dice(2, 2, 4);
-    std::cout << t << '\n';
+    Tensor c({});
+    c.item() = 2.0f;
 
-    Tensor s({});
-    s.item() = 3.0f;
-    std::cout << t << '\n';
+    t * c;
+    t.pow(c);
+
+    std::cout << t;
 
     return 0;
 }
