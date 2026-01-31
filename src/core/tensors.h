@@ -8,7 +8,7 @@
 #include <string>
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector){
+inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector){
     std::string out_string = "[";
     for (size_t i { 0 }; i < vector.size(); i++) {
         out_string += std::to_string(vector[i]);
@@ -36,6 +36,10 @@ public:
     
     size_t get_flat_index(
         const std::vector<size_t>& md_index
+    );
+
+    size_t get_flat_index_from_logical(
+        size_t logical_index
     );
     
     float& operator[](const std::vector<size_t>& md_index);

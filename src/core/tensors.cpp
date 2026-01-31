@@ -64,6 +64,25 @@ size_t Tensor::get_flat_index(
     return m_offset + flat_index;
 }
 
+size_t Tensor::get_flat_index_from_logical(
+    size_t logical_index
+) {
+    if (logical_index >= m_numel) {
+        throw std::out_of_range(std::format("Index {} out of bounds for tensor of size {}.", logical_index, m_numel));
+    }
+    
+    size_t offset = m_offset;
+    size_t current_index = logical_index;
+
+    for (size_t i = m_shape.size(); i-- > 0; ) {
+        size_t dim_size = m_shape[i];
+        size_t coord = current_index % dim_size;
+        current_index /= dim_size;
+        offset += coord * m_strides[i];
+    }
+    return offset;
+}
+
 float& Tensor::operator[](const std::vector<size_t>& md_index) {
     // Scalar case
     if (m_shape.empty()) {
