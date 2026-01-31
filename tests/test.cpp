@@ -23,26 +23,6 @@ void ASSERT_EQ(T actual, T expected, std::string_view message,
     }
 }
 
-// int main() {
-//     // Tests
-//     ASSERT_EQ(1 + 1, 2, "Addition check");
-//     ASSERT_EQ(10 * 10, 100, "Multiplication check");
-//     ASSERT_EQ(5 - 2, 0, "Subtraction check (Intentional Fail)");
-
-//     if (failed_tests == 0) {
-//         std::cout << "\nAll tests passed!\n";
-//         return 0;
-//     } else {
-//         std::cout << "\n" << failed_tests << " tests failed.\n";
-//         return 1;
-//     }
-// }
-
-// --- The Test Helper ---
-// 1. Try running the code.
-// 2. If it works (no throw), print FAIL.
-// 3. Catch the specific exception type -> PASS.
-// 4. Catch anything else -> FAIL.
 #define ASSERT_THROWS(expression, exception_type) \
     do { \
         bool caught_correctly = false; \
@@ -109,6 +89,19 @@ void test_tensor_access_errors() {
     }
 }
 
+void test_dice() {
+    Tensor t({5});
+    t.fill(1.0f);
+    // Dice 0-2 (size 2)
+    t.dice(0, 0, 2);
+    ASSERT_EQ(t.m_shape[0], (size_t)2, "Dice shape check");
+    
+    // Test invalid dice
+    Tensor t2({5});
+    ASSERT_THROWS(t2.dice(0, 0, 6), std::out_of_range); // OOB
+    ASSERT_THROWS(t2.dice(0, 3, 2), std::out_of_range); // start > end
+}
+
 // --- Main ---
 int main() {
     // Test 1: Should pass
@@ -127,6 +120,7 @@ int main() {
     // --- [ tensor.h tests ]  
     test_tensors_with_dims0();
     test_tensor_access_errors();
+    test_dice();
     
     if (failed_tests == 0) {
         std::cout << "\nAll tests passed!\n";

@@ -34,13 +34,13 @@ public:
     
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
     
-    size_t get_flat_index(
+    size_t get_flat_index_from_md(
         const std::vector<size_t>& md_index
-    );
+    ) const;
 
     size_t get_flat_index_from_logical(
         size_t logical_index
-    );
+    ) const;
     
     float& operator[](const std::vector<size_t>& md_index);
     
@@ -48,11 +48,17 @@ public:
         float value
     );
     
-    float item();
+    float& item();
     
     void slice(
         size_t dim,
         size_t slice_index
+    );
+    
+    void dice(
+        size_t dim,
+        size_t index_start,
+        size_t index_end
     );
     
     void linspace(

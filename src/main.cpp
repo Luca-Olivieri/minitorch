@@ -23,9 +23,14 @@ int main()
     // std::cout << t.item() << '\n';
     // std::cout << t[{0}] << '\n';
 
-    std::cout << t;
-    t.slice(0, 1);
-    std::cout << t;
+    
+    std::cout << t << '\n';
+    t.dice(2, 2, 4);
+    std::cout << t << '\n';
+
+    Tensor s({});
+    s.item() = 3.0f;
+    std::cout << t << '\n';
 
     return 0;
 }

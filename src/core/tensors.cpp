@@ -44,29 +44,26 @@ std::vector<size_t> Tensor::init_strides(
     return strides;
 }
 
-size_t Tensor::get_flat_index(
+size_t Tensor::get_flat_index_from_md(
     const std::vector<size_t>& md_index
-) {
+) const {
     if (md_index.size() != m_shape.size()) {
         throw std::invalid_argument(std::format("Index size {} does not match tensor shape size {}.", md_index.size(), m_shape.size()));
     }
     // Flat index computation
-    size_t flat_index { 0 };
+    size_t flat_index { m_offset };
     for (size_t i { 0 }; i < m_shape.size(); i++) {
         if (md_index[i] >= m_shape[i]) {
             throw std::out_of_range(std::format("Index {} out of bounds for dimension {} of size {}.", md_index[i], i, m_shape[i]));
         }
         flat_index += m_strides[i]*md_index[i];
     }
-    if (flat_index >= m_numel) {
-        throw std::out_of_range(std::format("Tensor flat data of size{} accessed at depth {}, of index {}.", m_numel, flat_index, md_index));
-    }
-    return m_offset + flat_index;
+    return flat_index;
 }
 
 size_t Tensor::get_flat_index_from_logical(
     size_t logical_index
-) {
+) const {
     if (logical_index >= m_numel) {
         throw std::out_of_range(std::format("Index {} out of bounds for tensor of size {}.", logical_index, m_numel));
     }
@@ -88,14 +85,14 @@ float& Tensor::operator[](const std::vector<size_t>& md_index) {
     if (m_shape.empty()) {
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
-    return m_flat_data[get_flat_index(md_index)];
+    return m_flat_data[get_flat_index_from_md(md_index)];
 }
 
 void Tensor::fill(
     float value
 ) {
     for (size_t i = 0; i < m_numel; i++) {
-        m_flat_data[i] = value;
+        m_flat_data[get_flat_index_from_logical(i)] = value;
     }
 }
 
@@ -105,11 +102,11 @@ void Tensor::linspace(
 ) {
     float delta = (end-start)/(static_cast<float>(m_numel-1));
     for (size_t i = 0; i < m_numel; i++) {
-        m_flat_data[i] = start + static_cast<float>(i)*delta;
+        m_flat_data[get_flat_index_from_logical(i)] = start + static_cast<float>(i)*delta;
     }
 }
 
-float Tensor::item() {
+float& Tensor::item() {
     if (m_numel != 1) {
         throw std::runtime_error(std::format("Cannot call item() on a non-singleton tensor (shape {}).", m_shape));
     }
@@ -145,6 +142,31 @@ void Tensor::slice(
     }
     m_shape = new_shape;
     m_strides = new_strides;
+}
+
+void Tensor::dice(
+    size_t dim,
+    size_t index_start,
+    size_t index_end
+) {
+    if (m_shape.empty()) {
+        throw std::runtime_error("Cannot dice a scalar tensor.");
+    }
+    if (dim >= m_shape.size()) {
+        throw std::out_of_range(std::format("Tensor has {} dimensions. Got dicing of dimension {}", m_shape.size(), dim));
+    }
+    if (index_start >= m_shape[dim] || index_end > m_shape[dim]) {
+        throw std::out_of_range(std::format("Dice [{}, {}] out of bounds for dimension {} of size {}.", index_start, index_end, dim, m_shape[dim]));
+    }
+    if (index_start >= index_end) {
+        throw std::out_of_range(std::format("Dice start ({}) should be less than to end ({}).", index_start, index_end));
+    }
+    
+    m_offset += index_start*m_strides[dim];
+    m_numel /= m_shape[dim];
+    m_numel *= index_end-index_start;
+
+    m_shape[dim] = index_end-index_start;
 }
 
 void Tensor::reshape(
