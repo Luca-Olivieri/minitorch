@@ -5,11 +5,17 @@
 #include <stdexcept>
 #include <cmath>
 
+#include "ops.h"
 #include "tensors.h"
 
 Tensor::Tensor(
     std::vector<size_t> shape
-): m_shape(shape), m_offset(0), m_grad{nullptr}, m_grad_fn{nullptr} {
+): 
+    m_shape(shape),
+    m_offset(0),
+    m_grad{nullptr},
+    m_grad_fn{nullptr},
+    m_requires_grad{true} {
     // shape validation
     
     for (size_t dim : shape) {
@@ -31,6 +37,8 @@ Tensor::Tensor(
     m_strides = Tensor::init_strides(m_shape);
     m_flat_data = std::vector<float>(m_numel, 0.0f);
 }
+
+Tensor::~Tensor() = default;
 
 std::vector<size_t> Tensor::init_strides(
     const std::vector<size_t>& shape
@@ -223,8 +231,8 @@ void Tensor::transpose(
 }
 
 bool Tensor::are_shapes_equal(
-    Tensor& a,
-    Tensor& b
+    const Tensor& a,
+    const Tensor& b
 ) {
     return a.m_shape == b.m_shape;
 }
@@ -244,78 +252,89 @@ bool Tensor::are_shapes_equal(
 //     return new_tensor;
 // }
 
-Tensor Tensor::mult(
-    Tensor& a,
-    Tensor& b
-) {
-    constexpr size_t N = BackwardMult::N;
-    return apply_op<N, BackwardMult>(
-        std::array<Tensor*, N>{&a, &b},
-        [](std::array<float, N> entries) { 
-                return entries[0] * entries[1]; 
-        }
+Tensor Tensor::mult(const Tensor& a, const Tensor& b) {
+    return apply_op<BackwardMult>(
+        [](float x, float y) { return x * y; }, 
+        a, b
     );
 }
 
-Tensor Tensor::add(
-    Tensor& a,
-    Tensor& b
-) {
-    constexpr size_t N = BackwardAdd::N;
-    return apply_op<N, BackwardAdd>(
-        std::array<Tensor*, N>{&a, &b},
-        [](std::array<float, N> entries) { 
-                return entries[0] + entries[1]; 
-        }
+Tensor Tensor::add(const Tensor& a, const Tensor& b) {
+    return apply_op<BackwardAdd>(
+        [](float x, float y) { return x + y; }, 
+        a, b
     );
 }
 
-Tensor& Tensor::add_inplace(
-    Tensor& a,
-    Tensor& b
-) {
-    constexpr size_t N = BackwardAdd::N;
-    return apply_op_inplace<N>(
-        std::array<Tensor*, N>{&a, &b},
-        [](std::array<float, N> entries) { 
-                return entries[0] + entries[1]; 
-        }
+Tensor& Tensor::add_inplace(Tensor& a, const Tensor& b) {
+    return apply_op_inplace<BackwardMult>(
+        [](float x, float y) { return x + y; }, 
+        a, b
+    );
+}
+
+Tensor Tensor::minus(const Tensor& a) {
+    return apply_op<BackwardMinus>(
+        [](float x) { return -x; }, 
+        a
+    );
+}
+
+Tensor Tensor::s_pow(const Tensor& base, const Tensor& exp) {
+    return apply_op<BackwardPow>(
+        [](float base, float exp) { return std::pow(base, exp); }, 
+        base, exp
     );
 }
 
 Tensor Tensor::operator*(
-    Tensor& other
+    const Tensor& other
 ) {
     return Tensor::mult(*this, other);
 }
 
 Tensor Tensor::operator+(
-    Tensor& other
+    const Tensor& other
 ) {
     return Tensor::add(*this, other);
 }
 
 Tensor& Tensor::operator+=(
-    Tensor& other
+    const Tensor& other
 ) {
     return Tensor::add_inplace(*this, other);
 }
 
+Tensor Tensor::operator-() {
+    return Tensor::minus(*this);
+}
+
+Tensor Tensor::pow(
+    const Tensor& exp
+) {
+    return Tensor::s_pow(*this, exp);
+}
+
 void Tensor::reset_grads() {
+    // TODO: A method should traverse the graph to zero all grads.
     if (m_grad)
         m_grad->fill(0.0f);
 }
 
 void Tensor::backward() {
-    if (!m_grad)
+    if (!m_grad) {
         m_grad = std::make_shared<Tensor>(m_shape);
+        m_grad->m_requires_grad = false;
+    }
     m_grad->fill(1.0f);
     backprop();
 }
 
 void Tensor::backprop() {
     if (m_grad_fn) {
+        m_grad_fn->init_operands_grad_if_none();
         m_grad_fn->backprop(*this);
+        m_grad_fn->backprop_operands();
     }
 }
 

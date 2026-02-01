@@ -18,32 +18,30 @@ int main()
     
     Tensor y({2, 3});
     y.fill(2.0f);
-
-    Tensor z = x*y;
-    // z += y;
-
-    std::cout << z << '\n';
     
-    z.backward();
     
-    // std::cout << x << '\n';
-    // std::cout << y << '\n';
-    std::cout << *(x.m_grad) << '\n';
+    // std::cout << *(y.m_grad) << '\n';
 
-    // for (int i = 0; i < 1000; i++) {
-    //     x.reset_grads();
-    //     Tensor p = x.pow(exp);
-    //     Tensor m = -x;
-    //     Tensor y = p + m;
-    //     y.backward();
-    //     for (size_t j = 0; j < x.m_numel; j++) {
-    //         size_t x_logic_idx = x.get_flat_index_from_logical(j);
-    //         x.m_flat_data[x_logic_idx] -= lr*x.m_flat_grad[x_logic_idx];
-    //     }
+    Tensor lrs{x.m_shape};
+    lrs.fill( 1e-2f);
+
+    for (int i = 0; i < 1000; i++) {
+        x.reset_grads();
+        Tensor p = x.pow(y);
+        Tensor m = -x;
+        Tensor o = p + m;
         
-    //     std::cout << x.m_flat_data << '\n';
-    //     std::cout << y.m_flat_data << '\n' << '\n';
-    // }
+        o.backward();
+        
+        Tensor a = -lrs;
+        Tensor b = a*(*x.m_grad);
+        Tensor temp = x + b;
+        x = temp;
+        x.m_grad_fn = nullptr;
+
+        std::cout << o << '\n';
+        std::cout << x << '\n' << '\n';
+    }
 
     return 0;
 }

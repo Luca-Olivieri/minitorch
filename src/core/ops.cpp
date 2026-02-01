@@ -22,19 +22,10 @@ std::ostream& BackwardMult::print(std::ostream& os) const {
 }
 
 void BackwardMult::backprop(Tensor& out) {
-    for (size_t i {0}; i<N; i++) {
-        if (auto operand = m_operands[i]) {
-            operand->m_grad = std::make_shared<Tensor>(operand->m_shape);
-        }
-    }
-    if (auto a = m_operands[0]) {
-        *(a->m_grad) = out * out;
-    }
-    // if (!m_t1.m_grad) m_t1.m_grad = std::make_shared<Tensor>(m_t1.m_shape);
-    // if (!m_t2.m_grad) m_t2.m_grad = std::make_shared<Tensor>(m_t2.m_shape);
-    // *(m_t1.m_grad) = m_t1 * m_t2 * *(out.m_grad);
-    // m_t1.backprop();
-    // m_t2.backprop();
+    Tensor& a = *m_operands[0];
+    Tensor& b = *m_operands[1];
+    *(a.m_grad) += b * *(out.m_grad);
+    *(b.m_grad) += a * *(out.m_grad);
 }
 
 std::ostream& BackwardAdd::print(std::ostream& os) const {
@@ -42,12 +33,30 @@ std::ostream& BackwardAdd::print(std::ostream& os) const {
 }
 
 void BackwardAdd::backprop(Tensor& out) {
-    for (size_t i {0}; i<N; i++) {
-        if (auto operand = m_operands[i]) {
-            operand->m_grad = std::make_shared<Tensor>(operand->m_shape);
-        }
-    }
-    if (auto a = m_operands[0]) {
-        *(a->m_grad) = out * out;
-    }
+    Tensor& a = *m_operands[0];
+    Tensor& b = *m_operands[1];
+    *(a.m_grad) += *(out.m_grad);
+    *(b.m_grad) += *(out.m_grad);
+}
+
+std::ostream& BackwardMinus::print(std::ostream& os) const {
+    return os << "BackwardMinus";
+}
+
+void BackwardMinus::backprop(Tensor& out) {
+    Tensor& a = *m_operands[0];
+    *(a.m_grad) += -*(out.m_grad);
+}
+
+std::ostream& BackwardPow::print(std::ostream& os) const {
+    return os << "BackwardPow";
+}
+
+void BackwardPow::backprop(Tensor& out) {
+    Tensor& base = *m_operands[0];
+    Tensor& exp = *m_operands[1];
+    Tensor ones{exp.m_shape};
+    ones.fill(1.0f);
+    *(base.m_grad) += exp * base.pow(exp+(-ones)) * *(out.m_grad);
+    // *(b.m_grad) += *(out.m_grad);
 }

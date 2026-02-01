@@ -8,7 +8,9 @@
 #include <string>
 #include <memory>
 
-#include "ops.h"
+// #include "ops.h"
+
+class BackwardOp;
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector){
@@ -33,10 +35,13 @@ public:
     
     std::shared_ptr<Tensor> m_grad;
     std::shared_ptr<BackwardOp> m_grad_fn;
+    bool m_requires_grad;
 
     Tensor(
         std::vector<size_t> shape
     );
+
+    ~Tensor();
     
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
     
@@ -84,26 +89,26 @@ public:
     );
 
     static bool are_shapes_equal(
-        Tensor& a,
-        Tensor& b
+        const Tensor& a,
+        const Tensor& b
     );
 
     Tensor operator*(
-        Tensor& other
+        const Tensor& other
     );
     
     Tensor operator+(
-        Tensor& other
+        const Tensor& other
     );
     
     Tensor& operator+=(
-        Tensor& other
+        const Tensor& other
     );
     
     Tensor operator-();
     
     Tensor pow(
-        Tensor& exp
+        const Tensor& exp
     );
 
     void reset_grads();
@@ -122,74 +127,84 @@ private:
     );
 
     static Tensor mult(
-        Tensor& a,
-        Tensor& b
+        const Tensor& a,
+        const Tensor& b
     );
 
     static Tensor add(
-        Tensor& a,
-        Tensor& b
+        const Tensor& a,
+        const Tensor& b
     );
     
     static Tensor& add_inplace(
         Tensor& a,
-        Tensor& b
+        const Tensor& b
+    );
+    
+    static Tensor minus(
+        const Tensor& a
+    );
+    
+    static Tensor s_pow(
+        const Tensor& base,
+        const Tensor& exp
     );
 
-    template <size_t N, typename BackwardOp, typename Func>
-    static Tensor apply_op(
-        std::array<Tensor*, N> operands,
-        Func op
-    ) {
-        // if (!are_shapes_equal(a, b)) {
-        //     throw std::invalid_argument(std::format(
-        //         "The operands must have the same shape. Got {} and {}", 
-        //         a.m_shape, b.m_shape
-        //     ));
-        // }
-        std::vector<size_t> shape = operands[0]->m_shape;
-        size_t numel = operands[0]->m_numel;
-        Tensor out(shape);
+    template <typename BackwardOp, typename Func, typename... Tensors>
+    static Tensor apply_op(Func op, Tensors&... operands) {
+        // 1. Infer N at compile time
+        constexpr size_t N = sizeof...(operands);
+        static_assert(N == BackwardOp::N, "Number of tensors does not match BackwardOp arity");
 
-        // Using std::transform is often cleaner and potentially faster (SIMD/Parallel)
-        // assuming you have iterators, otherwise use your loop:
-        for (size_t i = 0; i < numel; i++) {
-            std::array<float, N> entries = {};
-            for (size_t j = 0; j < N; j++) {
-                entries[j] = operands[j]->m_flat_data[i];
-            }
-            out.m_flat_data[i] = op(entries);
+        // 2. Get metadata from the first tensor (using a trick to access the first element of a pack)
+        auto& first = [] (auto& head, [[maybe_unused]] auto&... tail) -> auto& { return head; }(operands...);
+        size_t numel = first.m_numel;
+        Tensor out(first.m_shape);
+
+        // 3. Optional: Shape safety check using Fold Expressions
+        if (!((operands.m_shape == first.m_shape) && ...)) {
+            throw std::invalid_argument("Shapes must match for element-wise operation");
         }
 
-        // Construct the specific backward node
-        out.m_grad_fn = std::make_shared<BackwardOp>(operands);
+        // 4. Computation loop
+        for (size_t i = 0; i < numel; i++) {
+            // The magic: "Unpack" the i-th element of every tensor into the lambda
+            out.m_flat_data[i] = op(operands.m_flat_data[i]...);
+        }
+
+        // 5. Build the backward node
+        if ((operands.m_requires_grad || ...)) {
+            out.m_requires_grad = true;
+            out.m_grad_fn = std::make_shared<BackwardOp>(std::array<Tensor*, N>{const_cast<Tensor*>(&operands)...});
+        }
         
         return out;
     }
     
-    template <size_t N, typename Func>
-    static Tensor& apply_op_inplace(
-        std::array<Tensor*, N> operands,
-        Func op
-    ) {
-        // if (!are_shapes_equal(a, b)) {
-        //     throw std::invalid_argument(std::format(
-        //         "The operands must have the same shape. Got {} and {}", 
-        //         a.m_shape, b.m_shape
-        //     ));
-        // }
-        std::vector<size_t> shape = operands[0]->m_shape;
-        size_t numel = operands[0]->m_numel;
-        Tensor& out = *operands[0];
+    template <typename BackwardOp, typename Func, typename... Tensors>
+    static Tensor& apply_op_inplace(Func op, Tensors&... operands) {
+        // 1. Infer N at compile time
+        constexpr size_t N = sizeof...(operands);
+        static_assert(N == BackwardOp::N, "Number of tensors does not match BackwardOp arity");
 
-        // Using std::transform is often cleaner and potentially faster (SIMD/Parallel)
-        // assuming you have iterators, otherwise use your loop:
+        // 2. Get metadata from the first tensor (using a trick to access the first element of a pack)
+        auto& first = [] (auto& head, [[maybe_unused]] auto&... tail) -> auto& { return head; }(operands...);
+        size_t numel = first.m_numel;
+        Tensor& out = first;
+
+        if (out.m_requires_grad) {
+            throw std::logic_error(std::format("Cannot compute gradients on inplace operators. Set requires_grad = false."));
+        }
+
+        // 3. Optional: Shape safety check using Fold Expressions
+        if (!((operands.m_shape == first.m_shape) && ...)) {
+            throw std::invalid_argument("Shapes must match for element-wise operation");
+        }
+
+        // 4. Computation loop
         for (size_t i = 0; i < numel; i++) {
-            std::array<float, N> entries = {};
-            for (size_t j = 0; j < N; j++) {
-                entries[j] = operands[j]->m_flat_data[i];
-            }
-            out.m_flat_data[i] = op(entries);
+            // The magic: "Unpack" the i-th element of every tensor into the lambda
+            out.m_flat_data[i] = op(operands.m_flat_data[i]...);
         }
         
         return out;
