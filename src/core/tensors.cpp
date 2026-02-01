@@ -229,25 +229,76 @@ bool Tensor::are_shapes_equal(
     return a.m_shape == b.m_shape;
 }
 
+// Tensor Tensor::mult(
+//     Tensor& a,
+//     Tensor& b
+// ) {
+//     if (!are_shapes_equal(a, b)) {
+//         throw std::invalid_argument(std::format("The operands of a multiplication should have the same shape. Got {} and {}", a.m_shape, b.m_shape));
+//     }
+//     Tensor new_tensor(a.m_shape);
+//     for (size_t i = 0; i < a.m_numel; i++) {
+//         new_tensor.m_flat_data[i] = a.get_entry_ref(i) * b.get_entry_ref(i);
+//     }
+//     new_tensor.m_grad_fn = std::make_shared<BackwardMult>(std::array<Tensor*, 2>({&a, &b}));
+//     return new_tensor;
+// }
+
 Tensor Tensor::mult(
     Tensor& a,
     Tensor& b
 ) {
-    if (!are_shapes_equal(a, b)) {
-        throw std::invalid_argument(std::format("The operands of a multiplication should have the same shape. Got {} and {}", a.m_shape, b.m_shape));
-    }
-    Tensor new_tensor(a.m_shape);
-    for (size_t i = 0; i < a.m_numel; i++) {
-        new_tensor.m_flat_data[i] = a.get_entry_ref(i) * b.get_entry_ref(i);
-    }
-    new_tensor.m_grad_fn = std::make_shared<BackwardMult>(a, b);
-    return new_tensor;
+    constexpr size_t N = BackwardMult::N;
+    return apply_op<N, BackwardMult>(
+        std::array<Tensor*, N>{&a, &b},
+        [](std::array<float, N> entries) { 
+                return entries[0] * entries[1]; 
+        }
+    );
+}
+
+Tensor Tensor::add(
+    Tensor& a,
+    Tensor& b
+) {
+    constexpr size_t N = BackwardAdd::N;
+    return apply_op<N, BackwardAdd>(
+        std::array<Tensor*, N>{&a, &b},
+        [](std::array<float, N> entries) { 
+                return entries[0] + entries[1]; 
+        }
+    );
+}
+
+Tensor& Tensor::add_inplace(
+    Tensor& a,
+    Tensor& b
+) {
+    constexpr size_t N = BackwardAdd::N;
+    return apply_op_inplace<N>(
+        std::array<Tensor*, N>{&a, &b},
+        [](std::array<float, N> entries) { 
+                return entries[0] + entries[1]; 
+        }
+    );
 }
 
 Tensor Tensor::operator*(
     Tensor& other
 ) {
     return Tensor::mult(*this, other);
+}
+
+Tensor Tensor::operator+(
+    Tensor& other
+) {
+    return Tensor::add(*this, other);
+}
+
+Tensor& Tensor::operator+=(
+    Tensor& other
+) {
+    return Tensor::add_inplace(*this, other);
 }
 
 void Tensor::reset_grads() {

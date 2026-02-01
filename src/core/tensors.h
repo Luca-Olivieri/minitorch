@@ -96,6 +96,10 @@ public:
         Tensor& other
     );
     
+    Tensor& operator+=(
+        Tensor& other
+    );
+    
     Tensor operator-();
     
     Tensor pow(
@@ -120,7 +124,76 @@ private:
     static Tensor mult(
         Tensor& a,
         Tensor& b
-    );  
+    );
+
+    static Tensor add(
+        Tensor& a,
+        Tensor& b
+    );
+    
+    static Tensor& add_inplace(
+        Tensor& a,
+        Tensor& b
+    );
+
+    template <size_t N, typename BackwardOp, typename Func>
+    static Tensor apply_op(
+        std::array<Tensor*, N> operands,
+        Func op
+    ) {
+        // if (!are_shapes_equal(a, b)) {
+        //     throw std::invalid_argument(std::format(
+        //         "The operands must have the same shape. Got {} and {}", 
+        //         a.m_shape, b.m_shape
+        //     ));
+        // }
+        std::vector<size_t> shape = operands[0]->m_shape;
+        size_t numel = operands[0]->m_numel;
+        Tensor out(shape);
+
+        // Using std::transform is often cleaner and potentially faster (SIMD/Parallel)
+        // assuming you have iterators, otherwise use your loop:
+        for (size_t i = 0; i < numel; i++) {
+            std::array<float, N> entries = {};
+            for (size_t j = 0; j < N; j++) {
+                entries[j] = operands[j]->m_flat_data[i];
+            }
+            out.m_flat_data[i] = op(entries);
+        }
+
+        // Construct the specific backward node
+        out.m_grad_fn = std::make_shared<BackwardOp>(operands);
+        
+        return out;
+    }
+    
+    template <size_t N, typename Func>
+    static Tensor& apply_op_inplace(
+        std::array<Tensor*, N> operands,
+        Func op
+    ) {
+        // if (!are_shapes_equal(a, b)) {
+        //     throw std::invalid_argument(std::format(
+        //         "The operands must have the same shape. Got {} and {}", 
+        //         a.m_shape, b.m_shape
+        //     ));
+        // }
+        std::vector<size_t> shape = operands[0]->m_shape;
+        size_t numel = operands[0]->m_numel;
+        Tensor& out = *operands[0];
+
+        // Using std::transform is often cleaner and potentially faster (SIMD/Parallel)
+        // assuming you have iterators, otherwise use your loop:
+        for (size_t i = 0; i < numel; i++) {
+            std::array<float, N> entries = {};
+            for (size_t j = 0; j < N; j++) {
+                entries[j] = operands[j]->m_flat_data[i];
+            }
+            out.m_flat_data[i] = op(entries);
+        }
+        
+        return out;
+    }
 };
 
 #endif

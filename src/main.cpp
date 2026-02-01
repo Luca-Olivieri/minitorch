@@ -20,13 +20,14 @@ int main()
     y.fill(2.0f);
 
     Tensor z = x*y;
+    // z += y;
 
     std::cout << z << '\n';
     
     z.backward();
     
-    std::cout << x << '\n';
-    std::cout << y << '\n';
+    // std::cout << x << '\n';
+    // std::cout << y << '\n';
     std::cout << *(x.m_grad) << '\n';
 
     // for (int i = 0; i < 1000; i++) {
