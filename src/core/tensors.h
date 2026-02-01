@@ -31,7 +31,7 @@ public:
     std::vector<float> m_flat_data;
     size_t m_offset;
     
-    std::vector<float> m_flat_grad;
+    std::shared_ptr<Tensor> m_grad;
     std::shared_ptr<BackwardOp> m_grad_fn;
 
     Tensor(
@@ -83,6 +83,11 @@ public:
         size_t dim_2
     );
 
+    static bool are_shapes_equal(
+        Tensor& a,
+        Tensor& b
+    );
+
     Tensor operator*(
         Tensor& other
     );
@@ -107,6 +112,15 @@ private:
     static std::vector<size_t> init_strides(
         const std::vector<size_t>& shape
     );
+
+    float& get_entry_ref(
+        size_t l_index
+    );
+
+    static Tensor mult(
+        Tensor& a,
+        Tensor& b
+    );  
 };
 
 #endif

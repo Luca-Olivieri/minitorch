@@ -31,86 +31,11 @@ std::ostream& operator<<(std::ostream& os, const BackwardMult& op) {
 }
 
 void BackwardMult::backprop(Tensor& out) {
-    for (size_t i = 0; i < m_t1.m_numel; i++) {
-        size_t m_t1_lidx = m_t1.get_flat_index_from_logical(i);
-        size_t m_t2_lidx = m_t2.get_flat_index_from_logical(i);
-        size_t m_out_lidx = out.get_flat_index_from_logical(i);
-        m_t1.m_flat_grad[m_t1_lidx] += m_t2.m_flat_data[m_t2_lidx] * out.m_flat_grad[m_out_lidx];
-        m_t2.m_flat_grad[m_t2_lidx] += m_t1.m_flat_data[m_t1_lidx] * out.m_flat_grad[m_out_lidx];
-    }
+    if (!m_t1.m_grad) m_t1.m_grad = std::make_shared<Tensor>(m_t1.m_shape);
+    if (!m_t2.m_grad) m_t2.m_grad = std::make_shared<Tensor>(m_t2.m_shape);
+    *(m_t1.m_grad) = m_t1 * m_t2 * *(out.m_grad);
     m_t1.backprop();
     m_t2.backprop();
-}
-
-BackwardAdd::BackwardAdd(
-    Tensor& t1,
-    Tensor& t2
-): m_t1(t1), m_t2(t2) {}
-
-std::ostream& BackwardAdd::print(std::ostream& os) const {
-    return os << "BackwardAdd";
-}
-
-std::ostream& operator<<(std::ostream& os, const BackwardAdd& op) {
-    return op.print(os);
-}
-
-void BackwardAdd::backprop(Tensor& out) {
-    for (size_t i = 0; i < m_t1.m_numel; i++) {
-        size_t m_t1_lidx = m_t1.get_flat_index_from_logical(i);
-        size_t m_t2_lidx = m_t2.get_flat_index_from_logical(i);
-        size_t m_out_lidx = out.get_flat_index_from_logical(i);
-        m_t1.m_flat_grad[m_t1_lidx] += out.m_flat_grad[m_out_lidx];
-        m_t2.m_flat_grad[m_t2_lidx] += out.m_flat_grad[m_out_lidx];
-    }
-    m_t1.backprop();
-    m_t2.backprop();
-}
-
-BackwardMinus::BackwardMinus(
-    Tensor& t1
-): m_t1(t1) {}
-
-std::ostream& BackwardMinus::print(std::ostream& os) const {
-    return os << "BackwardMinus";
-}
-
-std::ostream& operator<<(std::ostream& os, const BackwardMinus& op) {
-    return op.print(os);
-}
-
-void BackwardMinus::backprop(Tensor& out) {
-    for (size_t i = 0; i < m_t1.m_numel; i++) {
-        size_t m_t1_lidx = m_t1.get_flat_index_from_logical(i);
-        size_t m_out_lidx = out.get_flat_index_from_logical(i);
-        m_t1.m_flat_grad[m_t1_lidx] += -out.m_flat_grad[m_out_lidx];
-    }
-    m_t1.backprop();
-}
-
-BackwardPow::BackwardPow(
-    Tensor& t1,
-    Tensor& t2
-): m_t1(t1), m_t2(t2) {}
-
-std::ostream& BackwardPow::print(std::ostream& os) const {
-    return os << "BackwardPow";
-}
-
-std::ostream& operator<<(std::ostream& os, const BackwardPow& op) {
-    return op.print(os);
-}
-
-void BackwardPow::backprop(Tensor& out) {
-    for (size_t i = 0; i < m_t1.m_numel; i++) {
-        size_t m_t1_lidx = m_t1.get_flat_index_from_logical(i);
-        size_t m_t2_lidx = m_t2.get_flat_index_from_logical(i);
-        size_t m_out_lidx = out.get_flat_index_from_logical(i);
-        float base = m_t1.m_flat_data[m_t1_lidx];
-        float exp = m_t2.m_flat_data[m_t2_lidx];
-        m_t1.m_flat_grad[m_t1_lidx] += exp*std::pow(base, exp-1)*out.m_flat_grad[m_out_lidx];
-    }
-    m_t1.backprop();
 }
 
 // OLD OPS

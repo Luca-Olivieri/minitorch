@@ -9,7 +9,7 @@
 
 Tensor::Tensor(
     std::vector<size_t> shape
-): m_shape(shape), m_offset(0) {
+): m_shape(shape), m_offset(0), m_grad{nullptr}, m_grad_fn{nullptr} {
     // shape validation
     
     for (size_t dim : shape) {
@@ -30,9 +30,6 @@ Tensor::Tensor(
     }
     m_strides = Tensor::init_strides(m_shape);
     m_flat_data = std::vector<float>(m_numel, 0.0f);
-    m_flat_grad = std::vector<float>(m_numel, 0.0f);
-
-    m_grad_fn = nullptr;
 }
 
 std::vector<size_t> Tensor::init_strides(
@@ -66,14 +63,14 @@ size_t Tensor::get_flat_index_from_md(
 }
 
 size_t Tensor::get_flat_index_from_logical(
-    size_t logical_index
+    size_t l_index
 ) const {
-    if (logical_index >= m_numel) {
-        throw std::out_of_range(std::format("Index {} out of bounds for tensor of size {}.", logical_index, m_numel));
+    if (l_index >= m_numel) {
+        throw std::out_of_range(std::format("Index {} out of bounds for tensor of size {}.", l_index, m_numel));
     }
     
     size_t offset = m_offset;
-    size_t current_index = logical_index;
+    size_t current_index = l_index;
 
     for (size_t i = m_shape.size(); i-- > 0; ) {
         size_t dim_size = m_shape[i];
@@ -82,6 +79,20 @@ size_t Tensor::get_flat_index_from_logical(
         offset += coord * m_strides[i];
     }
     return offset;
+}
+
+float& Tensor::get_entry_ref(
+    size_t l_index
+) {
+    return m_flat_data[get_flat_index_from_logical(l_index)];
+}
+
+float& Tensor::operator[](const std::vector<size_t>& md_index) {
+    // Scalar case
+    if (m_shape.empty()) {
+        throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
+    }
+    return m_flat_data[get_flat_index_from_md(md_index)];
 }
 
 bool Tensor::is_contiguous() {
@@ -93,19 +104,11 @@ bool Tensor::is_contiguous() {
     return true;
 }
 
-float& Tensor::operator[](const std::vector<size_t>& md_index) {
-    // Scalar case
-    if (m_shape.empty()) {
-        throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
-    }
-    return m_flat_data[get_flat_index_from_md(md_index)];
-}
-
 void Tensor::fill(
     float value
 ) {
     for (size_t i = 0; i < m_numel; i++) {
-        m_flat_data[get_flat_index_from_logical(i)] = value;
+        get_entry_ref(i) = value;
     }
 }
 
@@ -115,7 +118,7 @@ void Tensor::linspace(
 ) {
     float delta = (end-start)/(static_cast<float>(m_numel-1));
     for (size_t i = 0; i < m_numel; i++) {
-        m_flat_data[get_flat_index_from_logical(i)] = start + static_cast<float>(i)*delta;
+        get_entry_ref(i) = start + static_cast<float>(i)*delta;
     }
 }
 
@@ -219,85 +222,44 @@ void Tensor::transpose(
     m_shape[dim_2] = temp_dim;
 }
 
+bool Tensor::are_shapes_equal(
+    Tensor& a,
+    Tensor& b
+) {
+    return a.m_shape == b.m_shape;
+}
+
+Tensor Tensor::mult(
+    Tensor& a,
+    Tensor& b
+) {
+    if (!are_shapes_equal(a, b)) {
+        throw std::invalid_argument(std::format("The operands of a multiplication should have the same shape. Got {} and {}", a.m_shape, b.m_shape));
+    }
+    Tensor new_tensor(a.m_shape);
+    for (size_t i = 0; i < a.m_numel; i++) {
+        new_tensor.m_flat_data[i] = a.get_entry_ref(i) * b.get_entry_ref(i);
+    }
+    new_tensor.m_grad_fn = std::make_shared<BackwardMult>(a, b);
+    return new_tensor;
+}
+
 Tensor Tensor::operator*(
     Tensor& other
 ) {
-    if (other.m_shape.empty()) {
-        Tensor new_tensor(m_shape);
-        for (size_t i = 0; i < m_numel; i++) {
-            new_tensor.m_flat_data[i] = m_flat_data[get_flat_index_from_logical(i)] * other.item();
-        }
-        new_tensor.m_grad_fn = std::make_shared<BackwardMult>(*this,other);
-        return new_tensor;
-    }
-    else {
-        if (m_shape != other.m_shape) {
-            throw std::invalid_argument(std::format("The operands of a multiplication should have the same shape. Got {} and {}", m_shape, m_shape));
-        }
-        Tensor new_tensor(m_shape);
-        for (size_t i = 0; i < m_numel; i++) {
-            new_tensor.m_flat_data[i] = m_flat_data[get_flat_index_from_logical(i)] * other.m_flat_data[get_flat_index_from_logical(i)];
-        }
-        new_tensor.m_grad_fn = std::make_shared<BackwardMult>(*this,other);
-        return new_tensor;
-    }
-}
-
-Tensor Tensor::operator+(
-    Tensor& other
-) {
-    if (other.m_shape.empty()) {
-        Tensor new_tensor(m_shape);
-        for (size_t i = 0; i < m_numel; i++) {
-            new_tensor.m_flat_data[i] = m_flat_data[get_flat_index_from_logical(i)] + other.item();
-        }
-        new_tensor.m_grad_fn = std::make_shared<BackwardAdd>(*this,other);
-        return new_tensor;
-    }
-    else {
-        if (m_shape != other.m_shape) {
-            throw std::invalid_argument(std::format("The operands of an addition should have the same shape. Got {} and {}", m_shape, m_shape));
-        }
-        Tensor new_tensor(m_shape);
-        for (size_t i = 0; i < m_numel; i++) {
-            new_tensor.m_flat_data[i] = m_flat_data[get_flat_index_from_logical(i)] + other.m_flat_data[get_flat_index_from_logical(i)];
-        }
-        new_tensor.m_grad_fn = std::make_shared<BackwardAdd>(*this,other);
-        return new_tensor;
-    }
-}
-
-Tensor Tensor::operator-() {
-    Tensor new_tensor(m_shape);
-    for (size_t i = 0; i < m_numel; i++) {
-        new_tensor.m_flat_data[i] = -m_flat_data[get_flat_index_from_logical(i)];
-    }
-    new_tensor.m_grad_fn = std::make_shared<BackwardMinus>(*this);
-    return new_tensor;
-}
-
-Tensor Tensor::pow(
-    Tensor& exp
-) {    
-    Tensor new_tensor(m_shape);
-    for (size_t i = 0; i < m_numel; i++) {
-        new_tensor.m_flat_data[i] = std::pow(
-            m_flat_data[get_flat_index_from_logical(i)],
-            exp.m_flat_data[get_flat_index_from_logical(i)]
-            
-        );
-    }
-    new_tensor.m_grad_fn = std::make_shared<BackwardPow>(*this, exp);
-    return new_tensor;
+    return Tensor::mult(*this, other);
 }
 
 void Tensor::reset_grads() {
-    m_flat_grad = std::vector<float>(m_numel, 0.0f);
+    if (m_grad)
+        m_grad->fill(0.0f);
 }
 
 void Tensor::backward() {
-    m_flat_grad = std::vector<float>(m_numel, 1.0f);
-    Tensor::backprop();
+    if (!m_grad)
+        m_grad = std::make_shared<Tensor>(m_shape);
+    m_grad->fill(1.0f);
+    backprop();
 }
 
 void Tensor::backprop() {

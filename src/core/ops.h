@@ -37,55 +37,6 @@ public:
     void backprop(Tensor& out) override;
 };
 
-class BackwardAdd : public BackwardOp {
-public:
-    Tensor& m_t1;
-    Tensor& m_t2;
-
-    BackwardAdd(
-        Tensor& t1,
-        Tensor& t2
-    );
-
-    std::ostream& print(std::ostream& os) const override;
-
-    friend std::ostream& operator<<(std::ostream& os, const BackwardAdd& op);
-
-    void backprop(Tensor& out) override;
-};
-
-class BackwardMinus : public BackwardOp {
-public:
-    Tensor& m_t1;
-
-    BackwardMinus(
-        Tensor& t1
-    );
-
-    std::ostream& print(std::ostream& os) const override;
-
-    friend std::ostream& operator<<(std::ostream& os, const BackwardMinus& op);
-
-    void backprop(Tensor& out) override;
-};
-
-class BackwardPow : public BackwardOp {
-public:
-    Tensor& m_t1;
-    Tensor& m_t2;
-
-    BackwardPow(
-        Tensor& t1,
-        Tensor& t2
-    );
-
-    std::ostream& print(std::ostream& os) const override;
-
-    friend std::ostream& operator<<(std::ostream& os, const BackwardPow& op);
-
-    void backprop(Tensor& out) override;
-};
-
 // OLD OPS
 
 class Node {
