@@ -2,11 +2,18 @@
 
 Tensor::Tensor(
     std::vector<size_t> shape
-): m_value(shape) {}
+):
+    m_value{ shape },
+    m_bw_op{ nullptr },
+    m_grad{ nullptr } ,
+    m_requires_grad { true } {}
+
+std::ostream& operator<<(std::ostream& os, const Tensor& tensor){
+    return os << tensor.m_value;
+}
 
 float& Tensor::operator[](const std::vector<size_t>& md_index) {
-    // Scalar case
-    if (m_value.m_shape.empty()) {
+    if (m_value.m_shape.empty()) { // Scalar case
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
     return m_value.get_entry_ref((md_index));
@@ -33,7 +40,10 @@ bool Tensor::is_contiguous() {
     return m_value.is_contiguous();
 }
 
-std::ostream& operator<<(std::ostream& os, const Tensor& tensor){
-    return os << tensor.m_value;
+Tensor Tensor::operator+(
+    const Tensor& other
+) const {
+    Tensor out{m_value.m_shape};
+    out.m_value = TensorImpl::s_add(m_value, other.m_value);
+    return out;
 }
-

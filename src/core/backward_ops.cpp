@@ -3,19 +3,16 @@
 #include <math.h>
 #include <memory>
 
-#include "autograd.h"
+#include "backward_ops.h"
+
 #include "tensors.h"
 
-// BackwardOp::BackwardOp() {}
+BackwardOp::BackwardOp() {}
 
-// std::ostream& BackwardOp::print(std::ostream& os) const {
-//     return os << "BackwardOp";
-// }
-
-// std::ostream& operator<<(std::ostream& os, const BackwardOp& op) {
-//     op.print(os);
-//     return os;
-// }
+std::ostream& operator<<(std::ostream& os, const BackwardOp& op) {
+    op.print(os);
+    return os;
+}
 
 // std::ostream& BackwardMult::print(std::ostream& os) const {
 //     return os << "BackwardMult";

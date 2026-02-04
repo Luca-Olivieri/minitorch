@@ -2,7 +2,7 @@
 
 #include "core/tensors_impl.h"
 #include "core/tensors.h"
-#include "core/autograd.h"
+#include "core/backward_ops.h"
 #include "core/formatting.h"
 
 int main()
@@ -11,10 +11,10 @@ int main()
 
     std::cout << vec << '\n';
 
-    TensorImpl x({2, 3});
+    Tensor x({2, 3});
     x.linspace(1, 6);
     
-    TensorImpl y({2, 3});
+    Tensor y({2, 3});
     y.fill(2.0f);
 
     std::cout << x << '\n';
