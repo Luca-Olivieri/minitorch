@@ -27,11 +27,21 @@ public:
 template <size_t N>
 class NBackwardOp: public BackwardOp {
 public:
+    static constexpr size_t s_N = N; // expose N as a static member
     std::array<Tensor*, N> m_operands;
 
-    NBackwardOp(
-        std::array<Tensor*, N> operands
-    ): m_operands(operands) {}
+        // 1. Variadic Template Constructor
+    template <typename... Tensors>
+    explicit NBackwardOp(Tensors... operands): m_operands{{operands...}} {
+        // 2. Compile-time Arity Check
+        static_assert(sizeof...(Tensors) == N, 
+            "Error: Number of arguments provided to constructor must match template parameter N.");
+            
+        // 3. (Optional) Strict Type Checking using C++17 Fold Expressions
+        // This ensures every argument is actually a Tensor*
+        static_assert((std::is_convertible_v<Tensors, Tensor*> && ...), 
+            "Error: All arguments must be implicitly convertible to Tensor*.");
+    }
 
     void init_operands_grad_if_none() {
         for (size_t i {0}; i<N; i++) {
@@ -53,9 +63,7 @@ public:
 
 class BackwardAdd : public NBackwardOp<2> {
 public:
-    static constexpr size_t N { 2 };
-
-    using NBackwardOp<N>::NBackwardOp;
+    using NBackwardOp<s_N>::NBackwardOp;
 
     std::ostream& print(std::ostream& os) const override;
     
@@ -64,35 +72,29 @@ public:
 
 class BackwardMinus : public NBackwardOp<1> {
 public:
-    static constexpr size_t N { 1 };
-
-    using NBackwardOp<N>::NBackwardOp;
+    using NBackwardOp<s_N>::NBackwardOp;
 
     std::ostream& print(std::ostream& os) const override;
     
     void backprop(Tensor& out) override;
 };
 
-// class BackwardMult : public NBackwardOp<2> {
-// public:
-//     static constexpr size_t N { 2 };
+class BackwardMult : public NBackwardOp<2> {
+public:    
+    using NBackwardOp<s_N>::NBackwardOp;
+
+    std::ostream& print(std::ostream& os) const override;
     
-//     using NBackwardOp<N>::NBackwardOp;
+    void backprop(Tensor& out) override;
+};
 
-//     std::ostream& print(std::ostream& os) const override;
+class BackwardPow : public NBackwardOp<2> {
+public:
+    using NBackwardOp<s_N>::NBackwardOp;
+
+    std::ostream& print(std::ostream& os) const override;
     
-//     void backprop(Tensor& out) override;
-// };
-
-// class BackwardPow : public NBackwardOp<2> {
-// public:
-//     static constexpr size_t N { 2 };
-
-//     using NBackwardOp<N>::NBackwardOp;
-
-//     std::ostream& print(std::ostream& os) const override;
-    
-//     void backprop(Tensor& out) override;
-// };
+    void backprop(Tensor& out) override;
+};
 
 #endif

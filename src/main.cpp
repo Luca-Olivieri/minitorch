@@ -19,10 +19,14 @@ int main()
 
     Tensor a = x + y;
     Tensor b = -x;
+    Tensor c = x*y;
+    Tensor d = c.pow(y);
 
-    std::cout << a << '\n';
-    std::cout << b << '\n';
+    std::cout << d << '\n';
     std::cout << *(a.m_bw_op) << '\n';
+    std::cout << *(b.m_bw_op) << '\n';
+    std::cout << *(c.m_bw_op) << '\n';
+    std::cout << *(d.m_bw_op) << '\n';
     // std::cout << y << '\n';
 
     return 0;

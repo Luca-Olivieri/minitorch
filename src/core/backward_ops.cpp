@@ -33,26 +33,26 @@ void BackwardMinus::backprop(Tensor& out) {
     *(a.m_grad) += -*(out.m_grad);
 }
 
-// std::ostream& BackwardMult::print(std::ostream& os) const {
-//     return os << "BackwardMult";
-// }
+std::ostream& BackwardMult::print(std::ostream& os) const {
+    return os << "BackwardMult";
+}
 
-// void BackwardMult::backprop(Tensor& out) {
-//     Tensor& a = *m_operands[0];
-//     Tensor& b = *m_operands[1];
-//     *(a.m_grad) += b * *(out.m_grad);
-//     *(b.m_grad) += a * *(out.m_grad);
-// }
+void BackwardMult::backprop(Tensor& out) {
+    Tensor& a = *m_operands[0];
+    Tensor& b = *m_operands[1];
+    *(a.m_grad) += b * *(out.m_grad);
+    *(b.m_grad) += a * *(out.m_grad);
+}
 
-// std::ostream& BackwardPow::print(std::ostream& os) const {
-//     return os << "BackwardPow";
-// }
+std::ostream& BackwardPow::print(std::ostream& os) const {
+    return os << "BackwardPow";
+}
 
-// void BackwardPow::backprop(Tensor& out) {
-//     Tensor& base = *m_operands[0];
-//     Tensor& exp = *m_operands[1];
-//     Tensor ones{exp.m_shape};
-//     ones.fill(1.0f);
-//     *(base.m_grad) += exp * base.pow(exp+(-ones)) * *(out.m_grad);
-//     // *(b.m_grad) += *(out.m_grad);
-// }
+void BackwardPow::backprop(Tensor& out) {
+    Tensor& base = *m_operands[0];
+    Tensor& exp = *m_operands[1];
+    Tensor ones{exp.m_value.m_shape};
+    ones.fill(1.0f);
+    *(base.m_grad) += exp * base.pow(exp+(-ones)) * *(out.m_grad);
+    // *(b.m_grad) += *(out.m_grad);
+}
