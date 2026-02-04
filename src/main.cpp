@@ -3,21 +3,18 @@
 #include "core/tensors_impl.h"
 #include "core/tensors.h"
 #include "core/autograd.h"
-
-int do_nothing(
-    int x,
-    int y
-){
-    std::cout << x + y << '\n';
-    return 1;
-}
+#include "core/formatting.h"
 
 int main()
-{   
-    Tensor x({2, 3});
+{
+    std::vector<int> vec = {1, 4, 6};
+
+    std::cout << vec << '\n';
+
+    TensorImpl x({2, 3});
     x.linspace(1, 6);
     
-    Tensor y({2, 3});
+    TensorImpl y({2, 3});
     y.fill(2.0f);
 
     std::cout << x << '\n';

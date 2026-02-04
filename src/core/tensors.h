@@ -11,6 +11,8 @@ public:
     Tensor(
         std::vector<size_t> shape
     );
+
+    friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
     
     float& operator[](const std::vector<size_t>& md_index);
 
@@ -26,8 +28,6 @@ public:
     );
 
     bool is_contiguous();
-
-    friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
 };
 
 #endif

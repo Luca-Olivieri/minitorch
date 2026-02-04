@@ -20,8 +20,6 @@ public:
     TensorImpl(
         std::vector<size_t> shape
     );
-
-    // ~TensorImpl();
     
     friend std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor);
     
@@ -34,10 +32,6 @@ public:
     float& get_entry_ref(
         const std::vector<size_t>& md_index
     );
-    
-    float get_entry(
-        const std::vector<size_t>& md_index
-    ) const;
     
     void fill(
         float value
@@ -98,8 +92,6 @@ public:
         const TensorImpl& base,
         const TensorImpl& exp
     );
-
-    std::string to_string() const;
     
 private:
     static std::vector<size_t> s_init_strides(

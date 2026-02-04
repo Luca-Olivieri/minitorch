@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "tensors_impl.h"
-#include "utils.h"
+#include "formatting.h"
 
 TensorImpl::TensorImpl(
     std::vector<size_t> shape
@@ -269,7 +269,6 @@ TensorImpl TensorImpl::s_pow(const TensorImpl& base, const TensorImpl& exp) {
     );
 }
 
-// Helper function for the Tensor cout print
 static void s_print_recursive(
     std::ostream& os,
     TensorImpl& tensor_impl,
