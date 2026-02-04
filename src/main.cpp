@@ -17,8 +17,13 @@ int main()
     Tensor y({2, 3});
     y.fill(2.0f);
 
-    std::cout << x << '\n';
-    std::cout << y << '\n';
+    Tensor a = x + y;
+    Tensor b = -x;
+
+    std::cout << a << '\n';
+    std::cout << b << '\n';
+    std::cout << *(a.m_bw_op) << '\n';
+    // std::cout << y << '\n';
 
     return 0;
 }

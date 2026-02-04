@@ -35,8 +35,44 @@ public:
     );
 
     bool is_contiguous();
+    
+    template <auto Op, typename BW_OP, typename... Tensors>
+    Tensor apply_op(
+        Tensors&... others
+    ) const {
+        // 1. Infer N at compile time
+        constexpr size_t N = sizeof...(others) + 1;
+        static_assert(N == BW_OP::N, "Number of tensors does not match BackwardOp arity");
 
+        Tensor out{m_value.m_shape};
+        out.m_value = Op(m_value, others.m_value...);
+        out.m_bw_op = std::make_shared<BW_OP>(
+            std::array<Tensor*, BW_OP::N>(
+                    {
+                        const_cast<Tensor*>(this),
+                        const_cast<Tensor*>(&others)...
+                    }
+                )
+            );
+
+        return out;
+    }
+    
     Tensor operator+(
+        const Tensor& other
+    ) const;
+    
+    void operator+=(
+        const Tensor& other
+    );
+    
+    Tensor operator-() const;
+    
+    Tensor operator*(
+        const Tensor& other
+    ) const;
+    
+    Tensor pow(
         const Tensor& other
     ) const;
 };

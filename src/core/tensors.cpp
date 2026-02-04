@@ -1,4 +1,5 @@
 #include "tensors.h"
+#include "backward_ops.h"
 
 Tensor::Tensor(
     std::vector<size_t> shape
@@ -43,7 +44,33 @@ bool Tensor::is_contiguous() {
 Tensor Tensor::operator+(
     const Tensor& other
 ) const {
+    return apply_op<TensorImpl::s_add, BackwardAdd>(
+        other
+    );
+}
+
+void Tensor::operator+=(
+    const Tensor& other
+) {
+    TensorImpl::s_add_inplace(m_value, other.m_value);
+}
+
+Tensor Tensor::operator-() const {
+    return apply_op<TensorImpl::s_minus, BackwardMinus>();
+}
+
+Tensor Tensor::operator*(
+    const Tensor& other
+) const {
     Tensor out{m_value.m_shape};
-    out.m_value = TensorImpl::s_add(m_value, other.m_value);
+    out.m_value = TensorImpl::s_mult(m_value, other.m_value);
+    return out;
+}
+
+Tensor Tensor::pow(
+    const Tensor& other
+) const {
+    Tensor out{m_value.m_shape};
+    out.m_value = TensorImpl::s_pow(m_value, other.m_value);
     return out;
 }

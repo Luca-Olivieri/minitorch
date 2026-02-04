@@ -51,10 +51,10 @@ public:
     }
 };
 
-class BackwardMult : public NBackwardOp<2> {
+class BackwardAdd : public NBackwardOp<2> {
 public:
     static constexpr size_t N { 2 };
-    
+
     using NBackwardOp<N>::NBackwardOp;
 
     std::ostream& print(std::ostream& os) const override;
@@ -62,21 +62,21 @@ public:
     void backprop(Tensor& out) override;
 };
 
-// class BackwardAdd : public NBackwardOp<2> {
+class BackwardMinus : public NBackwardOp<1> {
+public:
+    static constexpr size_t N { 1 };
+
+    using NBackwardOp<N>::NBackwardOp;
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void backprop(Tensor& out) override;
+};
+
+// class BackwardMult : public NBackwardOp<2> {
 // public:
 //     static constexpr size_t N { 2 };
-
-//     using NBackwardOp<N>::NBackwardOp;
-
-//     std::ostream& print(std::ostream& os) const override;
     
-//     void backprop(Tensor& out) override;
-// };
-
-// class BackwardMinus : public NBackwardOp<1> {
-// public:
-//     static constexpr size_t N { 1 };
-
 //     using NBackwardOp<N>::NBackwardOp;
 
 //     std::ostream& print(std::ostream& os) const override;

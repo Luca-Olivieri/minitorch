@@ -227,6 +227,15 @@ void TensorImpl::transpose(
     m_shape[dim_2] = temp_dim;
 }
 
+TensorImpl TensorImpl::clone() const {
+    TensorImpl cloned(m_shape);
+    cloned.m_offset = m_offset;
+    cloned.m_strides = m_strides;
+    cloned.m_flat_data = m_flat_data;
+    cloned.m_numel = m_numel;
+    return cloned;
+}
+
 bool TensorImpl::are_shapes_equal(
     const TensorImpl& a,
     const TensorImpl& b

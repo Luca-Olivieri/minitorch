@@ -64,6 +64,8 @@ public:
         size_t dim_2
     );
 
+    TensorImpl clone() const;
+
     static bool are_shapes_equal(
         const TensorImpl& a,
         const TensorImpl& b
