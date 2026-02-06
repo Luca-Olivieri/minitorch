@@ -17,8 +17,6 @@ public:
         std::vector<size_t> shape
     );
 
-    // TODO provide a constructor which accepts a TensorStorage
-
     friend std::ostream& operator<<(std::ostream& os, const TensorNode& tensor);
     
     float& operator[](const std::vector<size_t>& md_index);
@@ -37,12 +35,12 @@ public:
     bool is_contiguous();
     
     template <auto Op, typename BW_OP, typename... Tensors>
-    TensorNode apply_op_ag(
+    std::shared_ptr<TensorNode> apply_op_ag(
         Tensors&... others
     ) const {
-        TensorNode out{m_value.m_shape};
-        out.m_value = Op(m_value, others.m_value...);
-        out.m_bw_op = std::make_shared<BW_OP>(
+        std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_value.m_shape)};
+        out->m_value = Op(m_value, others.m_value...);
+        out->m_bw_op = std::make_shared<BW_OP>(
             const_cast<TensorNode*>(this),       // First operand
             const_cast<TensorNode*>(&others)...  // Expand references to pointers
         );
@@ -50,7 +48,7 @@ public:
         return out;
     }
     
-    TensorNode operator+(
+    std::shared_ptr<TensorNode> operator+(
         const TensorNode& other
     ) const;
     
@@ -58,13 +56,13 @@ public:
         const TensorNode& other
     );
     
-    TensorNode operator-() const;
+    std::shared_ptr<TensorNode> operator-() const;
     
-    TensorNode operator*(
+    std::shared_ptr<TensorNode> operator*(
         const TensorNode& other
     ) const;
     
-    TensorNode pow(
+    std::shared_ptr<TensorNode> pow(
         const TensorNode& other
     ) const;
 

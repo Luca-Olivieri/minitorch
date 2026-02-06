@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "core/tensors.h"
 #include "core/tensor_storages.h"
 #include "core/tensor_nodes.h"
 #include "core/backward_ops.h"
@@ -7,29 +8,17 @@
 
 int main()
 {
-    std::vector<int> vec = {1, 4, 6};
+    // tensor_nodes_loop();
 
-    std::cout << vec << '\n';
-
-    TensorNode x({2, 3});
+    Tensor x({2, 3});
     x.linspace(1, 6);
-    
-    TensorNode y({2, 3});
+
+    Tensor y({2, 3});
     y.fill(2.0f);
 
-    TensorNode lrs{x.m_value.m_shape};
-    lrs.fill(1e-2f);
+    Tensor s = x + y;
 
-    for (size_t i {0}; i < 1000; i++) {
-        TensorNode p = x.pow(y);
-        TensorNode m = -x;
-        TensorNode o = p + m;
-        o.backward();
-        x += (-lrs)* *(x.m_grad);
-        o.zero_grad();
-    }
-
-    std::cout << x << '\n';
+    std::cout << s << '\n';
 
     return 0;
 }
