@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <cmath>
 
-#include "tensors_impl.h"
+#include "tensors_storage.h"
 #include "formatting.h"
 
 TensorImpl::TensorImpl(

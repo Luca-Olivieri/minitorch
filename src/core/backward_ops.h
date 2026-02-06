@@ -17,11 +17,13 @@ public:
     virtual std::ostream& print(std::ostream& os) const = 0;
     friend std::ostream& operator<<(std::ostream& os, const BackwardOp& op);
 
-    virtual void backprop(Tensor& out) = 0;
-
     virtual void init_operands_grad_if_none() = 0;
     
-    virtual void backprop_operands() = 0;
+    virtual void reset_all_grads() = 0;
+    
+    virtual void compute_operands_grad(Tensor& out) = 0;
+    
+    virtual void backprop() = 0;
 };
 
 template <size_t N>
@@ -53,11 +55,19 @@ public:
             }
         }
     }
-    
-    void backprop_operands() {
-        // for (size_t i {0}; i<N; i++) {
-        //     m_operands[i]->backprop();
-        // }
+
+    void backprop() {
+        for (size_t i {0}; i<N; i++) {
+            Tensor* operand = m_operands[i];
+            operand->backprop();
+        }
+    }
+
+    void reset_all_grads() {
+        for (size_t i {0}; i<N; i++) {
+            Tensor* operand = m_operands[i];
+            operand->zero_grad();
+        }
     }
 };
 
@@ -67,7 +77,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void backprop(Tensor& out) override;
+    void compute_operands_grad(Tensor& out) override;
 };
 
 class BackwardMinus : public NBackwardOp<1> {
@@ -76,7 +86,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void backprop(Tensor& out) override;
+    void compute_operands_grad(Tensor& out) override;
 };
 
 class BackwardMult : public NBackwardOp<2> {
@@ -85,7 +95,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void backprop(Tensor& out) override;
+    void compute_operands_grad(Tensor& out) override;
 };
 
 class BackwardPow : public NBackwardOp<2> {
@@ -94,7 +104,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void backprop(Tensor& out) override;
+    void compute_operands_grad(Tensor& out) override;
 };
 
 #endif

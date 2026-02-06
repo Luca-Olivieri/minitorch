@@ -1,7 +1,7 @@
 #ifndef TENSORS_H
 #define TENSORS_H
 
-#include "tensors_impl.h"
+#include "tensors_storage.h"
 
 class BackwardOp;
 
@@ -67,6 +67,14 @@ public:
     Tensor pow(
         const Tensor& other
     ) const;
+
+    void reset_grad();
+    
+    void zero_grad();
+
+    void backward();
+
+    void backprop();
 };
 
 #endif

@@ -68,3 +68,32 @@ Tensor Tensor::pow(
 ) const {
     return apply_op_ag<TensorImpl::s_pow, BackwardPow>(other);
 }
+
+void Tensor::reset_grad() {
+    m_grad->fill(0);
+    m_grad->m_bw_op = nullptr;
+    m_grad->m_grad = nullptr;
+}
+
+void Tensor::zero_grad() {
+    if (m_grad) {
+        reset_grad();
+    }
+    if (m_bw_op) {
+        m_bw_op->reset_all_grads();
+    }
+}
+
+void Tensor::backward() {
+    m_grad = std::make_shared<Tensor>(m_value.m_shape);
+    m_grad->fill(1.0f);
+    backprop();
+}
+
+void Tensor::backprop() {
+    if (m_bw_op) {
+        m_bw_op->init_operands_grad_if_none();
+        m_bw_op->compute_operands_grad(*this);
+        m_bw_op->backprop();
+    }
+}
