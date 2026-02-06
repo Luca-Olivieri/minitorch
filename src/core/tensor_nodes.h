@@ -1,7 +1,7 @@
 #ifndef TENSORS_H
 #define TENSORS_H
 
-#include "tensors_storage.h"
+#include "tensor_storages.h"
 
 class BackwardOp;
 

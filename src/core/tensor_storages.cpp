@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <cmath>
 
-#include "tensors_storage.h"
+#include "tensor_storages.h"
 #include "formatting.h"
 
 TensorStorage::TensorStorage(

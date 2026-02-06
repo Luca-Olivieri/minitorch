@@ -5,7 +5,7 @@
 
 #include "backward_ops.h"
 
-#include "tensors.h"
+#include "tensor_nodes.h"
 
 BackwardOp::BackwardOp() {}
 
