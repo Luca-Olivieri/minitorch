@@ -1,5 +1,5 @@
-#ifndef TENSORS_H
-#define TENSORS_H
+#ifndef TENSOR_NODES_H
+#define TENSOR_NODES_H
 
 #include "tensor_storages.h"
 

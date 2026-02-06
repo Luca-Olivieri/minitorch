@@ -1,5 +1,5 @@
-#ifndef TENSORS_IMPL_H
-#define TENSORS_IMPL_H
+#ifndef TENSOR_STORAGES_H
+#define TENSOR_STORAGES_H
 
 #include <iostream>
 #include <vector>

@@ -1,5 +1,5 @@
-#ifndef OPS_H
-#define OPS_H
+#ifndef BACKWARD_OPS
+#define BACKWARD_OPS
 
 #include <iostream>
 #include <memory>
