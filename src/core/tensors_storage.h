@@ -15,7 +15,7 @@ public:
     std::vector<size_t> m_strides;
     size_t m_offset;
     
-    std::vector<float> m_flat_data;
+    std::shared_ptr<std::vector<float>> m_flat_data;
 
     TensorStorage(
         std::vector<size_t> shape
@@ -127,7 +127,7 @@ private:
         // 4. Computation loop
         for (size_t i = 0; i < numel; i++) {
             // The magic: "Unpack" the i-th element of every tensor into the lambda
-            out.m_flat_data[i] = op(operands.m_flat_data[i]...);
+            (*out.m_flat_data)[i] = op((*operands.m_flat_data)[i]...);
         }
 
         return out;
@@ -156,7 +156,7 @@ private:
         // 4. Computation loop
         for (size_t i = 0; i < numel; i++) {
             // The magic: "Unpack" the i-th element of every tensor into the lambda
-            out.m_flat_data[i] = op(operands.m_flat_data[i]...);
+            (*out.m_flat_data)[i] = op((*operands.m_flat_data)[i]...);
         }
         
         return out;

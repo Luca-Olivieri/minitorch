@@ -32,7 +32,8 @@ TensorStorage::TensorStorage(
         m_numel = numel;
     }
     m_strides = TensorStorage::s_init_strides(m_shape);
-    m_flat_data = std::vector<float>(m_numel, 0.0f);
+    m_flat_data = std::make_shared<std::vector<float>>(m_numel, 0.0f);
+    
 }
 
 std::vector<size_t> TensorStorage::s_init_strides(
@@ -87,7 +88,7 @@ size_t TensorStorage::get_flat_index_from_logical(
 float& TensorStorage::get_entry_ref(
     size_t l_index
 ) {
-    return m_flat_data[get_flat_index_from_logical(l_index)];
+    return (*m_flat_data)[get_flat_index_from_logical(l_index)];
 }
 
 float& TensorStorage::get_entry_ref(
@@ -97,7 +98,7 @@ float& TensorStorage::get_entry_ref(
     if (m_shape.empty()) {
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
-    return m_flat_data[get_flat_index_from_md(md_index)];
+    return (*m_flat_data)[get_flat_index_from_md(md_index)];
 }
 
 bool TensorStorage::is_contiguous() {
@@ -131,7 +132,7 @@ float& TensorStorage::item() {
     if (m_numel != 1) {
         throw std::runtime_error(std::format("Cannot call item() on a non-singleton tensor (shape {}).", m_shape));
     }
-    return m_flat_data[m_offset];
+    return (*m_flat_data)[m_offset];
 }
 
 void TensorStorage::slice(
@@ -325,8 +326,8 @@ static void s_print_recursive(
 std::ostream& operator<<(std::ostream& os, const TensorStorage& tensor_impl){
     os << std::format("Tensor(shape={}, dtype=float,\n       data=", tensor_impl.m_shape);
     if (tensor_impl.m_shape.empty()) {
-        if (!tensor_impl.m_flat_data.empty())
-             os << std::fixed << std::setprecision(4) << tensor_impl.m_flat_data[0];
+        if (!tensor_impl.m_flat_data->empty())
+             os << std::fixed << std::setprecision(4) << (*tensor_impl.m_flat_data)[0];
     } else {
         std::vector<size_t> current_indices;
         s_print_recursive(os, const_cast<TensorStorage&>(tensor_impl), 0, current_indices, 12);
