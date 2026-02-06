@@ -6,6 +6,7 @@
 #include "backward_ops.h"
 
 #include "tensor_nodes.h"
+#include "tensors.h"
 
 BackwardOp::BackwardOp() {}
 
@@ -49,11 +50,10 @@ std::ostream& BackwardPow::print(std::ostream& os) const {
 }
 
 void BackwardPow::compute_operands_grad(TensorNode& out) {
-    TensorNode& base = *m_operands[0];
-    TensorNode& exp = *m_operands[1];
-    TensorNode ones{exp.m_value.m_shape};
+    TensorNode* base = m_operands[0];
+    TensorNode* exp = m_operands[1];
+    TensorNode ones{exp->m_value.m_shape};
     ones.fill(1.0f);
-    auto c = base.pow(exp+*(-ones));
-    // *(base.m_grad) += *(exp * *(base.pow(exp+(-ones))) * *(out.m_grad));
+    *(base->m_grad) += *(*(*exp * *base->pow(*(*exp + *(-ones)))) * *(out.m_grad));
     // *(b.m_grad) += *(out.m_grad);
 }

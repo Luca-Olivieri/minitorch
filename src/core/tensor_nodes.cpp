@@ -42,30 +42,30 @@ bool TensorNode::is_contiguous() {
 }
 
 std::shared_ptr<TensorNode> TensorNode::operator+(
-    const TensorNode& other
-) const {
+    TensorNode& other
+) {
     return apply_op_ag<TensorStorage::s_add, BackwardAdd>(other);
 }
 
 void TensorNode::operator+=(
-    const TensorNode& other
+    TensorNode& other
 ) {
     TensorStorage::s_add_inplace(m_value, other.m_value);
 }
 
-std::shared_ptr<TensorNode> TensorNode::operator-() const {
+std::shared_ptr<TensorNode> TensorNode::operator-() {
     return apply_op_ag<TensorStorage::s_minus, BackwardMinus>();
 }
 
 std::shared_ptr<TensorNode> TensorNode::operator*(
-    const TensorNode& other
-) const {
+    TensorNode& other
+) {
     return apply_op_ag<TensorStorage::s_mult, BackwardMult>(other);
 }
 
 std::shared_ptr<TensorNode> TensorNode::pow(
-    const TensorNode& other
-) const {
+    TensorNode& other
+) {
     return apply_op_ag<TensorStorage::s_pow, BackwardPow>(other);
 }
 

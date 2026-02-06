@@ -5,7 +5,7 @@
 
 class Tensor {
 public:
-    std::shared_ptr<TensorNode> node;
+    std::shared_ptr<TensorNode> m_node;
 
     Tensor(
         std::vector<size_t> shape
@@ -31,10 +31,34 @@ public:
     Tensor operator+(
         Tensor& other
     );
+    
+    void operator+=(
+        const Tensor& other
+    );
+
+    Tensor operator-();
+    
+    Tensor operator*(
+        Tensor& other
+    );
+    
+    Tensor pow(
+        Tensor& other
+    );
+    
+    void zero_grad();
+
+    void backward();
+
+    void backprop();
 
 private:
     
     Tensor();
+    
+    Tensor(
+        std::shared_ptr<TensorNode> node
+    );
 };
 
 

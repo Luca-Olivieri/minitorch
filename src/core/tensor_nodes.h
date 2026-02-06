@@ -37,7 +37,7 @@ public:
     template <auto Op, typename BW_OP, typename... Tensors>
     std::shared_ptr<TensorNode> apply_op_ag(
         Tensors&... others
-    ) const {
+    ) {
         std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_value.m_shape)};
         out->m_value = Op(m_value, others.m_value...);
         out->m_bw_op = std::make_shared<BW_OP>(
@@ -49,22 +49,22 @@ public:
     }
     
     std::shared_ptr<TensorNode> operator+(
-        const TensorNode& other
-    ) const;
-    
-    void operator+=(
-        const TensorNode& other
+        TensorNode& other
     );
     
-    std::shared_ptr<TensorNode> operator-() const;
+    void operator+=(
+        TensorNode& other
+    );
+    
+    std::shared_ptr<TensorNode> operator-();
     
     std::shared_ptr<TensorNode> operator*(
-        const TensorNode& other
-    ) const;
+        TensorNode& other
+    );
     
     std::shared_ptr<TensorNode> pow(
-        const TensorNode& other
-    ) const;
+        TensorNode& other
+    );
 
     void reset_grad();
     
