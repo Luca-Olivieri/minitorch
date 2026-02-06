@@ -11,19 +11,19 @@ int main()
 
     std::cout << vec << '\n';
 
-    Tensor x({2, 3});
+    TensorNode x({2, 3});
     x.linspace(1, 6);
     
-    Tensor y({2, 3});
+    TensorNode y({2, 3});
     y.fill(2.0f);
 
-    Tensor lrs{x.m_value.m_shape};
+    TensorNode lrs{x.m_value.m_shape};
     lrs.fill(1e-2f);
 
     for (size_t i {0}; i < 1000; i++) {
-        Tensor p = x.pow(y);
-        Tensor m = -x;
-        Tensor o = p + m;
+        TensorNode p = x.pow(y);
+        TensorNode m = -x;
+        TensorNode o = p + m;
         o.backward();
         x += (-lrs)* *(x.m_grad);
         o.zero_grad();

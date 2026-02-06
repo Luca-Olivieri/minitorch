@@ -8,7 +8,7 @@
 #include <string>
 #include <memory>
 
-class TensorImpl {
+class TensorStorage {
 public:
     std::vector<size_t> m_shape;
     size_t m_numel;
@@ -17,11 +17,11 @@ public:
     
     std::vector<float> m_flat_data;
 
-    TensorImpl(
+    TensorStorage(
         std::vector<size_t> shape
     );
     
-    friend std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor);
+    friend std::ostream& operator<<(std::ostream& os, const TensorStorage& tensor);
     
     bool is_contiguous();
 
@@ -64,35 +64,35 @@ public:
         size_t dim_2
     );
 
-    TensorImpl clone() const;
+    TensorStorage clone() const;
 
     static bool are_shapes_equal(
-        const TensorImpl& a,
-        const TensorImpl& b
+        const TensorStorage& a,
+        const TensorStorage& b
     );
 
-    static TensorImpl s_mult(
-        const TensorImpl& a,
-        const TensorImpl& b
+    static TensorStorage s_mult(
+        const TensorStorage& a,
+        const TensorStorage& b
     );
 
-    static TensorImpl s_add(
-        const TensorImpl& a,
-        const TensorImpl& b
+    static TensorStorage s_add(
+        const TensorStorage& a,
+        const TensorStorage& b
     );
     
-    static TensorImpl& s_add_inplace(
-        TensorImpl& a,
-        const TensorImpl& b
+    static TensorStorage& s_add_inplace(
+        TensorStorage& a,
+        const TensorStorage& b
     );
     
-    static TensorImpl s_minus(
-        const TensorImpl& a
+    static TensorStorage s_minus(
+        const TensorStorage& a
     );
     
-    static TensorImpl s_pow(
-        const TensorImpl& base,
-        const TensorImpl& exp
+    static TensorStorage s_pow(
+        const TensorStorage& base,
+        const TensorStorage& exp
     );
     
 private:
@@ -109,7 +109,7 @@ private:
     ) const;    
 
     template <typename Func, typename... Tensors>
-    static TensorImpl s_apply_op(Func op, Tensors&... operands) {
+    static TensorStorage s_apply_op(Func op, Tensors&... operands) {
         // 1. Infer N at compile time
         // constexpr size_t N = sizeof...(operands);
         // static_assert(N == BackwardOp::N, "Number of tensors does not match BackwardOp arity");
@@ -117,7 +117,7 @@ private:
         // 2. Get metadata from the first tensor (using a trick to access the first element of a pack)
         auto& first = [] (auto& head, [[maybe_unused]] auto&... tail) -> auto& { return head; }(operands...);
         size_t numel = first.m_numel;
-        TensorImpl out(first.m_shape);
+        TensorStorage out(first.m_shape);
 
         // 3. Optional: Shape safety check using Fold Expressions
         if (!((operands.m_shape == first.m_shape) && ...)) {
@@ -134,7 +134,7 @@ private:
     }
     
     template <typename Func, typename... Tensors>
-    static TensorImpl& s_apply_op_inplace(Func op, Tensors&... operands) {
+    static TensorStorage& s_apply_op_inplace(Func op, Tensors&... operands) {
         // 1. Infer N at compile time
         // constexpr size_t N = sizeof...(operands);
         // static_assert(N == BackwardOp::N, "Number of tensors does not match BackwardOp arity");
@@ -142,7 +142,7 @@ private:
         // 2. Get metadata from the first tensor (using a trick to access the first element of a pack)
         auto& first = [] (auto& head, [[maybe_unused]] auto&... tail) -> auto& { return head; }(operands...);
         size_t numel = first.m_numel;
-        TensorImpl& out = first;
+        TensorStorage& out = first;
 
         // if (out.m_requires_grad) {
         //     throw std::logic_error(std::format("Cannot compute gradients on inplace operators. Set requires_grad = false."));

@@ -52,14 +52,14 @@ int divide(int a, int b) {
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
-    ASSERT_THROWS(Tensor t({0}), std::invalid_argument);
-    ASSERT_THROWS(Tensor t({4, 0}), std::invalid_argument);
+    ASSERT_THROWS(TensorNode t({0}), std::invalid_argument);
+    ASSERT_THROWS(TensorNode t({4, 0}), std::invalid_argument);
 }
 
 void test_tensor_access_errors() {
     // 1. Out of Bounds
     {
-        Tensor t({2, 3});
+        TensorNode t({2, 3});
         // Valid access: t[{1, 2}]
         // Invalid accesses:
         ASSERT_THROWS((t[{2, 0}]), std::out_of_range); // Dim 0 overflow
@@ -69,7 +69,7 @@ void test_tensor_access_errors() {
 
     // 2. Scalar Access
     {
-        Tensor t({}); // Scalar
+        TensorNode t({}); // Scalar
         // Scalars cannot be accessed by index
         ASSERT_THROWS((t[{0}]), std::invalid_argument); 
         ASSERT_THROWS((t[{0, 0}]), std::invalid_argument);
@@ -77,27 +77,27 @@ void test_tensor_access_errors() {
 
     // 3. Index Size Mismatch
     {
-        Tensor t({2, 2});
+        TensorNode t({2, 2});
         ASSERT_THROWS((t[{0}]), std::invalid_argument);       // Too few indices
         ASSERT_THROWS((t[{0, 0, 0}]), std::invalid_argument); // Too many indices
     }
 
     // 4. item() on Non-Singleton
     {
-        Tensor t({2, 2});
+        TensorNode t({2, 2});
         ASSERT_THROWS(t.item(), std::runtime_error);
     }
 }
 
 void test_dice() {
-    Tensor t({5});
+    TensorNode t({5});
     t.fill(1.0f);
     // Dice 0-2 (size 2)
     t.dice(0, 0, 2);
     ASSERT_EQ(t.m_shape[0], (size_t)2, "Dice shape check");
     
     // Test invalid dice
-    Tensor t2({5});
+    TensorNode t2({5});
     ASSERT_THROWS(t2.dice(0, 0, 6), std::out_of_range); // OOB
     ASSERT_THROWS(t2.dice(0, 3, 2), std::out_of_range); // start > end
 }
@@ -106,23 +106,23 @@ void test_is_contiguous() {
     std::cout << "\nRunning is_contiguous tests...\n";
     
     // Default contiguous
-    Tensor t1({2, 3});
+    TensorNode t1({2, 3});
     ASSERT_EQ(t1.is_contiguous(), true, "New tensor should be contiguous");
 
     // Transpose (1, 4) -> (4, 1) (Contiguous despite stride swap because dim is 1)
-    Tensor t2({1, 4}); 
+    TensorNode t2({1, 4}); 
     t2.fill(1.0);
     t2.transpose(0, 1);
     ASSERT_EQ(t2.is_contiguous(), true, "Transposed (1,4) -> (4,1) should be contiguous");
     
     // Non-contiguous slice
-    Tensor t3({4, 4});
+    TensorNode t3({4, 4});
     // Slice columns (dim 1)
     t3.slice(1, 0); // shape (4), stride (4)
     ASSERT_EQ(t3.is_contiguous(), false, "Column slice of (4,4) should be non-contiguous");
     
     // Contiguous slice
-    Tensor t4({4, 4});
+    TensorNode t4({4, 4});
     // Slice rows (dim 0)
     t4.slice(0, 0); // shape (4), stride (1)
     ASSERT_EQ(t4.is_contiguous(), true, "Row slice of (4,4) should be contiguous");

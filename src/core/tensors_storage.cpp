@@ -8,7 +8,7 @@
 #include "tensors_storage.h"
 #include "formatting.h"
 
-TensorImpl::TensorImpl(
+TensorStorage::TensorStorage(
     std::vector<size_t> shape
 ): 
     m_shape(shape),
@@ -31,11 +31,11 @@ TensorImpl::TensorImpl(
         }
         m_numel = numel;
     }
-    m_strides = TensorImpl::s_init_strides(m_shape);
+    m_strides = TensorStorage::s_init_strides(m_shape);
     m_flat_data = std::vector<float>(m_numel, 0.0f);
 }
 
-std::vector<size_t> TensorImpl::s_init_strides(
+std::vector<size_t> TensorStorage::s_init_strides(
     const std::vector<size_t>& shape
 ) {
     std::vector<size_t> strides(shape.size(), 0);
@@ -48,7 +48,7 @@ std::vector<size_t> TensorImpl::s_init_strides(
     return strides;
 }
 
-size_t TensorImpl::get_flat_index_from_md(
+size_t TensorStorage::get_flat_index_from_md(
     const std::vector<size_t>& md_index
 ) const {
     if (md_index.size() != m_shape.size()) {
@@ -65,7 +65,7 @@ size_t TensorImpl::get_flat_index_from_md(
     return flat_index;
 }
 
-size_t TensorImpl::get_flat_index_from_logical(
+size_t TensorStorage::get_flat_index_from_logical(
     size_t l_index
 ) const {
     if (l_index >= m_numel) {
@@ -84,13 +84,13 @@ size_t TensorImpl::get_flat_index_from_logical(
     return offset;
 }
 
-float& TensorImpl::get_entry_ref(
+float& TensorStorage::get_entry_ref(
     size_t l_index
 ) {
     return m_flat_data[get_flat_index_from_logical(l_index)];
 }
 
-float& TensorImpl::get_entry_ref(
+float& TensorStorage::get_entry_ref(
     const std::vector<size_t>& md_index
 ) {
     // Scalar case
@@ -100,8 +100,8 @@ float& TensorImpl::get_entry_ref(
     return m_flat_data[get_flat_index_from_md(md_index)];
 }
 
-bool TensorImpl::is_contiguous() {
-    std::vector<size_t> contiguous_strides = TensorImpl::s_init_strides(m_shape);
+bool TensorStorage::is_contiguous() {
+    std::vector<size_t> contiguous_strides = TensorStorage::s_init_strides(m_shape);
     for (size_t i = 0; i < m_shape.size(); ++i) {
         if (m_shape[i] == 1) continue; // singleton dimensions do not affect contiguity
         if (m_strides[i] != contiguous_strides[i]) return false;
@@ -109,7 +109,7 @@ bool TensorImpl::is_contiguous() {
     return true;
 }
 
-void TensorImpl::fill(
+void TensorStorage::fill(
     float value
 ) {
     for (size_t i = 0; i < m_numel; i++) {
@@ -117,7 +117,7 @@ void TensorImpl::fill(
     }
 }
 
-void TensorImpl::linspace(
+void TensorStorage::linspace(
     float start,
     float end
 ) {
@@ -127,14 +127,14 @@ void TensorImpl::linspace(
     }
 }
 
-float& TensorImpl::item() {
+float& TensorStorage::item() {
     if (m_numel != 1) {
         throw std::runtime_error(std::format("Cannot call item() on a non-singleton tensor (shape {}).", m_shape));
     }
     return m_flat_data[m_offset];
 }
 
-void TensorImpl::slice(
+void TensorStorage::slice(
     size_t dim,
     size_t slice_index
 ) {
@@ -165,7 +165,7 @@ void TensorImpl::slice(
     m_strides = new_strides;
 }
 
-void TensorImpl::dice(
+void TensorStorage::dice(
     size_t dim,
     size_t index_start,
     size_t index_end
@@ -190,7 +190,7 @@ void TensorImpl::dice(
     m_shape[dim] = index_end-index_start;
 }
 
-void TensorImpl::reshape(
+void TensorStorage::reshape(
     std::vector<size_t> shape
 ) {
     for (size_t dim : shape) {
@@ -211,10 +211,10 @@ void TensorImpl::reshape(
     }
     
     m_shape = shape;
-    m_strides = TensorImpl::s_init_strides(m_shape);
+    m_strides = TensorStorage::s_init_strides(m_shape);
 }
 
-void TensorImpl::transpose(
+void TensorStorage::transpose(
     size_t dim_1,
     size_t dim_2
 ) {
@@ -227,8 +227,8 @@ void TensorImpl::transpose(
     m_shape[dim_2] = temp_dim;
 }
 
-TensorImpl TensorImpl::clone() const {
-    TensorImpl cloned(m_shape);
+TensorStorage TensorStorage::clone() const {
+    TensorStorage cloned(m_shape);
     cloned.m_offset = m_offset;
     cloned.m_strides = m_strides;
     cloned.m_flat_data = m_flat_data;
@@ -236,42 +236,42 @@ TensorImpl TensorImpl::clone() const {
     return cloned;
 }
 
-bool TensorImpl::are_shapes_equal(
-    const TensorImpl& a,
-    const TensorImpl& b
+bool TensorStorage::are_shapes_equal(
+    const TensorStorage& a,
+    const TensorStorage& b
 ) {
     return a.m_shape == b.m_shape;
 }
 
-TensorImpl TensorImpl::s_mult(const TensorImpl& a, const TensorImpl& b) {
+TensorStorage TensorStorage::s_mult(const TensorStorage& a, const TensorStorage& b) {
     return s_apply_op(
         [](float x, float y) { return x * y; }, 
         a, b
     );
 }
 
-TensorImpl TensorImpl::s_add(const TensorImpl& a, const TensorImpl& b) {
+TensorStorage TensorStorage::s_add(const TensorStorage& a, const TensorStorage& b) {
     return s_apply_op(
         [](float x, float y) { return x + y; }, 
         a, b
     );
 }
 
-TensorImpl& TensorImpl::s_add_inplace(TensorImpl& a, const TensorImpl& b) {
+TensorStorage& TensorStorage::s_add_inplace(TensorStorage& a, const TensorStorage& b) {
     return s_apply_op_inplace(
         [](float x, float y) { return x + y; }, 
         a, b
     );
 }
 
-TensorImpl TensorImpl::s_minus(const TensorImpl& a) {
+TensorStorage TensorStorage::s_minus(const TensorStorage& a) {
     return s_apply_op(
         [](float x) { return -x; }, 
         a
     );
 }
 
-TensorImpl TensorImpl::s_pow(const TensorImpl& base, const TensorImpl& exp) {
+TensorStorage TensorStorage::s_pow(const TensorStorage& base, const TensorStorage& exp) {
     return s_apply_op(
         [](float base, float exp) { return std::pow(base, exp); }, 
         base, exp
@@ -280,7 +280,7 @@ TensorImpl TensorImpl::s_pow(const TensorImpl& base, const TensorImpl& exp) {
 
 static void s_print_recursive(
     std::ostream& os,
-    TensorImpl& tensor_impl,
+    TensorStorage& tensor_impl,
     size_t dim_index,
     std::vector<size_t>& current_indices,
     int indent
@@ -322,14 +322,14 @@ static void s_print_recursive(
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const TensorImpl& tensor_impl){
+std::ostream& operator<<(std::ostream& os, const TensorStorage& tensor_impl){
     os << std::format("Tensor(shape={}, dtype=float,\n       data=", tensor_impl.m_shape);
     if (tensor_impl.m_shape.empty()) {
         if (!tensor_impl.m_flat_data.empty())
              os << std::fixed << std::setprecision(4) << tensor_impl.m_flat_data[0];
     } else {
         std::vector<size_t> current_indices;
-        s_print_recursive(os, const_cast<TensorImpl&>(tensor_impl), 0, current_indices, 12);
+        s_print_recursive(os, const_cast<TensorStorage&>(tensor_impl), 0, current_indices, 12);
     }
     os << ")";
     return os;

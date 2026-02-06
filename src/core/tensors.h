@@ -5,21 +5,21 @@
 
 class BackwardOp;
 
-class Tensor {
+class TensorNode {
 public:
-    TensorImpl m_value;
+    TensorStorage m_value;
     
     std::shared_ptr<BackwardOp> m_bw_op { nullptr };
-    std::shared_ptr<Tensor> m_grad { nullptr };
+    std::shared_ptr<TensorNode> m_grad { nullptr };
     bool m_requires_grad { true };
 
-    Tensor(
+    TensorNode(
         std::vector<size_t> shape
     );
 
-    // TODO provide a constructor which accepts a TensorImpl
+    // TODO provide a constructor which accepts a TensorStorage
 
-    friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
+    friend std::ostream& operator<<(std::ostream& os, const TensorNode& tensor);
     
     float& operator[](const std::vector<size_t>& md_index);
 
@@ -37,35 +37,35 @@ public:
     bool is_contiguous();
     
     template <auto Op, typename BW_OP, typename... Tensors>
-    Tensor apply_op_ag(
+    TensorNode apply_op_ag(
         Tensors&... others
     ) const {
-        Tensor out{m_value.m_shape};
+        TensorNode out{m_value.m_shape};
         out.m_value = Op(m_value, others.m_value...);
         out.m_bw_op = std::make_shared<BW_OP>(
-            const_cast<Tensor*>(this),       // First operand
-            const_cast<Tensor*>(&others)...  // Expand references to pointers
+            const_cast<TensorNode*>(this),       // First operand
+            const_cast<TensorNode*>(&others)...  // Expand references to pointers
         );
 
         return out;
     }
     
-    Tensor operator+(
-        const Tensor& other
+    TensorNode operator+(
+        const TensorNode& other
     ) const;
     
     void operator+=(
-        const Tensor& other
+        const TensorNode& other
     );
     
-    Tensor operator-() const;
+    TensorNode operator-() const;
     
-    Tensor operator*(
-        const Tensor& other
+    TensorNode operator*(
+        const TensorNode& other
     ) const;
     
-    Tensor pow(
-        const Tensor& other
+    TensorNode pow(
+        const TensorNode& other
     ) const;
 
     void reset_grad();
