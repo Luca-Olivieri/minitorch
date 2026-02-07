@@ -8,7 +8,7 @@ class BackwardOp;
 
 class TensorNode : public std::enable_shared_from_this<TensorNode> {
 public:
-    TensorStorage m_value;
+    TensorStorage m_storage;
     
     std::shared_ptr<BackwardOp> m_bw_op { nullptr };
     std::shared_ptr<TensorNode> m_grad { nullptr };
@@ -39,8 +39,8 @@ public:
     Tensor apply_op_ag(
         const Tensors&... others
     ) {
-        std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_value.m_shape)};
-        out->m_value = Op(m_value, others.m_node->m_value...);
+        std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_storage.m_shape)};
+        out->m_storage = Op(m_storage, others.m_node->m_storage...);
         out->m_bw_op = std::make_shared<BW_OP>(
             Tensor(shared_from_this()),       // First operand
             others...  // others are Tensors

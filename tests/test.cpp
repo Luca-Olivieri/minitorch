@@ -94,13 +94,13 @@ void test_dice() {
     TensorNode t({5});
     t.fill(1.0f);
     // Dice 0-2 (size 2)
-    t.m_value.dice(0, 0, 2);
-    ASSERT_EQ(t.m_value.m_shape[0], (size_t)2, "Dice shape check");
+    t.m_storage.dice(0, 0, 2);
+    ASSERT_EQ(t.m_storage.m_shape[0], (size_t)2, "Dice shape check");
     
     // Test invalid dice
     TensorNode t2({5});
-    ASSERT_THROWS(t2.m_value.dice(0, 0, 6), std::out_of_range); // OOB
-    ASSERT_THROWS(t2.m_value.dice(0, 3, 2), std::out_of_range); // start > end
+    ASSERT_THROWS(t2.m_storage.dice(0, 0, 6), std::out_of_range); // OOB
+    ASSERT_THROWS(t2.m_storage.dice(0, 3, 2), std::out_of_range); // start > end
 }
 
 void test_is_contiguous() {
@@ -113,19 +113,19 @@ void test_is_contiguous() {
     // Transpose (1, 4) -> (4, 1) (Contiguous despite stride swap because dim is 1)
     TensorNode t2({1, 4}); 
     t2.fill(1.0);
-    t2.m_value.transpose(0, 1);
+    t2.m_storage.transpose(0, 1);
     ASSERT_EQ(t2.is_contiguous(), true, "Transposed (1,4) -> (4,1) should be contiguous");
     
     // Non-contiguous slice
     TensorNode t3({4, 4});
     // Slice columns (dim 1)
-    t3.m_value.slice(1, 0); // shape (4), stride (4)
+    t3.m_storage.slice(1, 0); // shape (4), stride (4)
     ASSERT_EQ(t3.is_contiguous(), false, "Column slice of (4,4) should be non-contiguous");
     
     // Contiguous slice
     TensorNode t4({4, 4});
     // Slice rows (dim 0)
-    t4.m_value.slice(0, 0); // shape (4), stride (1)
+    t4.m_storage.slice(0, 0); // shape (4), stride (1)
     ASSERT_EQ(t4.is_contiguous(), true, "Row slice of (4,4) should be contiguous");
 }
 

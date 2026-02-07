@@ -4,41 +4,41 @@
 TensorNode::TensorNode(
     std::vector<size_t> shape
 ):
-    m_value{ shape },
+    m_storage{ shape },
     m_bw_op{ nullptr },
     m_grad{ nullptr } ,
     m_requires_grad { true } {}
 
 std::ostream& operator<<(std::ostream& os, const TensorNode& tensor){
-    return os << tensor.m_value;
+    return os << tensor.m_storage;
 }
 
 float& TensorNode::operator[](const std::vector<size_t>& md_index) {
-    if (m_value.m_shape.empty()) { // Scalar case
+    if (m_storage.m_shape.empty()) { // Scalar case
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
-    return m_value.get_entry_ref((md_index));
+    return m_storage.get_entry_ref((md_index));
 }
 
 float& TensorNode::item() {
-    return m_value.item();
+    return m_storage.item();
 }
 
 void TensorNode::fill(
     float value
 ) {
-    m_value.fill(value);
+    m_storage.fill(value);
 }
 
 void TensorNode::linspace(
     float start,
     float end
 ) {
-    m_value.linspace(start, end);
+    m_storage.linspace(start, end);
 }
 
 bool TensorNode::is_contiguous() {
-    return m_value.is_contiguous();
+    return m_storage.is_contiguous();
 }
 
 Tensor TensorNode::operator+(
@@ -50,7 +50,7 @@ Tensor TensorNode::operator+(
 void TensorNode::operator+=(
     const Tensor& other
 ) {
-    TensorStorage::s_add_inplace(m_value, other.m_node->m_value);
+    TensorStorage::s_add_inplace(m_storage, other.m_node->m_storage);
 }
 
 Tensor TensorNode::operator-() {
@@ -95,7 +95,7 @@ void TensorNode::zero_grad() {
 }
 
 void TensorNode::backward() {
-    m_grad = std::make_shared<TensorNode>(m_value.m_shape);
+    m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
     m_grad->fill(1.0f);
     backprop();
 }

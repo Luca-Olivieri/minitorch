@@ -88,7 +88,7 @@ void Tensor::zero_grad() {
 }
 
 const std::vector<size_t>& Tensor::shape() {
-    return m_node->m_value.m_shape;
+    return m_node->m_storage.m_shape;
 }
 
 void Tensor::backward() {
