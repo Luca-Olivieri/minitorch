@@ -18,6 +18,16 @@ public:
         std::vector<size_t> shape
     );
 
+    TensorNode(
+        TensorStorage& storage
+    );
+
+    // non-copyable object
+    TensorNode(const TensorNode&) = delete;
+    TensorNode& operator=(const TensorNode&) = delete;
+    TensorNode(TensorNode&&) = default;
+    TensorNode& operator=(TensorNode&&) = default;
+
     friend std::ostream& operator<<(std::ostream& os, const TensorNode& tensor);
     
     float& operator[](const std::vector<size_t>& md_index);
@@ -39,8 +49,12 @@ public:
     Tensor apply_op_ag(
         const Tensors&... others
     ) {
-        std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_storage.m_shape)};
-        out->m_storage = Op(m_storage, others.m_node->m_storage...);
+        TensorStorage out_storage = Op(m_storage, others.m_node->m_storage...);
+        std::shared_ptr<TensorNode> out {
+            std::make_shared<TensorNode>(out_storage)
+        };
+        // std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_storage.m_shape)};
+        // out->m_storage = Op(m_storage, others.m_node->m_storage...);
         out->m_bw_op = std::make_shared<BW_OP>(
             Tensor(shared_from_this()),       // First operand
             others...  // others are Tensors

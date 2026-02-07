@@ -9,6 +9,14 @@ TensorNode::TensorNode(
     m_grad{ nullptr } ,
     m_requires_grad { true } {}
 
+TensorNode::TensorNode(
+    TensorStorage& storage
+):
+    m_storage{ std::move(storage) },
+    m_bw_op{ nullptr },
+    m_grad{ nullptr } ,
+    m_requires_grad { true } {}
+
 std::ostream& operator<<(std::ostream& os, const TensorNode& tensor){
     return os << tensor.m_storage;
 }
