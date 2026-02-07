@@ -79,7 +79,7 @@ Tensor Tensor::pow(
     return m_node->pow(other);
 }
 
-Tensor Tensor::grad() {
+Tensor Tensor::grad() const {
     return Tensor(m_node->m_grad);
 }
 

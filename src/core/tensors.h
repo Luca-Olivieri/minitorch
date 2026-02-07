@@ -62,7 +62,7 @@ public:
         const Tensor& other
     );
     
-    Tensor grad();
+    Tensor grad() const;
 
     void zero_grad();
 

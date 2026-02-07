@@ -20,7 +20,7 @@ std::ostream& BackwardAdd::print(std::ostream& os) const {
     return os << "BackwardAdd";
 }
 
-void BackwardAdd::compute_operands_grad(Tensor out) {
+void BackwardAdd::compute_operands_grad(const Tensor& out) {
     m_operands[0].grad() += out.grad();
     m_operands[1].grad() += out.grad();
 }
@@ -29,7 +29,7 @@ std::ostream& BackwardMinus::print(std::ostream& os) const {
     return os << "BackwardMinus";
 }
 
-void BackwardMinus::compute_operands_grad(Tensor out) {
+void BackwardMinus::compute_operands_grad(const Tensor& out) {
     m_operands[0].grad() += -out.grad();
 }
 
@@ -37,7 +37,7 @@ std::ostream& BackwardSub::print(std::ostream& os) const {
     return os << "BackwardSub";
 }
 
-void BackwardSub::compute_operands_grad(Tensor out) {
+void BackwardSub::compute_operands_grad(const Tensor& out) {
     m_operands[0].grad() += out.grad();
     m_operands[1].grad() += -out.grad();
 }
@@ -46,7 +46,7 @@ std::ostream& BackwardMult::print(std::ostream& os) const {
     return os << "BackwardMult";
 }
 
-void BackwardMult::compute_operands_grad(Tensor out) {
+void BackwardMult::compute_operands_grad(const Tensor& out) {
     Tensor& a = m_operands[0];
     Tensor& b = m_operands[1];
     a.grad() += b * out.grad();
@@ -57,7 +57,7 @@ std::ostream& BackwardPow::print(std::ostream& os) const {
     return os << "BackwardPow";
 }
 
-void BackwardPow::compute_operands_grad(Tensor out) {
+void BackwardPow::compute_operands_grad(const Tensor& out) {
     Tensor& base = m_operands[0];
     Tensor& exp = m_operands[1];
     Tensor ones(exp.shape());
@@ -73,6 +73,6 @@ std::ostream& BackwardLog::print(std::ostream& os) const {
     return os << "BackwardPow";
 }
 
-void BackwardLog::compute_operands_grad([[maybe_unused]] Tensor out) {
+void BackwardLog::compute_operands_grad([[maybe_unused]] const Tensor& out) {
     // TensorNode& arg = *m_operands[0];
 }

@@ -21,7 +21,7 @@ public:
     
     virtual void reset_all_grads() = 0;
     
-    virtual void compute_operands_grad(Tensor out) = 0;
+    virtual void compute_operands_grad(const Tensor& out) = 0;
     
     virtual void backprop() = 0;
 };
@@ -36,7 +36,7 @@ public:
     template <typename... Tensors>
     explicit NBackwardOp(
         Tensors... operands
-    ): m_operands{{operands...}} {
+    ): m_operands{{operands...}} { // Optimization note: Move semantics (Tensors&&... and std::forward) could be used here for efficiency to avoid atomic ref-count increments on shared_ptr
         // 2. Compile-time Arity Check
         static_assert(sizeof...(Tensors) == N, 
             "Error: Number of arguments provided to constructor must match template parameter N.");
@@ -79,7 +79,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(Tensor out) override;
+    void compute_operands_grad(const Tensor& out) override;
 };
 
 class BackwardMinus : public NBackwardOp<1> {
@@ -88,7 +88,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(Tensor out) override;
+    void compute_operands_grad(const Tensor& out) override;
 };
 
 class BackwardSub : public NBackwardOp<2> {
@@ -97,7 +97,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(Tensor out) override;
+    void compute_operands_grad(const Tensor& out) override;
 };
 
 class BackwardMult : public NBackwardOp<2> {
@@ -106,7 +106,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(Tensor out) override;
+    void compute_operands_grad(const Tensor& out) override;
 };
 
 class BackwardPow : public NBackwardOp<2> {
@@ -115,7 +115,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(Tensor out) override;
+    void compute_operands_grad(const Tensor& out) override;
 };
 
 class BackwardLog : public NBackwardOp<1> {
@@ -124,7 +124,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(Tensor out) override;
+    void compute_operands_grad(const Tensor& out) override;
 };
 
 

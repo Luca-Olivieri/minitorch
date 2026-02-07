@@ -1,9 +1,6 @@
 #include <iostream>
 
 #include "core/tensors.h"
-#include "core/tensor_storages.h"
-#include "core/tensor_nodes.h"
-#include "core/backward_ops.h"
 #include "core/formatting.h"
 
 Tensor forward(
