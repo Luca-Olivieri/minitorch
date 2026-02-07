@@ -29,7 +29,7 @@ public:
     bool is_contiguous();
 
     Tensor operator+(
-        Tensor& other
+        const Tensor& other
     );
     
     void operator+=(
@@ -38,15 +38,23 @@ public:
 
     Tensor operator-();
     
+    Tensor operator-(
+        const Tensor& other
+    );
+    
     Tensor operator*(
-        Tensor& other
+        const Tensor& other
     );
     
     Tensor pow(
-        Tensor& other
+        const Tensor& other
     );
     
+    Tensor grad();
+
     void zero_grad();
+
+    const std::vector<size_t>& shape();
 
     void backward();
 

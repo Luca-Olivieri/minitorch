@@ -36,6 +36,17 @@ void BackwardMinus::compute_operands_grad(TensorNode& out) {
     *(a.m_grad) += *(-*(out.m_grad));
 }
 
+std::ostream& BackwardSub::print(std::ostream& os) const {
+    return os << "BackwardSub";
+}
+
+void BackwardSub::compute_operands_grad(TensorNode& out) {
+    TensorNode& a = *m_operands[0];
+    TensorNode& b = *m_operands[1];
+    *(a.m_grad) += *(out.m_grad);
+    *(b.m_grad) += *(-*(out.m_grad));
+}
+
 std::ostream& BackwardMult::print(std::ostream& os) const {
     return os << "BackwardMult";
 }

@@ -57,6 +57,12 @@ std::shared_ptr<TensorNode> TensorNode::operator-() {
     return apply_op_ag<TensorStorage::s_minus, BackwardMinus>();
 }
 
+std::shared_ptr<TensorNode> TensorNode::operator-(
+    TensorNode& other
+) {
+    return apply_op_ag<TensorStorage::s_sub, BackwardSub>(other);
+}
+
 std::shared_ptr<TensorNode> TensorNode::operator*(
     TensorNode& other
 ) {

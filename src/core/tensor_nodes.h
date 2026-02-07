@@ -58,6 +58,10 @@ public:
     
     std::shared_ptr<TensorNode> operator-();
     
+    std::shared_ptr<TensorNode> operator-(
+        TensorNode& other
+    );
+    
     std::shared_ptr<TensorNode> operator*(
         TensorNode& other
     );

@@ -44,7 +44,7 @@ bool Tensor::is_contiguous() {
 }
 
 Tensor Tensor::operator+(
-    Tensor& other
+    const Tensor& other
 ) {
     return Tensor((*m_node) + (*other.m_node));
 }
@@ -60,20 +60,34 @@ Tensor Tensor::operator-(
     return Tensor(-(*m_node));
 }
 
+Tensor Tensor::operator-(
+    const Tensor& other
+) {
+    return Tensor((*m_node) - (*other.m_node));
+}
+
 Tensor Tensor::operator*(
-    Tensor& other
+    const Tensor& other
 ) {
     return Tensor((*m_node) * (*other.m_node));
 }
 
 Tensor Tensor::pow(
-    Tensor& other
+    const Tensor& other
 ) {
     return Tensor(m_node->pow(*other.m_node));
 }
 
+Tensor Tensor::grad() {
+    return Tensor(m_node->m_grad);
+}
+
 void Tensor::zero_grad() {
     m_node->zero_grad();
+}
+
+const std::vector<size_t>& Tensor::shape() {
+    return m_node->m_value.m_shape;
 }
 
 void Tensor::backward() {

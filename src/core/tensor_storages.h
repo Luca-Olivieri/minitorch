@@ -85,6 +85,11 @@ public:
         TensorStorage& a,
         const TensorStorage& b
     );
+
+    static TensorStorage s_sub(
+        const TensorStorage& a,
+        const TensorStorage& b
+    );
     
     static TensorStorage s_minus(
         const TensorStorage& a
