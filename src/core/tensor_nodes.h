@@ -5,7 +5,7 @@
 
 class BackwardOp;
 
-class TensorNode {
+class TensorNode : public std::enable_shared_from_this<TensorNode> {
 public:
     TensorStorage m_value;
     
@@ -41,8 +41,8 @@ public:
         std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_value.m_shape)};
         out->m_value = Op(m_value, others.m_value...);
         out->m_bw_op = std::make_shared<BW_OP>(
-            const_cast<TensorNode*>(this),       // First operand
-            const_cast<TensorNode*>(&others)...  // Expand references to pointers
+            shared_from_this(),       // First operand
+            others.shared_from_this()...  // Expand references to pointers
         );
 
         return out;
