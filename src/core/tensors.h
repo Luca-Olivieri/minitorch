@@ -1,14 +1,26 @@
 #ifndef TENSORS_H
 #define TENSORS_H
 
-#include "tensor_nodes.h"
+#include <memory>
+#include <vector>
+#include <iostream>
+
+class TensorNode;
 
 class Tensor {
 public:
     std::shared_ptr<TensorNode> m_node;
 
+    friend class TensorNode;
+
     Tensor(
         std::vector<size_t> shape
+    );
+
+    Tensor();
+    
+    Tensor(
+        std::shared_ptr<TensorNode> node
     );
 
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
@@ -61,12 +73,6 @@ public:
     void backprop();
 
 private:
-    
-    Tensor();
-    
-    Tensor(
-        std::shared_ptr<TensorNode> node
-    );
 };
 
 

@@ -41,41 +41,41 @@ bool TensorNode::is_contiguous() {
     return m_value.is_contiguous();
 }
 
-std::shared_ptr<TensorNode> TensorNode::operator+(
-    TensorNode& other
+Tensor TensorNode::operator+(
+    const Tensor& other
 ) {
     return apply_op_ag<TensorStorage::s_add, BackwardAdd>(other);
 }
 
 void TensorNode::operator+=(
-    TensorNode& other
+    const Tensor& other
 ) {
-    TensorStorage::s_add_inplace(m_value, other.m_value);
+    TensorStorage::s_add_inplace(m_value, other.m_node->m_value);
 }
 
-std::shared_ptr<TensorNode> TensorNode::operator-() {
+Tensor TensorNode::operator-() {
     return apply_op_ag<TensorStorage::s_minus, BackwardMinus>();
 }
 
-std::shared_ptr<TensorNode> TensorNode::operator-(
-    TensorNode& other
+Tensor TensorNode::operator-(
+    const Tensor& other
 ) {
     return apply_op_ag<TensorStorage::s_sub, BackwardSub>(other);
 }
 
-std::shared_ptr<TensorNode> TensorNode::operator*(
-    TensorNode& other
+Tensor TensorNode::operator*(
+    const Tensor& other
 ) {
     return apply_op_ag<TensorStorage::s_mult, BackwardMult>(other);
 }
 
-std::shared_ptr<TensorNode> TensorNode::pow(
-    TensorNode& other
+Tensor TensorNode::pow(
+    const Tensor& other
 ) {
     return apply_op_ag<TensorStorage::s_pow, BackwardPow>(other);
 }
 
-std::shared_ptr<TensorNode> TensorNode::log() {
+Tensor TensorNode::log() {
     return apply_op_ag<TensorStorage::s_log, BackwardLog>();
 }
 
@@ -103,7 +103,7 @@ void TensorNode::backward() {
 void TensorNode::backprop() {
     if (m_bw_op) {
         m_bw_op->init_operands_grad_if_none();
-        m_bw_op->compute_operands_grad(*this);
+        m_bw_op->compute_operands_grad(Tensor(shared_from_this()));
         m_bw_op->backprop();
     }
 }

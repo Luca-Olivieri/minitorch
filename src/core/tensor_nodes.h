@@ -2,6 +2,7 @@
 #define TENSOR_NODES_H
 
 #include "tensor_storages.h"
+#include "tensors.h"
 
 class BackwardOp;
 
@@ -35,42 +36,43 @@ public:
     bool is_contiguous();
     
     template <auto Op, typename BW_OP, typename... Tensors>
-    std::shared_ptr<TensorNode> apply_op_ag(
-        Tensors&... others
+    Tensor apply_op_ag(
+        const Tensors&... others
     ) {
         std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_value.m_shape)};
-        out->m_value = Op(m_value, others.m_value...);
+        out->m_value = Op(m_value, others.m_node->m_value...);
         out->m_bw_op = std::make_shared<BW_OP>(
-            shared_from_this(),       // First operand
-            others.shared_from_this()...  // Expand references to pointers
+            Tensor(shared_from_this()),       // First operand
+            others...  // others are Tensors
         );
 
-        return out;
+        return Tensor(out);
     }
     
-    std::shared_ptr<TensorNode> operator+(
-        TensorNode& other
+    Tensor operator+(
+        const Tensor& other
     );
     
     void operator+=(
-        TensorNode& other
+        const Tensor& other
     );
     
-    std::shared_ptr<TensorNode> operator-();
+    Tensor operator-();
     
-    std::shared_ptr<TensorNode> operator-(
-        TensorNode& other
+    Tensor operator-(
+        const Tensor& other
     );
     
-    std::shared_ptr<TensorNode> operator*(
-        TensorNode& other
+    Tensor operator*(
+        const Tensor& other
     );
     
-    std::shared_ptr<TensorNode> pow(
-        TensorNode& other
+    Tensor pow(
+        const Tensor& other
     );
     
-    std::shared_ptr<TensorNode> log();
+    Tensor log();
+
 
     void reset_grad();
     

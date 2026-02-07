@@ -20,61 +20,59 @@ std::ostream& BackwardAdd::print(std::ostream& os) const {
     return os << "BackwardAdd";
 }
 
-void BackwardAdd::compute_operands_grad(TensorNode& out) {
-    TensorNode& a = *m_operands[0];
-    TensorNode& b = *m_operands[1];
-    *(a.m_grad) += *(out.m_grad);
-    *(b.m_grad) += *(out.m_grad);
+void BackwardAdd::compute_operands_grad(Tensor out) {
+    m_operands[0].grad() += out.grad();
+    m_operands[1].grad() += out.grad();
 }
 
 std::ostream& BackwardMinus::print(std::ostream& os) const {
     return os << "BackwardMinus";
 }
 
-void BackwardMinus::compute_operands_grad(TensorNode& out) {
-    TensorNode& a = *m_operands[0];
-    *(a.m_grad) += *(-*(out.m_grad));
+void BackwardMinus::compute_operands_grad(Tensor out) {
+    m_operands[0].grad() += -out.grad();
 }
 
 std::ostream& BackwardSub::print(std::ostream& os) const {
     return os << "BackwardSub";
 }
 
-void BackwardSub::compute_operands_grad(TensorNode& out) {
-    TensorNode& a = *m_operands[0];
-    TensorNode& b = *m_operands[1];
-    *(a.m_grad) += *(out.m_grad);
-    *(b.m_grad) += *(-*(out.m_grad));
+void BackwardSub::compute_operands_grad(Tensor out) {
+    m_operands[0].grad() += out.grad();
+    m_operands[1].grad() += -out.grad();
 }
 
 std::ostream& BackwardMult::print(std::ostream& os) const {
     return os << "BackwardMult";
 }
 
-void BackwardMult::compute_operands_grad(TensorNode& out) {
-    TensorNode& a = *m_operands[0];
-    TensorNode& b = *m_operands[1];
-    *(a.m_grad) += *(b * *(out.m_grad));
-    *(b.m_grad) += *(a * *(out.m_grad));
+void BackwardMult::compute_operands_grad(Tensor out) {
+    Tensor& a = m_operands[0];
+    Tensor& b = m_operands[1];
+    a.grad() += b * out.grad();
+    b.grad() += a * out.grad();
 }
 
 std::ostream& BackwardPow::print(std::ostream& os) const {
     return os << "BackwardPow";
 }
 
-void BackwardPow::compute_operands_grad(TensorNode& out) {
-    TensorNode& base = *m_operands[0];
-    TensorNode& exp = *m_operands[1];
-    std::shared_ptr<TensorNode> ones = std::make_shared<TensorNode>(exp.m_value.m_shape);
-    ones->m_value.fill(1.0f);
-    *(base.m_grad) += *(*(exp * *base.pow(*(exp + *(-(*ones))))) * *(out.m_grad));
-    *(exp.m_grad) += *(*(*base.pow(exp) * *(base.log())) * *(out.m_grad));
+void BackwardPow::compute_operands_grad(Tensor out) {
+    Tensor& base = m_operands[0];
+    Tensor& exp = m_operands[1];
+    Tensor ones(exp.shape());
+    ones.fill(1.0f);
+    
+    base.grad() += (exp * base.pow(exp - ones)) * out.grad();
+    
+    Tensor log_base(base.m_node->log());
+    exp.grad() += (base.pow(exp) * log_base) * out.grad();
 }
 
 std::ostream& BackwardLog::print(std::ostream& os) const {
     return os << "BackwardPow";
 }
 
-void BackwardLog::compute_operands_grad([[maybe_unused]] TensorNode& out) {
+void BackwardLog::compute_operands_grad([[maybe_unused]] Tensor out) {
     // TensorNode& arg = *m_operands[0];
 }

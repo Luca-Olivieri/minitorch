@@ -1,4 +1,5 @@
 #include "tensors.h"
+#include "tensor_nodes.h"
 
 Tensor::Tensor(
     std::vector<size_t> shape
@@ -46,36 +47,36 @@ bool Tensor::is_contiguous() {
 Tensor Tensor::operator+(
     const Tensor& other
 ) {
-    return Tensor((*m_node) + (*other.m_node));
+    return (*m_node) + other;
 }
 
 void Tensor::operator+=(
     const Tensor& other
 ) {
-    *m_node += *other.m_node;
+    *m_node += other;
 }
 
 Tensor Tensor::operator-(
 ) {
-    return Tensor(-(*m_node));
+    return -(*m_node);
 }
 
 Tensor Tensor::operator-(
     const Tensor& other
 ) {
-    return Tensor((*m_node) - (*other.m_node));
+    return (*m_node) - other;
 }
 
 Tensor Tensor::operator*(
     const Tensor& other
 ) {
-    return Tensor((*m_node) * (*other.m_node));
+    return (*m_node) * other;
 }
 
 Tensor Tensor::pow(
     const Tensor& other
 ) {
-    return Tensor(m_node->pow(*other.m_node));
+    return m_node->pow(other);
 }
 
 Tensor Tensor::grad() {

@@ -21,7 +21,7 @@ public:
     
     virtual void reset_all_grads() = 0;
     
-    virtual void compute_operands_grad(TensorNode& out) = 0;
+    virtual void compute_operands_grad(Tensor out) = 0;
     
     virtual void backprop() = 0;
 };
@@ -30,7 +30,7 @@ template <size_t N>
 class NBackwardOp: public BackwardOp {
 public:
     static constexpr size_t s_N = N; // expose N as a static member
-    std::array<std::shared_ptr<TensorNode>, N> m_operands;
+    std::array<Tensor, N> m_operands;
 
         // 1. Variadic Template Constructor
     template <typename... Tensors>
@@ -42,33 +42,33 @@ public:
             "Error: Number of arguments provided to constructor must match template parameter N.");
             
         // 3. (Optional) Strict Type Checking using C++17 Fold Expressions
-        // This ensures every argument is actually a TensorNode*
-        static_assert((std::is_convertible_v<Tensors, std::shared_ptr<TensorNode>> && ...), 
-            "Error: All arguments must be implicitly convertible to TensorNode*.");
+        // This ensures every argument is actually a Tensor
+        static_assert((std::is_convertible_v<Tensors, Tensor> && ...), 
+            "Error: All arguments must be implicitly convertible to Tensor.");
     }
 
     void init_operands_grad_if_none() {
         for (size_t i {0}; i<N; i++) {
-            std::shared_ptr<TensorNode> operand = m_operands[i];
+            Tensor& operand = m_operands[i];
 
-            if (!operand->m_grad) {
-                operand->m_grad = std::make_shared<TensorNode>(operand->m_value.m_shape);
-                operand->m_grad->m_requires_grad = false;
+            if (!operand.m_node->m_grad) {
+                operand.m_node->m_grad = std::make_shared<TensorNode>(operand.shape());
+                operand.m_node->m_grad->m_requires_grad = false;
             }
         }
     }
 
     void backprop() {
         for (size_t i {0}; i<N; i++) {
-            std::shared_ptr<TensorNode> operand = m_operands[i];
-            operand->backprop();
+            Tensor& operand = m_operands[i];
+            operand.backprop();
         }
     }
 
     void reset_all_grads() {
         for (size_t i {0}; i<N; i++) {
-            std::shared_ptr<TensorNode> operand = m_operands[i];
-            operand->zero_grad();
+            Tensor& operand = m_operands[i];
+            operand.zero_grad();
         }
     }
 };
@@ -79,7 +79,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(TensorNode& out) override;
+    void compute_operands_grad(Tensor out) override;
 };
 
 class BackwardMinus : public NBackwardOp<1> {
@@ -88,7 +88,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(TensorNode& out) override;
+    void compute_operands_grad(Tensor out) override;
 };
 
 class BackwardSub : public NBackwardOp<2> {
@@ -97,7 +97,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(TensorNode& out) override;
+    void compute_operands_grad(Tensor out) override;
 };
 
 class BackwardMult : public NBackwardOp<2> {
@@ -106,7 +106,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(TensorNode& out) override;
+    void compute_operands_grad(Tensor out) override;
 };
 
 class BackwardPow : public NBackwardOp<2> {
@@ -115,7 +115,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(TensorNode& out) override;
+    void compute_operands_grad(Tensor out) override;
 };
 
 class BackwardLog : public NBackwardOp<1> {
@@ -124,7 +124,8 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(TensorNode& out) override;
+    void compute_operands_grad(Tensor out) override;
 };
+
 
 #endif
