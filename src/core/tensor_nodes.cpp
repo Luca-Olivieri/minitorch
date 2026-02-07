@@ -75,6 +75,10 @@ std::shared_ptr<TensorNode> TensorNode::pow(
     return apply_op_ag<TensorStorage::s_pow, BackwardPow>(other);
 }
 
+std::shared_ptr<TensorNode> TensorNode::log() {
+    return apply_op_ag<TensorStorage::s_log, BackwardLog>();
+}
+
 void TensorNode::reset_grad() {
     m_grad->fill(0);
     m_grad->m_bw_op = nullptr;

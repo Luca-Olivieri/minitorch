@@ -118,4 +118,13 @@ public:
     void compute_operands_grad(TensorNode& out) override;
 };
 
+class BackwardLog : public NBackwardOp<1> {
+public:
+    using NBackwardOp<s_N>::NBackwardOp;
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(TensorNode& out) override;
+};
+
 #endif

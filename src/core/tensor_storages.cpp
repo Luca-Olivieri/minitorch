@@ -265,13 +265,6 @@ TensorStorage& TensorStorage::s_add_inplace(TensorStorage& a, const TensorStorag
     );
 }
 
-TensorStorage TensorStorage::s_sub(const TensorStorage& a, const TensorStorage& b) {
-    return s_apply_op(
-        [](float x, float y) { return x - y; }, 
-        a, b
-    );
-}
-
 TensorStorage TensorStorage::s_minus(const TensorStorage& a) {
     return s_apply_op(
         [](float x) { return -x; }, 
@@ -279,10 +272,21 @@ TensorStorage TensorStorage::s_minus(const TensorStorage& a) {
     );
 }
 
+TensorStorage TensorStorage::s_sub(const TensorStorage& a, const TensorStorage& b) {
+    return TensorStorage::s_add(a, TensorStorage::s_minus(b));
+}
+
 TensorStorage TensorStorage::s_pow(const TensorStorage& base, const TensorStorage& exp) {
     return s_apply_op(
-        [](float base, float exp) { return std::pow(base, exp); }, 
+        [](float base_, float exp_) { return std::pow(base_, exp_); }, 
         base, exp
+    );
+}
+
+TensorStorage TensorStorage::s_log(const TensorStorage& arg) {
+    return s_apply_op(
+        [](float arg_) { return std::log(arg_); }, 
+        arg
     );
 }
 

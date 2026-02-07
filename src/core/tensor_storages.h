@@ -100,6 +100,10 @@ public:
         const TensorStorage& exp
     );
     
+    static TensorStorage s_log(
+        const TensorStorage& arg
+    );
+    
 private:
     static std::vector<size_t> s_init_strides(
         const std::vector<size_t>& shape

@@ -69,6 +69,8 @@ public:
     std::shared_ptr<TensorNode> pow(
         TensorNode& other
     );
+    
+    std::shared_ptr<TensorNode> log();
 
     void reset_grad();
     
