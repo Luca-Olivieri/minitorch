@@ -232,11 +232,3 @@ void TensorNode::backward(bool create_graph) {
 
     topological_backprop(in_degree, create_graph);
 }
-
-void TensorNode::backprop(bool create_graph) {
-    // Deprecated / Recursive fallback
-    if (m_bw_op) {
-        m_bw_op->compute_operands_grad(Tensor(shared_from_this()), create_graph);
-        m_bw_op->backprop(create_graph);
-    }
-}

@@ -22,8 +22,6 @@ public:
     virtual void reset_all_grads() = 0;
     
     virtual void compute_operands_grad(const Tensor& out, bool create_graph = false) = 0;
-    
-    virtual void backprop(bool create_graph = false) = 0;
 
     virtual std::vector<Tensor> get_operands() const = 0;
 };
@@ -61,13 +59,6 @@ public:
         }
     }
     */
-
-    void backprop(bool create_graph = false) override {
-        for (size_t i {0}; i<N; i++) {
-            Tensor& operand = m_operands[i];
-            operand.backprop(create_graph);
-        }
-    }
 
     void reset_all_grads() override {
         for (size_t i {0}; i<N; i++) {

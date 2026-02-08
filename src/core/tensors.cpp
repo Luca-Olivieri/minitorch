@@ -108,10 +108,6 @@ void Tensor::backward(bool create_graph) {
     m_node->backward(create_graph);
 }
 
-void Tensor::backprop(bool create_graph) {
-    m_node->backprop(create_graph);
-}
-
 void Tensor::accumulate_grad(const Tensor& gradient, bool create_graph) {
     m_node->accumulate_grad(gradient, create_graph);
 }

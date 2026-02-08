@@ -111,10 +111,6 @@ public:
     void backward(
         bool create_graph = false
     );
-    
-    void backprop(
-        bool create_graph = false
-    );
 
     void accumulate_grad(
         const Tensor& gradient,
