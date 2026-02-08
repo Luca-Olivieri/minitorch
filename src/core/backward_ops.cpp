@@ -70,7 +70,7 @@ void BackwardPow::compute_operands_grad(const Tensor& out) {
     Tensor& base = m_operands[0];
     Tensor& exp = m_operands[1];
     Tensor ones(exp.shape());
-    ones.fill(1.0f);
+    ones.fill_inplace(1.0f);
     
     base.grad() += (exp * base.pow(exp - ones)) * out.grad();
     

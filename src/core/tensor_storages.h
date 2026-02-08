@@ -38,7 +38,7 @@ public:
         const std::vector<size_t>& md_index
     );
     
-    void fill(
+    void fill_inplace(
         float value
     );
     
@@ -55,7 +55,7 @@ public:
         size_t index_end
     );
     
-    void linspace(
+    void linspace_inplace(
         float start,
         float end
     );

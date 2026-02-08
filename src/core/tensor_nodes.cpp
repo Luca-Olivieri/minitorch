@@ -32,17 +32,17 @@ float& TensorNode::item() {
     return m_storage.item();
 }
 
-void TensorNode::fill(
+void TensorNode::fill_inplace(
     float value
 ) {
-    m_storage.fill(value);
+    m_storage.fill_inplace(value);
 }
 
-void TensorNode::linspace(
+void TensorNode::linspace_inplace(
     float start,
     float end
 ) {
-    m_storage.linspace(start, end);
+    m_storage.linspace_inplace(start, end);
 }
 
 bool TensorNode::is_contiguous() {
@@ -102,7 +102,7 @@ Tensor TensorNode::log() {
 }
 
 void TensorNode::reset_grad() {
-    m_grad->fill(0);
+    m_grad->fill_inplace(0);
     m_grad->m_bw_op = nullptr;
     m_grad->m_grad = nullptr;
 }
@@ -118,7 +118,7 @@ void TensorNode::zero_grad() {
 
 void TensorNode::backward() {
     m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
-    m_grad->fill(1.0f);
+    m_grad->fill_inplace(1.0f);
     backprop();
 }
 

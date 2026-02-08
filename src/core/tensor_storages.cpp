@@ -135,7 +135,7 @@ bool TensorStorage::is_contiguous() {
     return true;
 }
 
-void TensorStorage::fill(
+void TensorStorage::fill_inplace(
     float value
 ) {
     for (size_t i = 0; i < m_numel; i++) {
@@ -143,7 +143,7 @@ void TensorStorage::fill(
     }
 }
 
-void TensorStorage::linspace(
+void TensorStorage::linspace_inplace(
     float start,
     float end
 ) {

@@ -27,17 +27,17 @@ float& Tensor::item() {
     return m_node->item();
 }
 
-void Tensor::fill(
+void Tensor::fill_inplace(
     float value
 ) {
-    m_node->fill(value);
+    m_node->fill_inplace(value);
 }
 
-void Tensor::linspace(
+void Tensor::linspace_inplace(
     float start,
     float end
 ) {
-    m_node->linspace(start, end);
+    m_node->linspace_inplace(start, end);
 }
 
 bool Tensor::is_contiguous() {

@@ -34,11 +34,11 @@ public:
 
     float& item();
     
-    void fill(
+    void fill_inplace(
         float value
     );
 
-    void linspace(
+    void linspace_inplace(
         float start,
         float end
     );

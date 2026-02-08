@@ -48,7 +48,7 @@ void test_tensor_access_errors() {
 
 // void test_dice() {
 //     Tensor t({5});
-//     t.fill(1.0f);
+//     t.fill_inplace(1.0f);
 //     // Dice 0-2 (size 2)
 //     t.m_node->m_storage.dice(0, 0, 2);
 //     ASSERT_EQ(t.m_storage.m_shape[0], (size_t)2, "Dice shape check");
@@ -68,7 +68,7 @@ void test_tensor_access_errors() {
 
 //     // Transpose (1, 4) -> (4, 1) (Contiguous despite stride swap because dim is 1)
 //     Tensor t2({1, 4}); 
-//     t2.fill(1.0);
+//     t2.fill_inplace(1.0);
 //     t2.m_storage.transpose(0, 1);
 //     ASSERT_EQ(t2.is_contiguous(), true, "Transposed (1,4) -> (4,1) should be contiguous");
     

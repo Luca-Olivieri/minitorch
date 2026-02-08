@@ -12,7 +12,7 @@ void test_reshape_gradients() {
     // Test 1: Simple reshape - 1D to 2D
     {
         Tensor x({6});
-        x.linspace(1.0f, 6.0f);
+        x.linspace_inplace(1.0f, 6.0f);
         Tensor y = x.reshape({2, 3});
         y.backward();
         
@@ -26,7 +26,7 @@ void test_reshape_gradients() {
     // Test 2: 2D to 1D reshape
     {
         Tensor x({2, 3});
-        x.linspace(1.0f, 6.0f);
+        x.linspace_inplace(1.0f, 6.0f);
         Tensor y = x.reshape({6});
         y.backward();
         
@@ -43,11 +43,11 @@ void test_reshape_gradients() {
     // Test 3: Reshape with arithmetic operation
     {
         Tensor x({4});
-        x.linspace(1.0f, 4.0f);
+        x.linspace_inplace(1.0f, 4.0f);
         Tensor y = x.reshape({2, 2});
         
         Tensor z({2, 2});
-        z.fill(2.0f);
+        z.fill_inplace(2.0f);
         
         Tensor out = y * z;
         out.backward();
@@ -63,7 +63,7 @@ void test_reshape_gradients() {
     // Test 4: Multiple reshapes in chain
     {
         Tensor x({12});
-        x.linspace(1.0f, 12.0f);
+        x.linspace_inplace(1.0f, 12.0f);
         Tensor y = x.reshape({3, 4});
         Tensor z = y.reshape({2, 6});
         z.backward();
@@ -77,12 +77,12 @@ void test_reshape_gradients() {
     // Test 5: Reshape with addition
     {
         Tensor x({6});
-        x.fill(1.0f);
+        x.fill_inplace(1.0f);
         
         Tensor y = x.reshape({2, 3});
         
         Tensor b({2, 3});
-        b.fill(3.0f);
+        b.fill_inplace(3.0f);
         
         Tensor out = y + b;
         out.backward();
@@ -97,7 +97,7 @@ void test_reshape_gradients() {
     // Test 6: Complex reshape dimensions
     {
         Tensor x({24});
-        x.linspace(1.0f, 24.0f);
+        x.linspace_inplace(1.0f, 24.0f);
         Tensor y = x.reshape({2, 3, 4});
         y.backward();
         
@@ -110,12 +110,12 @@ void test_reshape_gradients() {
     // Test 7: Reshape with power operation
     {
         Tensor x({4});
-        x.fill(2.0f);
+        x.fill_inplace(2.0f);
         
         Tensor y = x.reshape({2, 2});
         
         Tensor exp({2, 2});
-        exp.fill(3.0f);
+        exp.fill_inplace(3.0f);
         
         Tensor out = y.pow(exp);
         out.backward();
@@ -131,7 +131,7 @@ void test_reshape_gradients() {
     {
         std::vector<size_t> scalar_shape {};
         Tensor x(scalar_shape);
-        x.fill(5.0f);
+        x.fill_inplace(5.0f);
         
         Tensor y = x.reshape({1, 1});
         y.backward();
