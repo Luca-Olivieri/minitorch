@@ -11,7 +11,7 @@ Tensor::Tensor(
     std::shared_ptr<TensorNode> node
 ): m_node{node} {}
 
-Tensor::Tensor(): m_node{nullptr} {}
+// Tensor::Tensor(): m_node{nullptr} {}
 
 std::ostream& operator<<(std::ostream& os, const Tensor& tensor){
     return os << *tensor.m_node;
@@ -42,6 +42,12 @@ void Tensor::linspace(
 
 bool Tensor::is_contiguous() {
     return m_node->is_contiguous();
+}
+
+Tensor Tensor::reshape(
+    std::vector<size_t> shape
+) {
+    return m_node->reshape(shape);
 }
 
 Tensor Tensor::operator+(

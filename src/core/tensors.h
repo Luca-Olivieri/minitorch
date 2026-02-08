@@ -17,7 +17,7 @@ public:
         std::vector<size_t> shape
     );
 
-    Tensor();
+    // Tensor();
     
     Tensor(
         std::shared_ptr<TensorNode> node
@@ -39,6 +39,10 @@ public:
     );
 
     bool is_contiguous();
+
+    Tensor reshape(
+        std::vector<size_t> shape
+    );
 
     Tensor operator+(
         const Tensor& other

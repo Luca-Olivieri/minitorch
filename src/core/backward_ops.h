@@ -73,6 +73,15 @@ public:
     }
 };
 
+class BackwardReshape : public NBackwardOp<2> {
+public:
+    using NBackwardOp<s_N>::NBackwardOp;
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(const Tensor& out) override;
+};
+
 class BackwardAdd : public NBackwardOp<2> {
 public:
     using NBackwardOp<s_N>::NBackwardOp;

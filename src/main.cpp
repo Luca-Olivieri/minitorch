@@ -6,7 +6,7 @@
 Tensor forward(
     Tensor& inputs
 ) {
-    Tensor y({2, 3});
+    Tensor y({inputs.shape()});
     y.fill(2.0f);
 
     return inputs.pow(y) - inputs;
@@ -16,8 +16,10 @@ int main()
 {
     // tensor_nodes_loop();
 
-    Tensor x({2, 3});
-    x.linspace(1, 6);
+    Tensor a {{3, 2}};
+    a.linspace(-3, 3);
+    
+    Tensor x {a.reshape({2, 3})};
 
     Tensor lrs{x.shape()};
     lrs.fill(1e-2f);

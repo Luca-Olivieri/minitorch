@@ -49,6 +49,20 @@ bool TensorNode::is_contiguous() {
     return m_storage.is_contiguous();
 }
 
+Tensor TensorNode::reshape(
+    std::vector<size_t> shape
+) {
+    TensorStorage out_storage = m_storage.reshape(shape);
+    std::shared_ptr<TensorNode> out {
+        std::make_shared<TensorNode>(out_storage)
+    };
+    out->m_bw_op = std::make_shared<BackwardReshape>(
+        Tensor(shared_from_this()),
+        m_storage.m_shape
+    );
+    return Tensor(out);
+}
+
 Tensor TensorNode::operator+(
     const Tensor& other
 ) {

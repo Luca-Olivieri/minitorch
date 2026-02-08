@@ -55,7 +55,7 @@ public:
         float end
     );
     
-    void reshape(
+    TensorStorage reshape(
         std::vector<size_t> shape
     );
 

@@ -191,7 +191,7 @@ void TensorStorage::dice(
     m_shape[dim] = index_end-index_start;
 }
 
-void TensorStorage::reshape(
+TensorStorage TensorStorage::reshape(
     std::vector<size_t> shape
 ) {
     for (size_t dim : shape) {
@@ -210,9 +210,12 @@ void TensorStorage::reshape(
     if (new_numel != m_numel) {
         throw std::invalid_argument(std::format("Cannot reshape tensor of size {} into shape {}.", m_numel, shape));
     }
-    
-    m_shape = shape;
-    m_strides = TensorStorage::s_init_strides(m_shape);
+
+    TensorStorage out {m_shape};
+    out.m_flat_data = m_flat_data;
+    out.m_shape = shape;
+    out.m_strides = TensorStorage::s_init_strides(m_shape);
+    return out;
 }
 
 void TensorStorage::transpose(

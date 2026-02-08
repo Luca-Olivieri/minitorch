@@ -53,8 +53,6 @@ public:
         std::shared_ptr<TensorNode> out {
             std::make_shared<TensorNode>(out_storage)
         };
-        // std::shared_ptr<TensorNode> out {std::make_shared<TensorNode>(m_storage.m_shape)};
-        // out->m_storage = Op(m_storage, others.m_node->m_storage...);
         out->m_bw_op = std::make_shared<BW_OP>(
             Tensor(shared_from_this()),       // First operand
             others...  // others are Tensors
@@ -62,6 +60,11 @@ public:
 
         return Tensor(out);
     }
+
+    Tensor reshape(
+        std::vector<size_t> shape
+    );
+
     
     Tensor operator+(
         const Tensor& other

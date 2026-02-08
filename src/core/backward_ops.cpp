@@ -16,6 +16,15 @@ std::ostream& operator<<(std::ostream& os, const BackwardOp& op) {
     return op.print(os);
 }
 
+std::ostream& BackwardReshape::print(std::ostream& os) const {
+    return os << "BackwardReshape";
+}
+
+void BackwardReshape::compute_operands_grad(const Tensor& out) {
+    std::vector<size_t> original_shape = m_operands[1].m_node->m_storage.m_shape;
+    m_operands[0].grad() += out.grad().reshape(original_shape);
+}
+
 std::ostream& BackwardAdd::print(std::ostream& os) const {
     return os << "BackwardAdd";
 }
