@@ -43,6 +43,11 @@ public:
     Tensor reshape(
         std::vector<size_t> shape
     );
+    
+    Tensor transpose(
+        size_t dim_1,
+        size_t dim_2
+    );
 
     Tensor operator+(
         const Tensor& other

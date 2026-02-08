@@ -217,8 +217,8 @@ void TensorStorage::dice(
 }
 
 TensorStorage TensorStorage::reshape(
-    std::vector<size_t> shape
-) {
+    const std::vector<size_t>& shape
+) const {
     for (size_t dim : shape) {
         if (dim == 0) {
             throw std::invalid_argument(std::format("\nTensor shape must have positive dimensions. Got {}.", shape));
@@ -239,20 +239,25 @@ TensorStorage TensorStorage::reshape(
     TensorStorage out { m_shape, m_flat_data };
     out.m_shape = shape;
     out.m_strides = TensorStorage::s_init_strides(m_shape);
+    
     return out;
 }
 
-void TensorStorage::transpose(
+TensorStorage TensorStorage::transpose(
     size_t dim_1,
     size_t dim_2
 ) {
-    size_t temp_stride = m_strides[dim_1];
-    m_strides[dim_1] = m_strides[dim_2];
-    m_strides[dim_2] = temp_stride;
+    TensorStorage out { m_shape, m_flat_data };
 
-    size_t temp_dim = m_shape[dim_1];
-    m_shape[dim_1] = m_shape[dim_2];
-    m_shape[dim_2] = temp_dim;
+    size_t temp_stride = out.m_strides[dim_1];
+    out.m_strides[dim_1] = out.m_strides[dim_2];
+    out.m_strides[dim_2] = temp_stride;
+
+    size_t temp_dim = out.m_shape[dim_1];
+    out.m_shape[dim_1] = out.m_shape[dim_2];
+    out.m_shape[dim_2] = temp_dim;
+
+    return out;
 }
 
 TensorStorage TensorStorage::clone() const {

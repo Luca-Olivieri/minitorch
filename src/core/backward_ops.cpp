@@ -21,8 +21,25 @@ std::ostream& BackwardReshape::print(std::ostream& os) const {
 }
 
 void BackwardReshape::compute_operands_grad(const Tensor& out) {
-    std::vector<size_t> original_shape = m_operands[1].m_node->m_storage.m_shape;
+    std::vector<size_t> original_shape = m_operands[0].shape();
     m_operands[0].grad() += out.grad().reshape(original_shape);
+}
+
+std::ostream& BackwardTranspose::print(std::ostream& os) const {
+    return os << "BackwardTranspose";
+}
+
+BackwardTranspose::BackwardTranspose(
+    Tensor viewed_tensor,
+    size_t dim_1,
+    size_t dim_2
+):
+    BackwardView { viewed_tensor },
+    m_dim_1 { dim_1 },
+    m_dim_2 { dim_2 } {}
+
+void BackwardTranspose::compute_operands_grad([[maybe_unused]] const Tensor& out) {
+    m_operands[0].grad() += out.grad().transpose(m_dim_2, m_dim_1);
 }
 
 std::ostream& BackwardAdd::print(std::ostream& os) const {

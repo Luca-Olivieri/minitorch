@@ -16,10 +16,10 @@ int main()
 {
     // tensor_nodes_loop();
 
-    Tensor a {{3, 2}};
+    Tensor a {{2, 3}};
     a.linspace_inplace(-3, 3);
-    
-    Tensor x {a.reshape({2, 3})};
+
+    Tensor x {a.transpose(0, 1)};
 
     Tensor lrs{x.shape()};
     lrs.fill_inplace(1e-2f);

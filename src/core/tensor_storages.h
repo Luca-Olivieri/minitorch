@@ -61,10 +61,10 @@ public:
     );
     
     TensorStorage reshape(
-        std::vector<size_t> shape
-    );
+        const std::vector<size_t>& shape
+    ) const;
 
-    void transpose(
+    TensorStorage transpose(
         size_t dim_1,
         size_t dim_2
     );

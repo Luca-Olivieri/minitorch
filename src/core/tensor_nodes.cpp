@@ -57,8 +57,23 @@ Tensor TensorNode::reshape(
         std::make_shared<TensorNode>(out_storage)
     };
     out->m_bw_op = std::make_shared<BackwardReshape>(
+        Tensor(shared_from_this())
+    );
+    return Tensor(out);
+}
+
+Tensor TensorNode::transpose(
+    size_t dim_1,
+    size_t dim_2
+) {
+    TensorStorage out_storage = m_storage.transpose(dim_1, dim_2);
+    std::shared_ptr<TensorNode> out {
+        std::make_shared<TensorNode>(out_storage)
+    };
+    out->m_bw_op = std::make_shared<BackwardTranspose>(
         Tensor(shared_from_this()),
-        m_storage.m_shape
+        dim_1,
+        dim_2
     );
     return Tensor(out);
 }
