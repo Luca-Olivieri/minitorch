@@ -21,6 +21,11 @@ public:
         std::vector<size_t> shape
     );
     
+    TensorStorage(
+        std::vector<size_t> shape,
+        std::shared_ptr<std::vector<float>> flat_data
+    );
+    
     friend std::ostream& operator<<(std::ostream& os, const TensorStorage& tensor);
     
     bool is_contiguous();
@@ -105,6 +110,14 @@ public:
     );
     
 private:
+    static void assert_positive_dims(
+        const std::vector<size_t>& shape
+    );
+    
+    static size_t compute_numel_from_shape(
+        const std::vector<size_t>& shape
+    );
+
     static std::vector<size_t> s_init_strides(
         const std::vector<size_t>& shape
     );

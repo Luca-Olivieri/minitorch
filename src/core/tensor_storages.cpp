@@ -10,30 +10,55 @@
 
 TensorStorage::TensorStorage(
     std::vector<size_t> shape
-): 
-    m_shape(shape),
-    m_offset(0) {
+): m_offset(0) {
+
+    assert_positive_dims(shape);
+
+    size_t numel { compute_numel_from_shape(shape) };
+    
+    m_numel = numel;
+    m_shape = shape;
+    m_strides = TensorStorage::s_init_strides(m_shape);
+    
+    m_flat_data = std::make_shared<std::vector<float>>(m_numel, 0.0f);
+}
+
+TensorStorage::TensorStorage(
+    std::vector<size_t> shape,
+    std::shared_ptr<std::vector<float>> flat_data
+): m_offset(0) {
         
-    // shape validation
+    assert_positive_dims(shape);
+
+    size_t numel { compute_numel_from_shape(shape) };
+
+    if (numel != flat_data->size()) {
+        throw std::invalid_argument(std::format("\nShape {} of numel and flat_data length do not match.", numel, flat_data->size()));
+    }
+
+    m_numel = numel;
+    m_shape = shape;
+    m_strides = TensorStorage::s_init_strides(m_shape);
+
+    m_flat_data = flat_data;
+}
+
+void TensorStorage::assert_positive_dims(
+    const std::vector<size_t>& shape
+) {
     for (size_t dim : shape) {
         if (dim == 0) {
-            throw std::invalid_argument(std::format("\nTensor shape must have positive dimensions. Got {}.", m_shape));
+            throw std::invalid_argument(std::format("\nTensor shape must have positive dimensions. Got {}.", shape));
         }
     }
-    
+}
+
+size_t TensorStorage::compute_numel_from_shape(
+    const std::vector<size_t>& shape
+) {
     size_t numel { 1 };
-    if (m_shape.empty()) {
-        m_numel = 1;
-    }
-    else {
-        for (size_t dim : shape) {
-            numel *= dim;
-        }
-        m_numel = numel;
-    }
-    m_strides = TensorStorage::s_init_strides(m_shape);
-    m_flat_data = std::make_shared<std::vector<float>>(m_numel, 0.0f);
-    
+    for (size_t dim : shape) numel *= dim;
+    return numel;
 }
 
 std::vector<size_t> TensorStorage::s_init_strides(
@@ -211,8 +236,7 @@ TensorStorage TensorStorage::reshape(
         throw std::invalid_argument(std::format("Cannot reshape tensor of size {} into shape {}.", m_numel, shape));
     }
 
-    TensorStorage out {m_shape};
-    out.m_flat_data = m_flat_data;
+    TensorStorage out { m_shape, m_flat_data };
     out.m_shape = shape;
     out.m_strides = TensorStorage::s_init_strides(m_shape);
     return out;
