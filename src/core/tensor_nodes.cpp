@@ -158,17 +158,11 @@ void TensorNode::accumulate_grad(const Tensor& gradient, bool create_graph) {
     m_grad = new_grad.m_node;    
 }
 
-void TensorNode::backward(bool create_graph) {
-    m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
-    m_grad->fill_inplace(1.0f);
-    m_grad->m_requires_grad = false;
-    
-    // Topological sort to ensure correctness for DAGs (shared nodes)
-    // Map to store in-degrees (number of parents in the computation graph that use this node)
+std::map<TensorNode*, int> TensorNode::compute_in_degree() {
     std::map<TensorNode*, int> in_degree;
     std::queue<TensorNode*> bfs_queue;
     std::set<TensorNode*> visited;
-    
+
     bfs_queue.push(this);
     visited.insert(this);
     in_degree[this] = 0; 
@@ -190,7 +184,14 @@ void TensorNode::backward(bool create_graph) {
             }
         }
     }
-    
+
+    return in_degree;
+}
+
+void TensorNode::topological_backprop(
+    std::map<TensorNode*, int>& in_degree,
+    bool create_graph
+) {
     // 2. Process in topological order
     // Queue now holds nodes with in-degree 0 (ready to process)
     std::queue<TensorNode*> process_queue;
@@ -202,7 +203,10 @@ void TensorNode::backward(bool create_graph) {
         
         if (u->m_bw_op) {
             // Push accumulated gradient to children
-            u->m_bw_op->compute_operands_grad(Tensor(u->shared_from_this()), create_graph);
+            u->m_bw_op->compute_operands_grad(
+                Tensor(u->shared_from_this()),
+                create_graph
+            );
             
             std::vector<Tensor> operands = u->m_bw_op->get_operands();
             for(auto& op : operands) {
@@ -214,6 +218,19 @@ void TensorNode::backward(bool create_graph) {
             }
         }
     }
+}
+
+void TensorNode::backward(bool create_graph) {
+    m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
+    m_grad->fill_inplace(1.0f);
+    m_grad->m_requires_grad = false;
+    
+    // Topological sort to ensure correctness for DAGs (shared nodes)
+    // Map to store in-degrees (number of parents in the computation graph that use this node)
+    
+    std::map<TensorNode*, int> in_degree { compute_in_degree() };
+
+    topological_backprop(in_degree, create_graph);
 }
 
 void TensorNode::backprop(bool create_graph) {

@@ -1,6 +1,8 @@
 #ifndef TENSOR_NODES_H
 #define TENSOR_NODES_H
 
+#include <map>
+
 #include "tensor_storages.h"
 #include "tensors.h"
 
@@ -95,10 +97,16 @@ public:
     
     Tensor log();
 
-
     void reset_grad();
     
     void zero_grad();
+
+    std::map<TensorNode*, int> compute_in_degree();
+
+    void topological_backprop(
+        std::map<TensorNode*, int>& in_degree,
+        bool create_graph
+    );
 
     void backward(
         bool create_graph = false
