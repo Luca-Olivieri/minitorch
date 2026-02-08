@@ -6,6 +6,7 @@
 
 #include "test_reshape.h"
 #include "test_transpose.h"
+#include "test_higher_order.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -94,6 +95,7 @@ int main() {
     test_tensor_access_errors();
     test_reshape_gradients();
     test_transpose_gradients();
+    test_higher_order_derivatives();
     // test_dice();
     // test_is_contiguous();
     

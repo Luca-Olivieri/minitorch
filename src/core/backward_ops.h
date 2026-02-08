@@ -17,13 +17,15 @@ public:
     virtual std::ostream& print(std::ostream& os) const = 0;
     friend std::ostream& operator<<(std::ostream& os, const BackwardOp& op);
 
-    virtual void init_operands_grad_if_none() = 0;
+    // virtual void init_operands_grad_if_none() = 0;
     
     virtual void reset_all_grads() = 0;
     
-    virtual void compute_operands_grad(const Tensor& out) = 0;
+    virtual void compute_operands_grad(const Tensor& out, bool create_graph = false) = 0;
     
-    virtual void backprop() = 0;
+    virtual void backprop(bool create_graph = false) = 0;
+
+    virtual std::vector<Tensor> get_operands() const = 0;
 };
 
 template <size_t N>
@@ -47,6 +49,7 @@ public:
             "Error: All arguments must be implicitly convertible to Tensor.");
     }
 
+    /*
     void init_operands_grad_if_none() {
         for (size_t i {0}; i<N; i++) {
             Tensor& operand = m_operands[i];
@@ -57,19 +60,29 @@ public:
             }
         }
     }
+    */
 
-    void backprop() {
+    void backprop(bool create_graph = false) override {
         for (size_t i {0}; i<N; i++) {
             Tensor& operand = m_operands[i];
-            operand.backprop();
+            operand.backprop(create_graph);
         }
     }
 
-    void reset_all_grads() {
+    void reset_all_grads() override {
         for (size_t i {0}; i<N; i++) {
             Tensor& operand = m_operands[i];
             operand.zero_grad();
         }
+    }
+
+    std::vector<Tensor> get_operands() const override {
+        std::vector<Tensor> ops;
+        ops.reserve(N);
+        for(const auto& op : m_operands) {
+            ops.push_back(op);
+        }
+        return ops;
     }
 };
 
@@ -84,7 +97,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 class BackwardTranspose : public BackwardView {
@@ -102,7 +115,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 class BackwardAdd : public NBackwardOp<2> {
@@ -111,7 +124,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 class BackwardMinus : public NBackwardOp<1> {
@@ -120,7 +133,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 class BackwardSub : public NBackwardOp<2> {
@@ -129,7 +142,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 class BackwardMult : public NBackwardOp<2> {
@@ -138,7 +151,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 class BackwardPow : public NBackwardOp<2> {
@@ -147,7 +160,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 class BackwardLog : public NBackwardOp<1> {
@@ -156,7 +169,7 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out) override;
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
 

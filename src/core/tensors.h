@@ -77,9 +77,18 @@ public:
 
     const std::vector<size_t>& shape();
 
-    void backward();
+    void backward(
+        bool create_graph = false
+    );
 
-    void backprop();
+    void backprop(
+        bool create_graph = false
+    );
+
+    void accumulate_grad(
+        const Tensor& gradient,
+        bool create_graph = false
+    );
 
 private:
 };

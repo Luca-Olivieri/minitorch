@@ -1,5 +1,8 @@
 #include "tensor_nodes.h"
 #include "backward_ops.h"
+#include <queue>
+#include <map>
+#include <set>
 
 TensorNode::TensorNode(
     std::vector<size_t> shape
@@ -117,9 +120,11 @@ Tensor TensorNode::log() {
 }
 
 void TensorNode::reset_grad() {
-    m_grad->fill_inplace(0);
-    m_grad->m_bw_op = nullptr;
-    m_grad->m_grad = nullptr;
+    // Replaces the gradient with a new zeroed tensor.
+    // This ensures that any existing references to the old gradient (e.g. for higher order derivatives) are preserved intact.
+    m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
+    m_grad->fill_inplace(0.0f);
+    m_grad->m_requires_grad = false;
 }
 
 void TensorNode::zero_grad() {
@@ -131,16 +136,90 @@ void TensorNode::zero_grad() {
     }
 }
 
-void TensorNode::backward() {
-    m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
-    m_grad->fill_inplace(1.0f);
-    backprop();
+void TensorNode::accumulate_grad(const Tensor& gradient, bool create_graph) {
+    if (!m_grad) {
+        // Initialize with zeros
+        m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
+        m_grad->fill_inplace(0.0f);
+        m_grad->m_requires_grad = false;
+    }
+
+    Tensor current_grad(m_grad);
+    Tensor new_grad = current_grad + gradient;
+
+    if (!create_graph) {
+        // Detach
+        if (new_grad.m_node->m_bw_op) {
+            new_grad.m_node->m_bw_op = nullptr;
+            new_grad.m_node->m_requires_grad = false;
+        }
+    }
+
+    m_grad = new_grad.m_node;    
 }
 
-void TensorNode::backprop() {
+void TensorNode::backward(bool create_graph) {
+    m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
+    m_grad->fill_inplace(1.0f);
+    m_grad->m_requires_grad = false;
+    
+    // Topological sort to ensure correctness for DAGs (shared nodes)
+    // Map to store in-degrees (number of parents in the computation graph that use this node)
+    std::map<TensorNode*, int> in_degree;
+    std::queue<TensorNode*> bfs_queue;
+    std::set<TensorNode*> visited;
+    
+    bfs_queue.push(this);
+    visited.insert(this);
+    in_degree[this] = 0; 
+    
+    // 1. Calculate in-degrees via BFS
+    while(!bfs_queue.empty()) {
+        TensorNode* u = bfs_queue.front();
+        bfs_queue.pop();
+        
+        if (u->m_bw_op) {
+            std::vector<Tensor> operands = u->m_bw_op->get_operands();
+            for(auto& op : operands) {
+                TensorNode* v = op.m_node.get();
+                in_degree[v]++;
+                if(visited.find(v) == visited.end()) {
+                    visited.insert(v);
+                    bfs_queue.push(v);
+                }
+            }
+        }
+    }
+    
+    // 2. Process in topological order
+    // Queue now holds nodes with in-degree 0 (ready to process)
+    std::queue<TensorNode*> process_queue;
+    process_queue.push(this);
+    
+    while(!process_queue.empty()) {
+        TensorNode* u = process_queue.front();
+        process_queue.pop();
+        
+        if (u->m_bw_op) {
+            // Push accumulated gradient to children
+            u->m_bw_op->compute_operands_grad(Tensor(u->shared_from_this()), create_graph);
+            
+            std::vector<Tensor> operands = u->m_bw_op->get_operands();
+            for(auto& op : operands) {
+                TensorNode* v = op.m_node.get();
+                in_degree[v]--;
+                if(in_degree[v] == 0) {
+                    process_queue.push(v);
+                }
+            }
+        }
+    }
+}
+
+void TensorNode::backprop(bool create_graph) {
+    // Deprecated / Recursive fallback
     if (m_bw_op) {
-        m_bw_op->init_operands_grad_if_none();
-        m_bw_op->compute_operands_grad(Tensor(shared_from_this()));
-        m_bw_op->backprop();
+        m_bw_op->compute_operands_grad(Tensor(shared_from_this()), create_graph);
+        m_bw_op->backprop(create_graph);
     }
 }

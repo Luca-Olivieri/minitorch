@@ -104,10 +104,14 @@ const std::vector<size_t>& Tensor::shape() {
     return m_node->m_storage.m_shape;
 }
 
-void Tensor::backward() {
-    m_node->backward();
+void Tensor::backward(bool create_graph) {
+    m_node->backward(create_graph);
 }
 
-void Tensor::backprop() {
-    m_node->backprop();
+void Tensor::backprop(bool create_graph) {
+    m_node->backprop(create_graph);
+}
+
+void Tensor::accumulate_grad(const Tensor& gradient, bool create_graph) {
+    m_node->accumulate_grad(gradient, create_graph);
 }
