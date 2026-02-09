@@ -20,7 +20,7 @@ TensorStorage::TensorStorage(
     m_shape = shape;
     m_strides = TensorStorage::s_init_strides(m_shape);
     
-    m_flat_data = std::make_shared<std::vector<float>>(m_numel, 0.0f);
+    m_flat_data = std::make_unique<std::vector<float>>(m_numel, 0.0f);
 }
 
 void TensorStorage::assert_positive_dims(
@@ -144,7 +144,7 @@ TensorStorage TensorStorage::clone() const {
     TensorStorage out(m_shape);
     out.m_offset = m_offset;
     out.m_strides = m_strides;
-    out.m_flat_data = m_flat_data;
+    *out.m_flat_data = *m_flat_data;
     out.m_numel = m_numel;
     return out;
 }

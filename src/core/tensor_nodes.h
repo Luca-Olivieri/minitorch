@@ -20,14 +20,14 @@ public:
     );
 
     TensorNode(
-        const TensorStorage& storage
+        TensorStorage storage
     );
 
     // non-copyable object
-    TensorNode(const TensorNode&) = delete;
-    TensorNode& operator=(const TensorNode&) = delete;
-    TensorNode(TensorNode&&) = default;
-    TensorNode& operator=(TensorNode&&) = default;
+    // TensorNode(const TensorNode&) = delete;
+    // TensorNode& operator=(const TensorNode&) = delete;
+    // TensorNode(TensorNode&&) = default;
+    // TensorNode& operator=(TensorNode&&) = default;
 
     friend std::ostream& operator<<(std::ostream& os, const TensorNode& tensor);
     
@@ -52,7 +52,7 @@ public:
     ) {
         TensorStorage out_storage = Op(m_storage, others.m_node->m_storage...);
         std::shared_ptr<TensorNode> out {
-            std::make_shared<TensorNode>(out_storage)
+            std::make_shared<TensorNode>(std::move(out_storage))
         };
         out->m_bw_op = std::make_shared<BW_OP>(
             Tensor(shared_from_this()),       // First operand

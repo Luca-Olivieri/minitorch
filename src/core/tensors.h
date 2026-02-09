@@ -16,8 +16,6 @@ public:
     Tensor(
         std::vector<size_t> shape
     );
-
-    // Tensor();
     
     Tensor(
         std::shared_ptr<TensorNode> node

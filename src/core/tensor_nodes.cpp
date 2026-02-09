@@ -12,7 +12,7 @@ TensorNode::TensorNode(
     m_grad{ nullptr } {}
 
 TensorNode::TensorNode(
-    const TensorStorage& storage
+    TensorStorage storage
 ):
     m_storage{ std::move(storage) },
     m_bw_op{ nullptr },
