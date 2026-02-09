@@ -21,14 +21,9 @@ public:
         std::vector<size_t> shape
     );
     
-    TensorStorage(
-        std::vector<size_t> shape,
-        std::shared_ptr<std::vector<float>> flat_data
-    );
-    
     friend std::ostream& operator<<(std::ostream& os, const TensorStorage& tensor);
     
-    bool is_contiguous();
+    bool is_contiguous() const;
 
     float& get_entry_ref(
         size_t l_index
@@ -44,29 +39,9 @@ public:
     
     float& item();
     
-    void slice(
-        size_t dim,
-        size_t slice_index
-    );
-    
-    void dice(
-        size_t dim,
-        size_t index_start,
-        size_t index_end
-    );
-    
     void linspace_inplace(
         float start,
         float end
-    );
-    
-    TensorStorage reshape(
-        const std::vector<size_t>& shape
-    ) const;
-
-    TensorStorage transpose(
-        size_t dim_1,
-        size_t dim_2
     );
 
     TensorStorage clone() const;

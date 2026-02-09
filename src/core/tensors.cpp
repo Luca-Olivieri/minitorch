@@ -44,19 +44,6 @@ bool Tensor::is_contiguous() {
     return m_node->is_contiguous();
 }
 
-Tensor Tensor::reshape(
-    std::vector<size_t> shape
-) {
-    return m_node->reshape(shape);
-}
-
-Tensor Tensor::transpose(
-    size_t dim_1,
-    size_t dim_2
-) {
-    return m_node->transpose(dim_1, dim_2);
-}
-
 Tensor Tensor::operator+(
     const Tensor& other
 ) {

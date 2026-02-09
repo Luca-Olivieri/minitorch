@@ -9,16 +9,14 @@ TensorNode::TensorNode(
 ):
     m_storage{ shape },
     m_bw_op{ nullptr },
-    m_grad{ nullptr } ,
-    m_requires_grad { true } {}
+    m_grad{ nullptr } {}
 
 TensorNode::TensorNode(
-    TensorStorage& storage
+    const TensorStorage& storage
 ):
     m_storage{ std::move(storage) },
     m_bw_op{ nullptr },
-    m_grad{ nullptr } ,
-    m_requires_grad { true } {}
+    m_grad{ nullptr } {}
 
 std::ostream& operator<<(std::ostream& os, const TensorNode& tensor){
     return os << tensor.m_storage;
@@ -50,35 +48,6 @@ void TensorNode::linspace_inplace(
 
 bool TensorNode::is_contiguous() {
     return m_storage.is_contiguous();
-}
-
-Tensor TensorNode::reshape(
-    std::vector<size_t> shape
-) {
-    TensorStorage out_storage = m_storage.reshape(shape);
-    std::shared_ptr<TensorNode> out {
-        std::make_shared<TensorNode>(out_storage)
-    };
-    out->m_bw_op = std::make_shared<BackwardReshape>(
-        Tensor(shared_from_this())
-    );
-    return Tensor(out);
-}
-
-Tensor TensorNode::transpose(
-    size_t dim_1,
-    size_t dim_2
-) {
-    TensorStorage out_storage = m_storage.transpose(dim_1, dim_2);
-    std::shared_ptr<TensorNode> out {
-        std::make_shared<TensorNode>(out_storage)
-    };
-    out->m_bw_op = std::make_shared<BackwardTranspose>(
-        Tensor(shared_from_this()),
-        dim_1,
-        dim_2
-    );
-    return Tensor(out);
 }
 
 Tensor TensorNode::operator+(
@@ -124,7 +93,6 @@ void TensorNode::reset_grad() {
     // This ensures that any existing references to the old gradient (e.g. for higher order derivatives) are preserved intact.
     m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
     m_grad->fill_inplace(0.0f);
-    m_grad->m_requires_grad = false;
 }
 
 void TensorNode::zero_grad() {
@@ -141,7 +109,6 @@ void TensorNode::accumulate_grad(const Tensor& gradient, bool create_graph) {
         // Initialize with zeros
         m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
         m_grad->fill_inplace(0.0f);
-        m_grad->m_requires_grad = false;
     }
 
     Tensor current_grad(m_grad);
@@ -151,7 +118,6 @@ void TensorNode::accumulate_grad(const Tensor& gradient, bool create_graph) {
         // Detach
         if (new_grad.m_node->m_bw_op) {
             new_grad.m_node->m_bw_op = nullptr;
-            new_grad.m_node->m_requires_grad = false;
         }
     }
 
@@ -223,7 +189,6 @@ void TensorNode::topological_backprop(
 void TensorNode::backward(bool create_graph) {
     m_grad = std::make_shared<TensorNode>(m_storage.m_shape);
     m_grad->fill_inplace(1.0f);
-    m_grad->m_requires_grad = false;
     
     // Topological sort to ensure correctness for DAGs (shared nodes)
     // Map to store in-degrees (number of parents in the computation graph that use this node)

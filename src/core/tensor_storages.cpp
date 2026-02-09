@@ -23,26 +23,6 @@ TensorStorage::TensorStorage(
     m_flat_data = std::make_shared<std::vector<float>>(m_numel, 0.0f);
 }
 
-TensorStorage::TensorStorage(
-    std::vector<size_t> shape,
-    std::shared_ptr<std::vector<float>> flat_data
-): m_offset(0) {
-        
-    assert_positive_dims(shape);
-
-    size_t numel { compute_numel_from_shape(shape) };
-
-    if (numel != flat_data->size()) {
-        throw std::invalid_argument(std::format("\nShape {} of numel and flat_data length do not match.", numel, flat_data->size()));
-    }
-
-    m_numel = numel;
-    m_shape = shape;
-    m_strides = TensorStorage::s_init_strides(m_shape);
-
-    m_flat_data = flat_data;
-}
-
 void TensorStorage::assert_positive_dims(
     const std::vector<size_t>& shape
 ) {
@@ -126,7 +106,7 @@ float& TensorStorage::get_entry_ref(
     return (*m_flat_data)[get_flat_index_from_md(md_index)];
 }
 
-bool TensorStorage::is_contiguous() {
+bool TensorStorage::is_contiguous() const {
     std::vector<size_t> contiguous_strides = TensorStorage::s_init_strides(m_shape);
     for (size_t i = 0; i < m_shape.size(); ++i) {
         if (m_shape[i] == 1) continue; // singleton dimensions do not affect contiguity
@@ -160,113 +140,13 @@ float& TensorStorage::item() {
     return (*m_flat_data)[m_offset];
 }
 
-void TensorStorage::slice(
-    size_t dim,
-    size_t slice_index
-) {
-    if (m_shape.empty()) {
-        throw std::runtime_error("Cannot slice a scalar tensor.");
-    }
-    if (dim >= m_shape.size()) {
-        throw std::out_of_range(std::format("Tensor has {} dimensions. Got slicing of dimension {}", m_shape.size(), dim));
-    }
-    if (slice_index >= m_shape[dim]) {
-        throw std::out_of_range(std::format("Slice index {} out of bounds for dimension {} of size {}.", slice_index, dim, m_shape[dim]));
-    }
-
-    m_offset += slice_index*m_strides[dim];
-    m_numel /= m_shape[dim];
-
-    std::vector<size_t> new_shape(m_shape.size()-1); 
-    std::vector<size_t> new_strides(m_strides.size()-1); 
-    size_t j { 0 };
-    for (size_t i = 0; i < m_shape.size(); i++) {
-        if (i != dim) {
-            new_shape[j] = m_shape[i];
-            new_strides[j] = m_strides[i];
-            j++;
-        }
-    }
-    m_shape = new_shape;
-    m_strides = new_strides;
-}
-
-void TensorStorage::dice(
-    size_t dim,
-    size_t index_start,
-    size_t index_end
-) {
-    if (m_shape.empty()) {
-        throw std::runtime_error("Cannot dice a scalar tensor.");
-    }
-    if (dim >= m_shape.size()) {
-        throw std::out_of_range(std::format("Tensor has {} dimensions. Got dicing of dimension {}", m_shape.size(), dim));
-    }
-    if (index_start >= m_shape[dim] || index_end > m_shape[dim]) {
-        throw std::out_of_range(std::format("Dice [{}, {}] out of bounds for dimension {} of size {}.", index_start, index_end, dim, m_shape[dim]));
-    }
-    if (index_start >= index_end) {
-        throw std::out_of_range(std::format("Dice start ({}) should be less than to end ({}).", index_start, index_end));
-    }
-    
-    m_offset += index_start*m_strides[dim];
-    m_numel /= m_shape[dim];
-    m_numel *= index_end-index_start;
-
-    m_shape[dim] = index_end-index_start;
-}
-
-TensorStorage TensorStorage::reshape(
-    const std::vector<size_t>& shape
-) const {
-    for (size_t dim : shape) {
-        if (dim == 0) {
-            throw std::invalid_argument(std::format("\nTensor shape must have positive dimensions. Got {}.", shape));
-        }
-    }
-
-    size_t new_numel { 1 };
-    if (!shape.empty()) {
-        for (size_t dim : shape) {
-            new_numel *= dim;
-        }
-    }
-
-    if (new_numel != m_numel) {
-        throw std::invalid_argument(std::format("Cannot reshape tensor of size {} into shape {}.", m_numel, shape));
-    }
-
-    TensorStorage out { m_shape, m_flat_data };
-    out.m_shape = shape;
-    out.m_strides = TensorStorage::s_init_strides(m_shape);
-    
-    return out;
-}
-
-TensorStorage TensorStorage::transpose(
-    size_t dim_1,
-    size_t dim_2
-) {
-    TensorStorage out { m_shape, m_flat_data };
-
-    size_t temp_stride = out.m_strides[dim_1];
-    out.m_strides[dim_1] = out.m_strides[dim_2];
-    out.m_strides[dim_2] = temp_stride;
-
-    size_t temp_dim = out.m_shape[dim_1];
-    out.m_shape[dim_1] = out.m_shape[dim_2];
-    out.m_shape[dim_2] = temp_dim;
-
-    return out;
-}
-
 TensorStorage TensorStorage::clone() const {
-    TensorStorage cloned(m_shape);
-    cloned.m_offset = m_offset;
-    cloned.m_strides = m_strides;
-    cloned.m_flat_data = m_flat_data;
-    cloned.m_numel = m_numel;
-    return cloned;
+    TensorStorage out(m_shape);
+    out.m_offset = m_offset;
+    out.m_strides = m_strides;
+    out.m_flat_data = m_flat_data;
+    out.m_numel = m_numel;
+    return out;
 }
 
 bool TensorStorage::are_shapes_equal(

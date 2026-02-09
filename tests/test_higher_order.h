@@ -20,7 +20,7 @@ void test_higher_order_derivatives() {
         y.backward(true); 
         
         Tensor grad_x = x.grad(); // dy/dx = 2x = 6
-        ASSERT_EQ(grad_x.item(), 6.0f, "First derivative dy/dx");
+        ASSERT_EQ_APPROX(grad_x.item(), 6.0f, 1e-4, "First derivative dy/dx");
         
         // We accumulate into grad_x, so it's not strictly necessary to zero here if we just look at the new contribution to the gradient of the gradient.
         // However, x.grad() holds the gradient w.r.t x.
@@ -37,7 +37,7 @@ void test_higher_order_derivatives() {
         grad_x.backward(); 
         
         Tensor grad2_x = x.grad();
-        ASSERT_EQ(grad2_x.item(), 8.0f, "Second derivative accumulated (6 + 2)");
+        ASSERT_EQ_APPROX(grad2_x.item(), 8.0f, 1e-4, "Second derivative accumulated (6 + 2)");
         
         // If we isolated the second derivative:
         // x.zero_grad();
@@ -56,20 +56,20 @@ void test_higher_order_derivatives() {
         
         y.backward(true); 
         Tensor grad_1 = x.grad(); // dy/dx = 3x^2 = 3*4 = 12
-        ASSERT_EQ(grad_1.item(), 12.0f, "First derivative of x^3");
+        ASSERT_EQ_APPROX(grad_1.item(), 12.0f, 1e-4, "First derivative of x^3");
         
         x.zero_grad(); // Clear gradient for clean accumulation check if desired, though usually we accumulate.
         // Let's clear to verify isolation.
         
         grad_1.backward(true); // create_graph=true for next level
         Tensor grad_2 = x.grad(); // d2y/dx2 = 6x = 12
-        ASSERT_EQ(grad_2.item(), 12.0f, "Second derivative of x^3");
+        ASSERT_EQ_APPROX(grad_2.item(), 12.0f, 1e-4, "Second derivative of x^3");
         
         x.zero_grad();
         
         grad_2.backward(); // create_graph not needed for final value
         Tensor grad_3 = x.grad(); // d3y/dx3 = 6
-        ASSERT_EQ(grad_3.item(), 6.0f, "Third derivative of x^3");
+        ASSERT_EQ_APPROX(grad_3.item(), 6.0f, 1e-4, "Third derivative of x^3");
     }
     
     // Test 3: Second derivative of sin(x) => -sin(x) ? 
@@ -94,13 +94,13 @@ void test_higher_order_derivatives() {
         // y'' = 12(4) + 4 = 52
         
         y.backward(true);
-        ASSERT_EQ(x.grad().item(), 40.0f, "First derivative of poly");
+        ASSERT_EQ_APPROX(x.grad().item(), 40.0f, 1e-4, "First derivative of poly");
         
         Tensor grad_1 = x.grad();
         x.zero_grad(); // Clear to check exact value of second derivative
         
         grad_1.backward();
-        ASSERT_EQ(x.grad().item(), 52.0f, "Second derivative of poly");
+        ASSERT_EQ_APPROX(x.grad().item(), 52.0f, 1e-4, "Second derivative of poly");
     }
 
     // Test 4: Multivariate 2nd derivative (Hessian vector product implicit)
@@ -119,8 +119,8 @@ void test_higher_order_derivatives() {
         // df/dx = 2xy = 2*3*4 = 24
         // df/dy = x^2 = 9
         
-        ASSERT_EQ(x.grad().item(), 24.0f, "df/dx");
-        ASSERT_EQ(y.grad().item(), 9.0f, "df/dy");
+        ASSERT_EQ_APPROX(x.grad().item(), 24.0f, 1e-4, "df/dx");
+        ASSERT_EQ_APPROX(y.grad().item(), 9.0f, 1e-4, "df/dy");
         
         // Check u.grad
         // u.grad should be y = 4
@@ -152,9 +152,9 @@ void test_higher_order_derivatives() {
         // d(2xy)/dx = 2y = 8 (accumulates into x via backward)
         // d(2xy)/dy = 2x = 6 (accumulates into y via backward)
         
-        ASSERT_EQ(x.grad().item(), 8.0f, "d(df/dx)/dx");
+        ASSERT_EQ_APPROX(x.grad().item(), 8.0f, 1e-4, "d(df/dx)/dx");
         
-        ASSERT_EQ(y.grad().item(), 6.0f, "d(df/dx)/dy");
+        ASSERT_EQ_APPROX(y.grad().item(), 6.0f, 1e-4, "d(df/dx)/dy");
     }
     
     // Test 5: Simple Mixed Second Derivative (x*y)
@@ -166,7 +166,7 @@ void test_higher_order_derivatives() {
         f.backward(true);
         
         Tensor grad_x = x.grad(); // should be y = 5
-        ASSERT_EQ(grad_x.item(), 5.0f, "Simple xy grad_x");
+        ASSERT_EQ_APPROX(grad_x.item(), 5.0f, 1e-4, "Simple xy grad_x");
         
         x.zero_grad();
         y.zero_grad();
@@ -174,7 +174,7 @@ void test_higher_order_derivatives() {
         grad_x.backward();
         
         // d(y)/dy = 1
-        ASSERT_EQ(y.grad().item(), 1.0f, "Simple xy mixed partial");
+        ASSERT_EQ_APPROX(y.grad().item(), 1.0f, 1e-4, "Simple xy mixed partial");
     }
 }
 

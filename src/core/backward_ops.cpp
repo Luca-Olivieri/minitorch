@@ -16,32 +16,6 @@ std::ostream& operator<<(std::ostream& os, const BackwardOp& op) {
     return op.print(os);
 }
 
-std::ostream& BackwardReshape::print(std::ostream& os) const {
-    return os << "BackwardReshape";
-}
-
-void BackwardReshape::compute_operands_grad(const Tensor& out, bool create_graph) {
-    std::vector<size_t> original_shape = m_operands[0].shape();
-    m_operands[0].accumulate_grad(out.grad().reshape(original_shape), create_graph);
-}
-
-std::ostream& BackwardTranspose::print(std::ostream& os) const {
-    return os << "BackwardTranspose";
-}
-
-BackwardTranspose::BackwardTranspose(
-    Tensor viewed_tensor,
-    size_t dim_1,
-    size_t dim_2
-):
-    BackwardView { viewed_tensor },
-    m_dim_1 { dim_1 },
-    m_dim_2 { dim_2 } {}
-
-void BackwardTranspose::compute_operands_grad(const Tensor& out, bool create_graph) {
-    m_operands[0].accumulate_grad(out.grad().transpose(m_dim_2, m_dim_1), create_graph);
-}
-
 std::ostream& BackwardAdd::print(std::ostream& os) const {
     return os << "BackwardAdd";
 }

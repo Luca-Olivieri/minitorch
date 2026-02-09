@@ -14,14 +14,13 @@ public:
     
     std::shared_ptr<BackwardOp> m_bw_op { nullptr };
     std::shared_ptr<TensorNode> m_grad { nullptr };
-    bool m_requires_grad { true };
 
     TensorNode(
         std::vector<size_t> shape
     );
 
     TensorNode(
-        TensorStorage& storage
+        const TensorStorage& storage
     );
 
     // non-copyable object
@@ -62,16 +61,6 @@ public:
 
         return Tensor(out);
     }
-
-    Tensor reshape(
-        std::vector<size_t> shape
-    );
-
-    Tensor transpose(
-        size_t dim_1,
-        size_t dim_2
-    );
-
     
     Tensor operator+(
         const Tensor& other

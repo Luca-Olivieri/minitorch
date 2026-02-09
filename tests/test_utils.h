@@ -3,6 +3,7 @@
 #include <string_view>
 #include <stdexcept>
 #include <source_location>
+#include <cmath>
 
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
@@ -16,6 +17,33 @@ void ASSERT_EQ(T actual, T expected, std::string_view message,
     if (actual != expected) {
         std::cerr << "[FAIL] " << message << "\n"
                   << "       Expected: " << expected << ", Got: " << actual << "\n"
+                  << "       File: " << location.file_name() << "(" 
+                  << location.line() << ")\n";
+        failed_tests++;
+    } else {
+        std::cout << "[PASS] " << message << "\n";
+    }
+}
+
+template <typename T>
+void ASSERT_EQ_APPROX(T actual, T expected, double tolerance, std::string_view message, 
+                      const std::source_location location = std::source_location::current()) {
+    if (std::abs(actual - expected) > tolerance) {
+        std::cerr << "[FAIL] " << message << "\n"
+                  << "       Expected: " << expected << " (+/- " << tolerance << "), Got: " << actual << "\n"
+                  << "       File: " << location.file_name() << "(" 
+                  << location.line() << ")\n";
+        failed_tests++;
+    } else {
+        std::cout << "[PASS] " << message << "\n";
+    }
+}
+
+void ASSERT_TRUE(bool condition, std::string_view message, 
+                 const std::source_location location = std::source_location::current()) {
+    if (!condition) {
+        std::cerr << "[FAIL] " << message << "\n"
+                  << "       Expected: true, Got: false\n"
                   << "       File: " << location.file_name() << "(" 
                   << location.line() << ")\n";
         failed_tests++;

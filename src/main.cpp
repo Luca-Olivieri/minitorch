@@ -14,12 +14,7 @@ Tensor forward(
 
 int main()
 {
-    // tensor_nodes_loop();
-
-    Tensor a {{2, 3}};
-    a.linspace_inplace(-3, 3);
-
-    Tensor x {a.transpose(0, 1)};
+    Tensor x {{3, 2}};
 
     Tensor lrs{x.shape()};
     lrs.fill_inplace(1e-2f);

@@ -4,8 +4,6 @@
 #include <stdexcept>
 #include <source_location>
 
-#include "test_reshape.h"
-#include "test_transpose.h"
 #include "test_higher_order.h"
 
 void test_tensors_with_dims0() {
@@ -48,56 +46,12 @@ void test_tensor_access_errors() {
     }
 }
 
-// void test_dice() {
-//     Tensor t({5});
-//     t.fill_inplace(1.0f);
-//     // Dice 0-2 (size 2)
-//     t.m_node->m_storage.dice(0, 0, 2);
-//     ASSERT_EQ(t.m_storage.m_shape[0], (size_t)2, "Dice shape check");
-    
-//     // Test invalid dice
-//     TensorNode t2({5});
-//     ASSERT_THROWS(t2.m_storage.dice(0, 0, 6), std::out_of_range); // OOB
-//     ASSERT_THROWS(t2.m_storage.dice(0, 3, 2), std::out_of_range); // start > end
-// }
-
-// void test_is_contiguous() {
-//     std::cout << "\nRunning is_contiguous tests...\n";
-    
-//     // Default contiguous
-//     Tensor t1({2, 3});
-//     ASSERT_EQ(t1.is_contiguous(), true, "New tensor should be contiguous");
-
-//     // Transpose (1, 4) -> (4, 1) (Contiguous despite stride swap because dim is 1)
-//     Tensor t2({1, 4}); 
-//     t2.fill_inplace(1.0);
-//     t2.m_storage.transpose(0, 1);
-//     ASSERT_EQ(t2.is_contiguous(), true, "Transposed (1,4) -> (4,1) should be contiguous");
-    
-//     // Non-contiguous slice
-//     Tensor t3({4, 4});
-//     // Slice columns (dim 1)
-//     t3.Tensor.slice(1, 0); // shape (4), stride (4)
-//     ASSERT_EQ(t3.is_contiguous(), false, "Column slice of (4,4) should be non-contiguous");
-    
-//     // Contiguous slice
-//     TensorNode t4({4, 4});
-//     // Slice rows (dim 0)
-//     t4.m_storage.slice(0, 0); // shape (4), stride (1)
-//     ASSERT_EQ(t4.is_contiguous(), true, "Row slice of (4,4) should be contiguous");
-// }
-
-
 
 // --- Main ---
 int main() {
     test_tensors_with_dims0();
     test_tensor_access_errors();
-    test_reshape_gradients();
-    test_transpose_gradients();
     test_higher_order_derivatives();
-    // test_dice();
-    // test_is_contiguous();
     
     if (failed_tests == 0) {
         std::cout << "\nAll tests passed!\n";

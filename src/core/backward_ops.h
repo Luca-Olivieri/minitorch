@@ -77,38 +77,6 @@ public:
     }
 };
 
-class BackwardView: public NBackwardOp<1> {
-public:
-    using NBackwardOp<s_N>::NBackwardOp;
-};
-
-class BackwardReshape : public BackwardView {
-public:
-    using BackwardView::BackwardView;
-
-    std::ostream& print(std::ostream& os) const override;
-    
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
-};
-
-class BackwardTranspose : public BackwardView {
-public:
-    size_t m_dim_1;
-    size_t m_dim_2;
-
-    BackwardTranspose(
-        Tensor viewed_tensor,
-        size_t dim_1,
-        size_t dim_2
-    );
-
-    // using NBackwardOp<s_N>::NBackwardOp;
-
-    std::ostream& print(std::ostream& os) const override;
-    
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
-};
-
 class BackwardAdd : public NBackwardOp<2> {
 public:
     using NBackwardOp<s_N>::NBackwardOp;
