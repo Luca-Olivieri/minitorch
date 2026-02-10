@@ -18,6 +18,12 @@ TensorNode::TensorNode(
     m_bw_op{ nullptr },
     m_grad{ nullptr } {}
 
+TensorNode TensorNode::from_storage(
+    TensorStorage storage
+) {
+    return TensorNode(std::move(storage));
+}
+
 std::ostream& operator<<(std::ostream& os, const TensorNode& tensor){
     return os << tensor.m_storage;
 }

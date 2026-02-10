@@ -19,7 +19,7 @@ public:
         std::vector<size_t> shape
     );
 
-    TensorNode(
+    static TensorNode from_storage(
         TensorStorage storage
     );
 
@@ -52,7 +52,11 @@ public:
     ) {
         TensorStorage out_storage = Op(m_storage, others.m_node->m_storage...);
         std::shared_ptr<TensorNode> out {
-            std::make_shared<TensorNode>(std::move(out_storage))
+            std::make_shared<TensorNode>(
+                TensorNode::from_storage(
+                    std::move(out_storage)
+                )
+            )
         };
         out->m_bw_op = std::make_shared<BW_OP>(
             Tensor(shared_from_this()),       // First operand
@@ -108,6 +112,10 @@ public:
     void accumulate_grad(
         const Tensor& gradient,
         bool create_graph = false
+    );
+private:
+    TensorNode(
+        TensorStorage storage
     );
 };
 
