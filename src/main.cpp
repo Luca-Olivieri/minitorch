@@ -3,30 +3,69 @@
 #include "core/tensors.h"
 #include "core/formatting.h"
 
-Tensor forward(
+Tensor forward_1st(
     Tensor& inputs
 ) {
-    Tensor y({inputs.shape()});
-    y.fill_inplace(2.0f);
+    Tensor exp_2({inputs.shape()});
+    exp_2.fill_inplace(2.0f);
 
-    return inputs.pow(y) - inputs;
+    return inputs.pow(exp_2) - inputs;
 }
 
-int main()
-{
+void optimize_1st_deriv() {
     Tensor x {{3, 2}};
+    x.linspace_inplace(0.1f, 0.9f);
 
     Tensor lrs{x.shape()};
     lrs.fill_inplace(1e-2f);
 
     for (size_t i = 0; i < 1000; i++) {
-        Tensor o {forward(x)};
+        Tensor o {forward_1st(x)};
         o.backward();
         x += -lrs * x.grad();
         o.zero_grad();
     }
 
     std::cout << x << '\n';
+}
 
+Tensor forward_2nd(
+    Tensor& inputs
+) {
+    Tensor exp_2({inputs.shape()});
+    exp_2.fill_inplace(2.0f);
+    
+    Tensor exp_3({inputs.shape()});
+    exp_3.fill_inplace(3.0f);
+
+    return inputs.pow(exp_3) - inputs.pow(exp_2);
+}
+
+void optimize_2nd_deriv() {
+    Tensor x {{3, 2}};
+    x.linspace_inplace(0.1f, 0.9f);
+
+    Tensor lrs{x.shape()};
+    lrs.fill_inplace(1e-2f);
+
+    for (size_t i = 0; i < 1000; i++) {
+        Tensor o {forward_2nd(x)};
+        o.backward(true);
+        
+        Tensor grad_x { x.grad() };
+        x.zero_grad();
+        grad_x.backward();
+        
+        x += -lrs * x.grad();
+        x.zero_grad();
+    }
+
+    std::cout << x << '\n';
+}
+
+int main()
+{
+    optimize_1st_deriv();
+    optimize_2nd_deriv();
     return 0;
 }
