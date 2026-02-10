@@ -56,6 +56,12 @@ Tensor TensorNode::operator+(
     return apply_op_ag<TensorStorage::s_add, BackwardAdd>(other);
 }
 
+Tensor TensorNode::operator/(
+    const Tensor& other
+) {
+    return apply_op_ag<TensorStorage::s_div, BackwardDiv>(other);
+}
+
 void TensorNode::operator+=(
     const Tensor& other
 ) {

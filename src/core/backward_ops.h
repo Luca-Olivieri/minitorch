@@ -122,6 +122,15 @@ public:
     void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
+class BackwardDiv : public NBackwardOp<2> {
+public:
+    using NBackwardOp<s_N>::NBackwardOp;
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+};
+
 class BackwardLog : public NBackwardOp<1> {
 public:
     using NBackwardOp<s_N>::NBackwardOp;

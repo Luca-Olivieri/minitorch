@@ -53,6 +53,17 @@ void BackwardMult::compute_operands_grad(const Tensor& out, bool create_graph) {
     b.accumulate_grad(a * out.grad(), create_graph);
 }
 
+std::ostream& BackwardDiv::print(std::ostream& os) const {
+    return os << "BackwardDiv";
+}
+
+void BackwardDiv::compute_operands_grad(const Tensor& out, bool create_graph) {
+    Tensor& a = m_operands[0];
+    Tensor& b = m_operands[1];
+    a.accumulate_grad(out.grad() / b, create_graph);
+    b.accumulate_grad(-a / (b * b) * out.grad(), create_graph);
+}
+
 std::ostream& BackwardPow::print(std::ostream& os) const {
     return os << "BackwardPow";
 }
@@ -70,9 +81,10 @@ void BackwardPow::compute_operands_grad(const Tensor& out, bool create_graph) {
 }
 
 std::ostream& BackwardLog::print(std::ostream& os) const {
-    return os << "BackwardPow";
+    return os << "BackwardLog";
 }
 
 void BackwardLog::compute_operands_grad([[maybe_unused]] const Tensor& out, [[maybe_unused]] bool create_graph) {
-    // TensorNode& arg = *m_operands[0];
+    Tensor& x = m_operands[0];
+    x.accumulate_grad(out.grad() / x, create_graph);
 }

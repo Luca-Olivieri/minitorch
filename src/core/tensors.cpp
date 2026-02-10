@@ -73,6 +73,12 @@ Tensor Tensor::operator*(
     return (*m_node) * other;
 }
 
+Tensor Tensor::operator/(
+    const Tensor& other
+) {
+    return (*m_node) / other;
+}
+
 Tensor Tensor::pow(
     const Tensor& other
 ) {

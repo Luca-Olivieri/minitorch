@@ -163,6 +163,13 @@ TensorStorage TensorStorage::s_mult(const TensorStorage& a, const TensorStorage&
     );
 }
 
+TensorStorage TensorStorage::s_div(const TensorStorage& a, const TensorStorage& b) {
+    return s_apply_op(
+        [](float x, float y) { return x / y; }, 
+        a, b
+    );
+}
+
 TensorStorage TensorStorage::s_add(const TensorStorage& a, const TensorStorage& b) {
     return s_apply_op(
         [](float x, float y) { return x + y; }, 

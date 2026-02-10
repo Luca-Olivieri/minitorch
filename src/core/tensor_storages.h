@@ -56,6 +56,11 @@ public:
         const TensorStorage& b
     );
 
+    static TensorStorage s_div(
+        const TensorStorage& a,
+        const TensorStorage& b
+    );
+
     static TensorStorage s_add(
         const TensorStorage& a,
         const TensorStorage& b

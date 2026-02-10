@@ -56,6 +56,10 @@ public:
         const Tensor& other
     );
     
+    Tensor operator/(
+        const Tensor& other
+    );
+    
     Tensor pow(
         const Tensor& other
     );
