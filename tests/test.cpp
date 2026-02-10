@@ -5,10 +5,10 @@
 #include <source_location>
 
 #include "test_higher_order.h"
-#include "test_add.h"
-#include "test_neg.h"
-#include "test_sub.h"
-#include "test_mult.h"
+#include "ops/test_add.h"
+#include "ops/test_neg.h"
+#include "ops/test_sub.h"
+#include "ops/test_mult.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims

@@ -2,7 +2,7 @@
 #define TEST_SUB_H
 
 #include "src/core/tensors.h"
-#include "test_utils.h"
+#include "tests/test_utils.h"
 
 void test_tensor_sub() {
     
