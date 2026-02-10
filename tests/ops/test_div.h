@@ -5,7 +5,8 @@
 #include "tests/test_utils.h"
 
 void test_tensor_div() {
-    std::cout << "\nRunning Tensor Division tests...\n";
+    
+    std::cout << "\n===[ test_div.h ]===\n";
 
     // 1. Simple 1D division
     {

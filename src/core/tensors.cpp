@@ -85,6 +85,10 @@ Tensor Tensor::pow(
     return m_node->pow(other);
 }
 
+Tensor Tensor::log() {
+    return m_node->log();
+}
+
 Tensor Tensor::grad() const {
     return Tensor(m_node->m_grad);
 }

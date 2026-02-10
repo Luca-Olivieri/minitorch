@@ -10,6 +10,8 @@
 #include "ops/test_sub.h"
 #include "ops/test_mult.h"
 #include "ops/test_div.h"
+#include "ops/test_pow.h"
+#include "ops/test_log.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -61,6 +63,8 @@ int main() {
     test_tensor_sub();
     test_tensor_mult();
     test_tensor_div();
+    test_tensor_pow();
+    test_tensor_log();
     test_higher_order_derivatives();
     
     if (failed_tests == 0) {

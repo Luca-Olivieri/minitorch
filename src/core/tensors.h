@@ -64,6 +64,8 @@ public:
         const Tensor& other
     );
     
+    Tensor log();
+
     Tensor grad() const;
 
     void zero_grad();
