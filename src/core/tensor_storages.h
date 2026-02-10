@@ -21,6 +21,12 @@ public:
         std::vector<size_t> shape,
         float value = 0.0f
     );
+
+    static TensorStorage linspace(
+        std::vector<size_t> shape,
+        float start,
+        float end
+    );
     
     friend std::ostream& operator<<(std::ostream& os, const TensorStorage& tensor);
     
@@ -34,16 +40,25 @@ public:
         const std::vector<size_t>& md_index
     );
     
+    TensorStorage fill(
+        float value
+    );
+
     void fill_inplace(
         float value
     );
     
-    float& item();
-    
+    TensorStorage linspace(
+        float start,
+        float end
+    );
+
     void linspace_inplace(
         float start,
         float end
     );
+
+    float& item();
 
     TensorStorage clone() const;
 
@@ -91,6 +106,12 @@ public:
     );
     
 private:
+    TensorStorage(
+        std::vector<size_t> shape,
+        float start,
+        float end
+    );
+
     static void assert_positive_dims(
         const std::vector<size_t>& shape
     );

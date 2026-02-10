@@ -27,6 +27,33 @@ TensorStorage::TensorStorage(
     );
 }
 
+TensorStorage::TensorStorage(
+    std::vector<size_t> shape,
+    float start,
+    float end
+): m_offset(0) {
+
+    assert_positive_dims(shape);
+
+    size_t numel { compute_numel_from_shape(shape) };
+    
+    m_numel = numel;
+    m_shape = shape;
+    m_strides = TensorStorage::s_init_strides(m_shape);
+    
+    m_flat_data = std::make_unique<std::vector<float>>();
+    m_flat_data->reserve(m_numel);
+    linspace_inplace(start, end);
+}
+
+TensorStorage TensorStorage::linspace(
+    std::vector<size_t> shape,
+    float start,
+    float end
+) {
+    return TensorStorage(shape, start, end);
+}
+
 void TensorStorage::assert_positive_dims(
     const std::vector<size_t>& shape
 ) {
@@ -119,12 +146,27 @@ bool TensorStorage::is_contiguous() const {
     return true;
 }
 
+TensorStorage TensorStorage::fill(
+    float value
+) {
+    return TensorStorage(m_shape, value);
+}
+
 void TensorStorage::fill_inplace(
     float value
 ) {
     for (size_t i = 0; i < m_numel; i++) {
         get_entry_ref(i) = value;
     }
+}
+
+TensorStorage TensorStorage::linspace(
+    float start,
+    float end
+) {
+    TensorStorage out { m_shape };
+    out.linspace_inplace(start, end);
+    return out;
 }
 
 void TensorStorage::linspace_inplace(

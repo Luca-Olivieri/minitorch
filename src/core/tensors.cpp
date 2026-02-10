@@ -2,16 +2,18 @@
 #include "tensor_nodes.h"
 
 Tensor::Tensor(
-    std::vector<size_t> shape
+    std::vector<size_t> shape,
+    float value
 ) {
-    m_node = std::make_shared<TensorNode>(shape);
+    m_node = std::make_shared<TensorNode>(
+        shape,
+        value
+    );
 }
 
 Tensor::Tensor(
     std::shared_ptr<TensorNode> node
 ): m_node{node} {}
-
-// Tensor::Tensor(): m_node{nullptr} {}
 
 std::ostream& operator<<(std::ostream& os, const Tensor& tensor){
     return os << *tensor.m_node;
@@ -38,6 +40,27 @@ void Tensor::linspace_inplace(
     float end
 ) {
     m_node->linspace_inplace(start, end);
+}
+
+Tensor Tensor::linspace(
+    float start,
+    float end
+) {
+    return m_node->linspace(start, end);
+}
+
+Tensor Tensor::linspace(
+    std::vector<size_t> shape,
+    float start,
+    float end
+) {
+    return TensorNode::linspace(std::move(shape), start, end);
+}
+
+Tensor Tensor::fill(
+    float value
+) {
+    return m_node->fill(value);
 }
 
 bool Tensor::is_contiguous() {

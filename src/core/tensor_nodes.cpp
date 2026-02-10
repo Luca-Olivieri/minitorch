@@ -5,9 +5,10 @@
 #include <set>
 
 TensorNode::TensorNode(
-    std::vector<size_t> shape
+    std::vector<size_t> shape,
+    float value
 ):
-    m_storage{ shape },
+    m_storage{ shape, value },
     m_bw_op{ nullptr },
     m_grad{ nullptr } {}
 
@@ -45,11 +46,44 @@ void TensorNode::fill_inplace(
     m_storage.fill_inplace(value);
 }
 
+Tensor TensorNode::fill(
+    float value
+) {
+    TensorStorage out = m_storage.fill(value);
+    std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
+        TensorNode::from_storage(std::move(out))
+    );
+    return Tensor(out_node);
+}
+
 void TensorNode::linspace_inplace(
     float start,
     float end
 ) {
     m_storage.linspace_inplace(start, end);
+}
+
+Tensor TensorNode::linspace(
+    float start,
+    float end
+) {
+    TensorStorage out = m_storage.linspace(start, end);
+    std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
+        TensorNode::from_storage(std::move(out))
+    );
+    return Tensor(out_node);
+}
+
+Tensor TensorNode::linspace(
+    std::vector<size_t> shape,
+    float start,
+    float end
+) {
+    TensorStorage out = TensorStorage::linspace(std::move(shape), start, end);
+    std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
+        TensorNode::from_storage(std::move(out))
+    );
+    return Tensor(out_node);
 }
 
 bool TensorNode::is_contiguous() {

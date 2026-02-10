@@ -16,7 +16,8 @@ public:
     std::shared_ptr<TensorNode> m_grad { nullptr };
 
     TensorNode(
-        std::vector<size_t> shape
+        std::vector<size_t> shape,
+        float value = 0.0f
     );
 
     static TensorNode from_storage(
@@ -39,11 +40,25 @@ public:
         float value
     );
 
+    Tensor fill(
+        float value
+    );
+
     void linspace_inplace(
         float start,
         float end
     );
 
+    Tensor linspace(
+        float start,
+        float end
+    );
+
+    static Tensor linspace(
+        std::vector<size_t> shape,
+        float start,
+        float end
+    );
     bool is_contiguous();
     
     template <auto Op, typename BW_OP, typename... Tensors>

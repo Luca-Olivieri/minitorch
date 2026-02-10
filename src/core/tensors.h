@@ -14,7 +14,8 @@ public:
     friend class TensorNode;
 
     Tensor(
-        std::vector<size_t> shape
+        std::vector<size_t> shape,
+        float value = 0.0f
     );
     
     Tensor(
@@ -31,7 +32,22 @@ public:
         float value
     );
 
+    Tensor fill(
+        float value
+    );
+
     void linspace_inplace(
+        float start,
+        float end
+    );
+
+    Tensor linspace(
+        float start,
+        float end
+    );
+
+    static Tensor linspace(
+        std::vector<size_t> shape,
         float start,
         float end
     );
