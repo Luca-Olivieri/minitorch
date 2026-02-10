@@ -6,6 +6,9 @@
 
 #include "test_higher_order.h"
 #include "test_add.h"
+#include "test_neg.h"
+#include "test_sub.h"
+#include "test_mult.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -53,6 +56,9 @@ int main() {
     test_tensors_with_dims0();
     test_tensor_access_errors();
     test_tensor_add();
+    test_tensor_neg();
+    test_tensor_sub();
+    test_tensor_mult();
     test_higher_order_derivatives();
     
     if (failed_tests == 0) {
