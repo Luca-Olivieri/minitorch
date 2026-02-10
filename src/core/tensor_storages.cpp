@@ -9,7 +9,8 @@
 #include "formatting.h"
 
 TensorStorage::TensorStorage(
-    std::vector<size_t> shape
+    std::vector<size_t> shape,
+    float value
 ): m_offset(0) {
 
     assert_positive_dims(shape);
@@ -20,7 +21,10 @@ TensorStorage::TensorStorage(
     m_shape = shape;
     m_strides = TensorStorage::s_init_strides(m_shape);
     
-    m_flat_data = std::make_unique<std::vector<float>>(m_numel, 0.0f);
+    m_flat_data = std::make_unique<std::vector<float>>(
+        m_numel,
+        value
+    );
 }
 
 void TensorStorage::assert_positive_dims(

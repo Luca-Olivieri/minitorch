@@ -18,7 +18,8 @@ public:
     std::unique_ptr<std::vector<float>> m_flat_data;
 
     TensorStorage(
-        std::vector<size_t> shape
+        std::vector<size_t> shape,
+        float value = 0.0f
     );
     
     friend std::ostream& operator<<(std::ostream& os, const TensorStorage& tensor);
