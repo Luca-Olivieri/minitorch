@@ -5,6 +5,7 @@
 #include <source_location>
 
 #include "test_higher_order.h"
+#include "test_add.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -51,6 +52,7 @@ void test_tensor_access_errors() {
 int main() {
     test_tensors_with_dims0();
     test_tensor_access_errors();
+    test_tensor_add();
     test_higher_order_derivatives();
     
     if (failed_tests == 0) {

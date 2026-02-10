@@ -7,7 +7,8 @@
 #include "src/core/tensors.h"
 
 void test_higher_order_derivatives() {
-    std::cout << "\nRunning higher order gradient tests...\n";
+    
+    std::cout << "\n===[ test_higher_order.h ]===\n";
     
     // Test 1: Second derivative of x^2 => 2
     {
@@ -17,7 +18,7 @@ void test_higher_order_derivatives() {
         Tensor y = x * x; // y = x^2 = 9
         
         // create_graph=true to enable higher order grads
-        y.backward(true); 
+        y.backward(true);
         
         Tensor grad_x = x.grad(); // dy/dx = 2x = 6
         ASSERT_EQ_APPROX(grad_x.item(), 6.0f, 1e-4, "First derivative dy/dx");
