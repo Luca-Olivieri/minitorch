@@ -60,8 +60,8 @@ void optimize_2nd_deriv() {
 
 int main()
 {
-    // optimize_1st_deriv();
-    // optimize_2nd_deriv();
+    optimize_1st_deriv();
+    optimize_2nd_deriv();
     
     return 0;
 }

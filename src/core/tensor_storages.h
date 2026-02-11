@@ -124,13 +124,13 @@ private:
         const std::vector<size_t>& shape
     );
 
-    size_t get_flat_index_from_md(
+    size_t multi_to_linear(
         const std::vector<size_t>& md_index
     ) const;
 
-    size_t get_flat_index_from_logical(
+    size_t logical_to_linear(
         size_t logical_index
-    ) const;    
+    ) const;
 
     template <typename Func, typename... Tensors>
     static TensorStorage s_apply_op(Func op, Tensors&... operands) {

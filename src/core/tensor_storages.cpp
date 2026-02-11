@@ -85,7 +85,7 @@ std::vector<size_t> TensorStorage::s_init_strides(
     return strides;
 }
 
-size_t TensorStorage::get_flat_index_from_md(
+size_t TensorStorage::multi_to_linear(
     const std::vector<size_t>& md_index
 ) const {
     if (md_index.size() != m_shape.size()) {
@@ -102,7 +102,7 @@ size_t TensorStorage::get_flat_index_from_md(
     return flat_index;
 }
 
-size_t TensorStorage::get_flat_index_from_logical(
+size_t TensorStorage::logical_to_linear(
     size_t l_index
 ) const {
     if (l_index >= m_numel) {
@@ -124,7 +124,7 @@ size_t TensorStorage::get_flat_index_from_logical(
 float& TensorStorage::get_entry_ref(
     size_t l_index
 ) {
-    return (*m_flat_data)[get_flat_index_from_logical(l_index)];
+    return (*m_flat_data)[logical_to_linear(l_index)];
 }
 
 float& TensorStorage::get_entry_ref(
@@ -134,7 +134,7 @@ float& TensorStorage::get_entry_ref(
     if (m_shape.empty()) {
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
-    return (*m_flat_data)[get_flat_index_from_md(md_index)];
+    return (*m_flat_data)[multi_to_linear(md_index)];
 }
 
 bool TensorStorage::is_contiguous() const {

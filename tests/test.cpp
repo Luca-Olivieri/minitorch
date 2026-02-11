@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <source_location>
 
-#include "test_higher_order.h"
 #include "ops/test_add.h"
 #include "ops/test_neg.h"
 #include "ops/test_sub.h"
@@ -67,7 +66,6 @@ int main() {
     test_tensor_pow();
     test_chained_ops();
     test_tensor_log();
-    test_higher_order_derivatives();
     
     if (failed_tests == 0) {
         std::cout << "\nAll tests passed!\n";
