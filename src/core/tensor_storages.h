@@ -124,11 +124,11 @@ private:
         const std::vector<size_t>& shape
     );
 
-    size_t md_to_linear(
+    size_t md_to_flat(
         const std::vector<size_t>& md_index
     ) const;
 
-    size_t logical_to_linear(
+    size_t logical_to_flat(
         size_t logical_index
     ) const;
 
