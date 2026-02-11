@@ -85,7 +85,7 @@ std::vector<size_t> TensorStorage::s_init_strides(
     return strides;
 }
 
-size_t TensorStorage::multi_to_linear(
+size_t TensorStorage::md_to_linear(
     const std::vector<size_t>& md_index
 ) const {
     if (md_index.size() != m_shape.size()) {
@@ -134,7 +134,7 @@ float& TensorStorage::get_entry_ref(
     if (m_shape.empty()) {
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
-    return (*m_flat_data)[multi_to_linear(md_index)];
+    return (*m_flat_data)[md_to_linear(md_index)];
 }
 
 bool TensorStorage::is_contiguous() const {

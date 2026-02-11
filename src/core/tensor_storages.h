@@ -124,7 +124,7 @@ private:
         const std::vector<size_t>& shape
     );
 
-    size_t multi_to_linear(
+    size_t md_to_linear(
         const std::vector<size_t>& md_index
     ) const;
 
