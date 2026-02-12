@@ -12,7 +12,7 @@ class TensorNode : public std::enable_shared_from_this<TensorNode> {
 public:
     TensorStorage m_storage;
     
-    std::shared_ptr<BackwardOp> m_bw_op { nullptr };
+    std::unique_ptr<BackwardOp> m_bw_op { nullptr };
     std::shared_ptr<TensorNode> m_grad { nullptr };
 
     TensorNode(
@@ -20,9 +20,11 @@ public:
         float value = 0.0f
     );
 
-    static TensorNode from_storage(
+    TensorNode(
         TensorStorage storage
     );
+
+    ~TensorNode();
 
     // non-copyable object
     // TensorNode(const TensorNode&) = delete;
@@ -66,14 +68,8 @@ public:
         const Tensors&... others
     ) {
         TensorStorage out_storage = Op(m_storage, others.m_node->m_storage...);
-        std::shared_ptr<TensorNode> out {
-            std::make_shared<TensorNode>(
-                TensorNode::from_storage(
-                    std::move(out_storage)
-                )
-            )
-        };
-        out->m_bw_op = std::make_shared<BW_OP>(
+        std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(std::move(out_storage));
+        out->m_bw_op = std::make_unique<BW_OP>(
             Tensor(shared_from_this()),       // First operand
             others...  // others are Tensors
         );
@@ -134,9 +130,6 @@ public:
         bool create_graph = false
     );
 private:
-    TensorNode(
-        TensorStorage storage
-    );
 };
 
 #endif

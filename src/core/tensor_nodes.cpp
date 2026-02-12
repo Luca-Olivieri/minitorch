@@ -19,11 +19,7 @@ TensorNode::TensorNode(
     m_bw_op{ nullptr },
     m_grad{ nullptr } {}
 
-TensorNode TensorNode::from_storage(
-    TensorStorage storage
-) {
-    return TensorNode(std::move(storage));
-}
+TensorNode::~TensorNode() = default;
 
 std::ostream& operator<<(std::ostream& os, const TensorNode& tensor){
     return os << tensor.m_storage;
@@ -51,7 +47,7 @@ Tensor TensorNode::fill(
 ) {
     TensorStorage out = m_storage.fill(value);
     std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
-        TensorNode::from_storage(std::move(out))
+        std::move(out)
     );
     return Tensor(out_node);
 }
@@ -69,7 +65,7 @@ Tensor TensorNode::linspace(
 ) {
     TensorStorage out = m_storage.linspace(start, end);
     std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
-        TensorNode::from_storage(std::move(out))
+        std::move(out)
     );
     return Tensor(out_node);
 }
@@ -81,7 +77,7 @@ Tensor TensorNode::linspace(
 ) {
     TensorStorage out = TensorStorage::linspace(std::move(shape), start, end);
     std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
-        TensorNode::from_storage(std::move(out))
+        std::move(out)
     );
     return Tensor(out_node);
 }
@@ -142,14 +138,8 @@ Tensor TensorNode::sum(
         a.m_node->m_storage, 
         dim
     );
-    std::shared_ptr<TensorNode> out {
-        std::make_shared<TensorNode>(
-            TensorNode::from_storage(
-                std::move(out_storage)
-            )
-        )
-    };
-    out->m_bw_op = std::make_shared<BackwardSum>(
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(std::move(out_storage));
+    out->m_bw_op = std::make_unique<BackwardSum>(
         a,
         dim
     );
