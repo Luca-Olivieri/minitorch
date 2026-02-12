@@ -25,7 +25,11 @@ std::ostream& operator<<(
     std::ostream& os,
     const Tensor& tensor
 ) {
-    return os << tensor.m_node->m_storage;
+    os << tensor.m_node->m_storage;
+    if (tensor.m_node->m_bw_op) {
+        os << " " << *tensor.m_node->m_bw_op;
+    }
+    return os;
 }
 float& Tensor::operator[](
     const std::vector<size_t>& md_index
