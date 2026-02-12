@@ -4,10 +4,8 @@
 #include <map>
 
 #include "tensor_storages.h"
-// #include "tensors.h"
 
 class Tensor;
-
 class BackwardOp;
 
 class TensorNode : public std::enable_shared_from_this<TensorNode> {
@@ -25,12 +23,6 @@ public:
     TensorNode(
         TensorStorage storage
     );
-
-    ~TensorNode();
-
-    friend std::ostream& operator<<(std::ostream& os, const TensorNode& tensor);
-    
-    float& operator[](const std::vector<size_t>& md_index);
 };
 
 #endif

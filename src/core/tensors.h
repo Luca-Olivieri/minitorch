@@ -6,10 +6,6 @@
 #include <iostream>
 
 #include "tensor_nodes.h"
-#include "tensors.h"
-
-class TensorNode;
-
 
 class Tensor {
 public:
@@ -33,6 +29,26 @@ public:
     float& item();
 
     bool is_contiguous();
+
+    Tensor grad() const;
+
+    const std::vector<size_t>& shape();
+
+    void backward(
+        bool create_graph = false
+    );
+
+    void accumulate_grad(
+        const Tensor& gradient,
+        bool create_graph = false
+    );
+
+    std::map<TensorNode*, int> compute_in_degree();
+
+    void topological_backprop(
+        std::map<TensorNode*, int>& in_degree,
+        bool create_graph
+    );
     
     void fill_inplace(
         float value
@@ -106,26 +122,6 @@ public:
     
     Tensor sum(
         const size_t dim
-    );
-
-    Tensor grad() const;
-
-    const std::vector<size_t>& shape();
-
-    void backward(
-        bool create_graph = false
-    );
-
-    void accumulate_grad(
-        const Tensor& gradient,
-        bool create_graph = false
-    );
-
-    std::map<TensorNode*, int> compute_in_degree();
-
-    void topological_backprop(
-        std::map<TensorNode*, int>& in_degree,
-        bool create_graph
     );
 
 private:

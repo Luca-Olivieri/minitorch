@@ -21,14 +21,19 @@ Tensor::Tensor(
     std::shared_ptr<TensorNode> node
 ): m_node{node} {}
 
-std::ostream& operator<<(std::ostream& os, const Tensor& tensor){
-    return os << *tensor.m_node;
+std::ostream& operator<<(
+    std::ostream& os,
+    const Tensor& tensor
+) {
+    return os << tensor.m_node->m_storage;
 }
-
 float& Tensor::operator[](
     const std::vector<size_t>& md_index
 ) {
-    return (*m_node)[md_index];
+    if (m_node->m_storage.m_shape.empty()) { // Scalar case
+        throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
+    }
+    return m_node->m_storage.get_entry_ref((md_index));
 }
 
 float& Tensor::item() {
