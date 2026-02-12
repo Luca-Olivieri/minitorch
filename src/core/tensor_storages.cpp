@@ -126,8 +126,9 @@ std::vector<size_t> TensorStorage::logical_to_md(
 ) const {
     if (l_index >= m_numel) {
         throw std::out_of_range(
-            std::format("Logical index {} out of bounds for tensor of size {}.",
-                        l_index, m_numel)
+            std::format(
+                "Logical index {} out of bounds for tensor of size {}.",
+                l_index, m_numel)
         );
     }
 
@@ -277,6 +278,32 @@ TensorStorage TensorStorage::s_log(const TensorStorage& arg) {
     );
 }
 
+ std::vector<size_t> TensorStorage::reduce_shape(
+    const std::vector<size_t>& shape,
+    const size_t dim
+) {
+    std::vector<size_t> out_shape = shape;
+    
+    out_shape.erase(
+        out_shape.begin() +
+        static_cast<std::vector<size_t>::difference_type>(dim)
+    );
+
+    return out_shape;
+}
+
+void TensorStorage::populate_in_md_for_accum(
+    std::vector<size_t>& in_md,
+    const std::vector<size_t>& out_md,
+    const size_t dim
+) {
+    // copy output coords into input coords (skip reduced dim)
+    for (size_t i = 0, j = 0; i < in_md.size(); ++i) {
+        if (i == dim) continue;
+        in_md[i] = out_md[j++];
+    }
+}
+
 TensorStorage TensorStorage::s_sum(
     TensorStorage& a,
     const size_t dim
@@ -285,29 +312,24 @@ TensorStorage TensorStorage::s_sum(
         throw std::invalid_argument("Reduction dimension out of range.");
     }
 
-    // ---- build output shape ----
-    std::vector<size_t> out_shape = a.m_shape;
-    out_shape.erase(out_shape.begin() +
-        static_cast<std::vector<size_t>::difference_type>(dim));
+    // build output shape
+    std::vector<size_t> out_shape = reduce_shape(a.m_shape, dim);
 
     TensorStorage out{ out_shape };
+
+    // build input md index with dim inserted
+    std::vector<size_t> in_md(a.m_shape.size());
 
     // iterate over output logical indices
     for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
 
-            // build input md index with dim inserted
-        std::vector<size_t> in_md(a.m_shape.size());
-
         std::vector<size_t> out_md = out.logical_to_md(out_i);
 
-        // copy output coords into input coords (skip reduced dim)
-        for (size_t i = 0, j = 0; i < a.m_shape.size(); ++i) {
-            if (i == dim) continue;
-            in_md[i] = out_md[j++];
-        }
+        // in_md follows out_md but skips reduced dimension
+        populate_in_md_for_accum(in_md, out_md, dim);
 
+        // accumulate over reduced dim
         float acc = 0.0f;
-
         for (size_t r = 0; r < a.m_shape[dim]; ++r) {
             in_md[dim] = r;
             acc += a.get_entry_ref(in_md);

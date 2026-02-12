@@ -105,6 +105,17 @@ public:
         const TensorStorage& arg
     );
 
+    static std::vector<size_t> reduce_shape(
+        const std::vector<size_t>& shape,
+        const size_t dim
+    );
+
+    static void populate_in_md_for_accum(
+        std::vector<size_t>& in_md,
+        const std::vector<size_t>& out_md,
+        const size_t dim
+    );
+
     static TensorStorage s_sum(
         TensorStorage& a,
         const size_t dim
