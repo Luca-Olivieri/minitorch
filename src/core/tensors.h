@@ -5,7 +5,11 @@
 #include <vector>
 #include <iostream>
 
+#include "tensor_nodes.h"
+#include "tensors.h"
+
 class TensorNode;
+
 
 class Tensor {
 public:
@@ -27,6 +31,8 @@ public:
     float& operator[](const std::vector<size_t>& md_index);
 
     float& item();
+
+    bool is_contiguous();
     
     void fill_inplace(
         float value
@@ -52,7 +58,23 @@ public:
         float end
     );
 
-    bool is_contiguous();
+    void reset_grad();
+    
+    void zero_grad();
+
+    template <auto Op, typename BW_OP, typename... Tensors>
+    Tensor apply_op_ag(
+        const Tensors&... others
+    ) {
+        TensorStorage out_storage = Op(m_node->m_storage, others.m_node->m_storage...);
+        std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(std::move(out_storage));
+        out->m_bw_op = std::make_unique<BW_OP>(
+            m_node,       // First operand
+            others...  // others are Tensors
+        );
+
+        return Tensor(out);
+    }
 
     Tensor operator+(
         const Tensor& other
@@ -88,8 +110,6 @@ public:
 
     Tensor grad() const;
 
-    void zero_grad();
-
     const std::vector<size_t>& shape();
 
     void backward(
@@ -101,8 +121,14 @@ public:
         bool create_graph = false
     );
 
+    std::map<TensorNode*, int> compute_in_degree();
+
+    void topological_backprop(
+        std::map<TensorNode*, int>& in_degree,
+        bool create_graph
+    );
+
 private:
 };
-
 
 #endif

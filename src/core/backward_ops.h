@@ -7,6 +7,7 @@
 #include <functional>
 
 #include "tensor_nodes.h"
+#include "tensors.h"
 
 class BackwardOp {
 public:

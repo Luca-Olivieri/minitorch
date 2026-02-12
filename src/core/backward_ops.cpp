@@ -20,7 +20,10 @@ std::ostream& BackwardAdd::print(std::ostream& os) const {
     return os << "BackwardAdd";
 }
 
-void BackwardAdd::compute_operands_grad(const Tensor& out, bool create_graph) {
+void BackwardAdd::compute_operands_grad(
+    const Tensor& out,
+    bool create_graph)
+{
     m_operands[0].accumulate_grad(out.grad(), create_graph);
     m_operands[1].accumulate_grad(out.grad(), create_graph);
 }
@@ -76,7 +79,7 @@ void BackwardPow::compute_operands_grad(const Tensor& out, bool create_graph) {
     
     base.accumulate_grad((exp * base.pow(exp - ones)) * out.grad(), create_graph);
     
-    Tensor log_base(base.m_node->log());
+    Tensor log_base(base.log());
     exp.accumulate_grad((base.pow(exp) * log_base) * out.grad(), create_graph);
 }
 
