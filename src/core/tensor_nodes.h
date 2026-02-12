@@ -109,6 +109,11 @@ public:
     
     Tensor log();
 
+    static Tensor sum(
+        const Tensor& a,
+        const size_t dim
+    );
+
     void reset_grad();
     
     void zero_grad();

@@ -70,12 +70,12 @@ int main()
     // std::cout << a << '\n';
     // std::cout << a.m_node->m_storage.m_strides << '\n';
 
-    TensorStorage a { {2, 3, 4} };
+    Tensor a { {2, 3, 4} };
     a.linspace_inplace(0.0f, 23.0f);
 
     std::cout << a << '\n';
 
-    TensorStorage s = TensorStorage::s_sum(a, 1);
+    Tensor s = a.sum(1);
     std::cout << s << '\n';
     
     return 0;

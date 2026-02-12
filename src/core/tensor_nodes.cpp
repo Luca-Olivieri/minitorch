@@ -134,6 +134,29 @@ Tensor TensorNode::log() {
     return apply_op_ag<TensorStorage::s_log, BackwardLog>();
 }
 
+Tensor TensorNode::sum(
+    const Tensor& a,
+    const size_t dim
+) {
+    TensorStorage out_storage = TensorStorage::s_sum(
+        a.m_node->m_storage, 
+        dim
+    );
+    std::shared_ptr<TensorNode> out {
+        std::make_shared<TensorNode>(
+            TensorNode::from_storage(
+                std::move(out_storage)
+            )
+        )
+    };
+    out->m_bw_op = std::make_shared<BackwardSum>(
+        a,
+        dim
+    );
+
+    return Tensor(out);
+}
+
 void TensorNode::reset_grad() {
     // Replaces the gradient with a new zeroed tensor.
     // This ensures that any existing references to the old gradient (e.g. for higher order derivatives) are preserved intact.

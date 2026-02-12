@@ -140,5 +140,24 @@ public:
     void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
+class BackwardReduce : public NBackwardOp<1> {
+public:
+    using NBackwardOp<s_N>::NBackwardOp;
+};
+
+class BackwardSum : public BackwardReduce {
+public:
+    size_t m_dim;
+    
+    BackwardSum(
+        Tensor reduced_tensor,
+        const size_t dim
+    );
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+};
+
 
 #endif

@@ -309,7 +309,11 @@ TensorStorage TensorStorage::s_sum(
     const size_t dim
 ) {
     if (dim >= a.m_shape.size()) {
-        throw std::invalid_argument("Reduction dimension out of range.");
+        throw std::invalid_argument(
+            std::format("Reduction dimension {} out of range for shape {}.",
+            dim, a.m_shape
+            )
+        );
     }
 
     // build output shape

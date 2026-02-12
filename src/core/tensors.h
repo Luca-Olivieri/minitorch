@@ -81,6 +81,10 @@ public:
     );
     
     Tensor log();
+    
+    Tensor sum(
+        const size_t dim
+    );
 
     Tensor grad() const;
 

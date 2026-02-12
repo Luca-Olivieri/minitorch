@@ -112,6 +112,12 @@ Tensor Tensor::log() {
     return m_node->log();
 }
 
+Tensor Tensor::sum(
+    const size_t dim
+) {
+    return m_node->sum(*this, dim);
+}
+
 Tensor Tensor::grad() const {
     return Tensor(m_node->m_grad);
 }

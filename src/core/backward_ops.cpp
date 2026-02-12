@@ -84,7 +84,26 @@ std::ostream& BackwardLog::print(std::ostream& os) const {
     return os << "BackwardLog";
 }
 
-void BackwardLog::compute_operands_grad([[maybe_unused]] const Tensor& out, [[maybe_unused]] bool create_graph) {
+void BackwardLog::compute_operands_grad(
+        const Tensor& out,
+        bool create_graph)
+{
     Tensor& x = m_operands[0];
     x.accumulate_grad(out.grad() / x, create_graph);
+}
+
+BackwardSum::BackwardSum(
+    Tensor reduced_tensor,
+    const size_t dim
+):
+    BackwardReduce(reduced_tensor),
+    m_dim {dim} {}
+
+std::ostream& BackwardSum::print(std::ostream& os) const {
+    return os << "BackwardSum";
+}
+
+void BackwardSum::compute_operands_grad([[maybe_unused]] const Tensor& out, [[maybe_unused]] bool create_graph) {
+    // Tensor& x = m_operands[0];
+    // x.accumulate_grad(out.grad() / x, create_graph);
 }
