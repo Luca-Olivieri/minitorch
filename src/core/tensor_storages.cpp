@@ -121,6 +121,28 @@ size_t TensorStorage::logical_to_flat(
     return offset;
 }
 
+std::vector<size_t> TensorStorage::logical_to_md(
+    size_t l_index
+) const {
+    if (l_index >= m_numel) {
+        throw std::out_of_range(
+            std::format("Logical index {} out of bounds for tensor of size {}.",
+                        l_index, m_numel)
+        );
+    }
+
+    std::vector<size_t> md(m_shape.size());
+
+    for (size_t i = m_shape.size(); i-- > 0;) {
+        md[i] = l_index % m_shape[i];
+        l_index /= m_shape[i];
+    }
+
+    return md;
+}
+
+
+
 float& TensorStorage::get_entry_ref(
     size_t l_index
 ) {
@@ -253,6 +275,48 @@ TensorStorage TensorStorage::s_log(const TensorStorage& arg) {
         [](float arg_) { return std::log(arg_); }, 
         arg
     );
+}
+
+TensorStorage TensorStorage::s_sum(
+    TensorStorage& a,
+    const size_t dim
+) {
+    if (dim >= a.m_shape.size()) {
+        throw std::invalid_argument("Reduction dimension out of range.");
+    }
+
+    // ---- build output shape ----
+    std::vector<size_t> out_shape = a.m_shape;
+    out_shape.erase(out_shape.begin() +
+        static_cast<std::vector<size_t>::difference_type>(dim));
+
+    TensorStorage out{ out_shape };
+
+    // iterate over output logical indices
+    for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
+
+            // build input md index with dim inserted
+        std::vector<size_t> in_md(a.m_shape.size());
+
+        std::vector<size_t> out_md = out.logical_to_md(out_i);
+
+        // copy output coords into input coords (skip reduced dim)
+        for (size_t i = 0, j = 0; i < a.m_shape.size(); ++i) {
+            if (i == dim) continue;
+            in_md[i] = out_md[j++];
+        }
+
+        float acc = 0.0f;
+
+        for (size_t r = 0; r < a.m_shape[dim]; ++r) {
+            in_md[dim] = r;
+            acc += a.get_entry_ref(in_md);
+        }
+
+        out.get_entry_ref(out_i) = acc;
+    }
+
+    return out;
 }
 
 static void s_print_recursive(

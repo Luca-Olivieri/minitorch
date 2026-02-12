@@ -1,6 +1,8 @@
 #include <iostream>
 
 #include "core/tensors.h"
+#include "core/tensor_nodes.h"
+#include "core/tensor_storages.h"
 #include "core/formatting.h"
 
 Tensor forward_1st(
@@ -60,8 +62,21 @@ void optimize_2nd_deriv() {
 
 int main()
 {
-    optimize_1st_deriv();
-    optimize_2nd_deriv();
+    // optimize_1st_deriv();
+    // optimize_2nd_deriv();
+
+    // Tensor a { Tensor::linspace({2, 2, 3}, 0.0f, 11.0f) };
+
+    // std::cout << a << '\n';
+    // std::cout << a.m_node->m_storage.m_strides << '\n';
+
+    TensorStorage a { {2, 3, 4} };
+    a.linspace_inplace(0.0f, 23.0f);
+
+    std::cout << a << '\n';
+
+    TensorStorage s = TensorStorage::s_sum(a, 1);
+    std::cout << s << '\n';
     
     return 0;
 }

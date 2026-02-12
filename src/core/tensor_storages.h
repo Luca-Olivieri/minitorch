@@ -104,6 +104,11 @@ public:
     static TensorStorage s_log(
         const TensorStorage& arg
     );
+
+    static TensorStorage s_sum(
+        TensorStorage& a,
+        const size_t dim
+    );
     
 private:
     TensorStorage(
@@ -130,6 +135,10 @@ private:
 
     size_t logical_to_flat(
         size_t logical_index
+    ) const;
+
+    std::vector<size_t> logical_to_md(
+        size_t l_index
     ) const;
 
     template <typename Func, typename... Tensors>
