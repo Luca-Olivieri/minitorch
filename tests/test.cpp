@@ -12,7 +12,9 @@
 #include "ops/test_pow.h"
 #include "ops/test_log.h"
 #include "ops/test_ops.h"
-#include "reds/test_sum.h"
+#include "views/test_unsqueeze.h"
+#include "views/test_squeeze.h"
+#include "reduces/test_sum.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -67,6 +69,8 @@ int main() {
     test_tensor_pow();
     test_chained_ops();
     test_tensor_log();
+    test_unsqueeze();
+    test_squeeze();
     test_storage_sum();
     
     if (failed_tests == 0) {

@@ -104,7 +104,48 @@ std::ostream& BackwardSum::print(std::ostream& os) const {
     return os << "BackwardSum";
 }
 
-void BackwardSum::compute_operands_grad([[maybe_unused]] const Tensor& out, [[maybe_unused]] bool create_graph) {
+void BackwardSum::compute_operands_grad(
+    [[maybe_unused]] const Tensor& out,
+    [[maybe_unused]] bool create_graph
+) {
     // Tensor& x = m_operands[0];
     // x.accumulate_grad(out.grad() / x, create_graph);
+}
+
+BackwardUnsqueeze::BackwardUnsqueeze(
+    Tensor viewed_tensor,
+    const size_t dim
+):
+    BackwardView(viewed_tensor),
+    m_dim {dim} {}
+
+std::ostream& BackwardUnsqueeze::print(std::ostream& os) const {
+    return os << "BackwardUnsqueeze";
+}
+
+void BackwardUnsqueeze::compute_operands_grad(
+    const Tensor& out,
+    bool create_graph
+) {
+    Tensor& x = m_operands[0];
+    x.accumulate_grad(out.grad().squeeze(m_dim), create_graph);
+}
+
+BackwardSqueeze::BackwardSqueeze(
+    Tensor viewed_tensor,
+    const size_t dim
+):
+    BackwardView(viewed_tensor),
+    m_dim {dim} {}
+
+std::ostream& BackwardSqueeze::print(std::ostream& os) const {
+    return os << "BackwardSqueeze";
+}
+
+void BackwardSqueeze::compute_operands_grad(
+    const Tensor& out,
+    bool create_graph
+) {
+    Tensor& x = m_operands[0];
+    x.accumulate_grad(out.grad().unsqueeze(m_dim), create_graph);
 }

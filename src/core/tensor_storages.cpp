@@ -292,6 +292,20 @@ TensorStorage TensorStorage::s_log(const TensorStorage& arg) {
     return out_shape;
 }
 
+std::vector<size_t> TensorStorage::unsqueeze_shape(
+    const std::vector<size_t>& shape,
+    const size_t dim
+) {
+    std::vector<size_t> out_shape = shape;
+
+    out_shape.insert(
+        out_shape.begin() + static_cast<std::vector<size_t>::difference_type>(dim),
+         1
+    ); // inserts 1 at index 'dim'
+
+    return out_shape;
+}
+
 void TensorStorage::populate_in_md_for_accum(
     std::vector<size_t>& in_md,
     const std::vector<size_t>& out_md,
@@ -340,6 +354,58 @@ TensorStorage TensorStorage::s_sum(
         }
 
         out.get_entry_ref(out_i) = acc;
+    }
+
+    return out;
+}
+
+TensorStorage TensorStorage::s_unsqueeze(
+    TensorStorage& a,
+    const size_t dim
+) {
+    if (dim > a.m_shape.size()) {
+        throw std::invalid_argument(
+            std::format("Unsqueezed dimension {} out of range for shape of length {}.",
+            dim, a.m_shape.size()
+            )
+        );
+    }
+
+    // build output shape
+    std::vector<size_t> out_shape = unsqueeze_shape(a.m_shape, dim);
+
+    TensorStorage out{ out_shape };
+
+    // iterate over output logical indices
+    for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
+
+        out.get_entry_ref(out_i) = a.get_entry_ref(out_i);
+    }
+
+    return out;
+}
+
+TensorStorage TensorStorage::s_squeeze(
+    TensorStorage& a,
+    const size_t dim
+) {
+    if (dim >= a.m_shape.size()) {
+        throw std::invalid_argument(
+            std::format("Squeezed dimension {} out of range for shape of length {}.",
+            dim, a.m_shape.size()
+            )
+        );
+    }
+
+    // build output shape
+    std::vector<size_t> out_shape = reduce_shape(a.m_shape, dim);
+
+    TensorStorage out{ out_shape };
+
+    // iterate over output logical indices
+    for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
+
+        out.get_entry_ref(out_i) = a.get_entry_ref(out_i);
     }
 
     return out;

@@ -77,6 +77,10 @@ int main()
 
     Tensor s = a.sum(1);
     std::cout << s << '\n';
+
+    Tensor n = Tensor::linspace({1, 3}, 1.0f, 6.0f);
+    Tensor n1 = n.squeeze(0);
+    std::cout << n1.shape() << '\n';
     
     return 0;
 }

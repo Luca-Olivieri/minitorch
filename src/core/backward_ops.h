@@ -160,5 +160,38 @@ public:
     void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
+class BackwardView : public NBackwardOp<1> {
+public:
+    using NBackwardOp<s_N>::NBackwardOp;
+};
+
+class BackwardUnsqueeze : public BackwardView {
+public:
+    size_t m_dim;
+    
+    BackwardUnsqueeze(
+        Tensor viewed_tensor,
+        const size_t dim
+    );
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+};
+
+class BackwardSqueeze : public BackwardView {
+public:
+    size_t m_dim;
+    
+    BackwardSqueeze(
+        Tensor viewed_tensor,
+        const size_t dim
+    );
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+};
+
 
 #endif

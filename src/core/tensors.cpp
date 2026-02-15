@@ -181,8 +181,48 @@ Tensor Tensor::sum(
         m_node->m_storage, 
         dim
     );
-    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(std::move(out_storage));
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+        std::move(out_storage)
+    );
     out->m_bw_op = std::make_unique<BackwardSum>(
+        *this,
+        dim
+    );
+
+    return Tensor(out);
+}
+
+Tensor Tensor::unsqueeze(
+    const size_t dim
+) const {
+    TensorStorage out_storage = TensorStorage::s_unsqueeze(
+        m_node->m_storage, 
+        dim
+    );
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+        std::move(out_storage)
+    );
+
+    out->m_bw_op = std::make_unique<BackwardUnsqueeze>(
+        *this,
+        dim
+    );
+
+    return Tensor(out);
+}
+
+Tensor Tensor::squeeze(
+    const size_t dim
+) const {
+    TensorStorage out_storage = TensorStorage::s_squeeze(
+        m_node->m_storage, 
+        dim
+    );
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+        std::move(out_storage)
+    );
+
+    out->m_bw_op = std::make_unique<BackwardSqueeze>(
         *this,
         dim
     );

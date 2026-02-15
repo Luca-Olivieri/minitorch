@@ -109,6 +109,11 @@ public:
         const std::vector<size_t>& shape,
         const size_t dim
     );
+    
+    static std::vector<size_t> unsqueeze_shape(
+        const std::vector<size_t>& shape,
+        const size_t dim
+    );
 
     static void populate_in_md_for_accum(
         std::vector<size_t>& in_md,
@@ -117,6 +122,16 @@ public:
     );
 
     static TensorStorage s_sum(
+        TensorStorage& a,
+        const size_t dim
+    );
+    
+    static TensorStorage s_unsqueeze(
+        TensorStorage& a,
+        const size_t dim
+    );
+    
+    static TensorStorage s_squeeze(
         TensorStorage& a,
         const size_t dim
     );

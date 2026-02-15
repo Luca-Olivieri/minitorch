@@ -123,6 +123,14 @@ public:
     Tensor sum(
         const size_t dim
     );
+    
+    Tensor unsqueeze(
+        const size_t dim
+    ) const;
+    
+    Tensor squeeze(
+        const size_t dim
+    ) const;
 
 private:
 };
