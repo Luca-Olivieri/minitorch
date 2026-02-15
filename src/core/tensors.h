@@ -137,6 +137,9 @@ public:
         const size_t times
     ) const;
 
+    Tensor matmul(
+        const Tensor& other
+    );
 private:
 };
 

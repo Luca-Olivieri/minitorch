@@ -8,6 +8,7 @@
 #include "ops/test_neg.h"
 #include "ops/test_sub.h"
 #include "ops/test_mult.h"
+#include "ops/test_matmul.h"
 #include "ops/test_div.h"
 #include "ops/test_pow.h"
 #include "ops/test_log.h"
@@ -66,6 +67,7 @@ int main() {
     test_tensor_neg();
     test_tensor_sub();
     test_tensor_mult();
+    test_tensor_matmul();
     test_tensor_div();
     test_tensor_pow();
     test_chained_ops();

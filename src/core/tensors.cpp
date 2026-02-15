@@ -252,6 +252,35 @@ Tensor Tensor::repeat(
     return Tensor(out);
 }
 
+Tensor Tensor::matmul(
+    const Tensor& other
+) {
+    const std::vector<size_t>& a_shape = this->m_node->m_storage.m_shape;
+    const std::vector<size_t>& b_shape = other.m_node->m_storage.m_shape;
+
+    if (a_shape.size() != 2 || b_shape.size() != 2) {
+        throw std::invalid_argument(std::format("matmul requires 2D tensors, got {}D and {}D", a_shape.size(), b_shape.size()));
+    }
+
+    size_t m = a_shape[0];
+    size_t k = a_shape[1];
+    size_t kb = b_shape[0];
+    size_t n = b_shape[1];
+
+    if (k != kb) {
+        throw std::invalid_argument(std::format("matmul inner dimensions must match ({} != {})", k, kb));
+    }
+
+    // Use unsqueeze->repeat->mult->sum pipeline
+    Tensor a_expanded = this->unsqueeze(2).repeat(2, n); // [m,k,1] -> [m,k,n]
+    Tensor b_expanded = other.unsqueeze(0).repeat(0, m); // [1,k,n] -> [m,k,n]
+
+    Tensor prod = a_expanded * b_expanded; // elementwise [m,k,n]
+    Tensor out = prod.sum(1); // sum over k -> [m,n]
+
+    return out;
+}
+
 Tensor Tensor::grad() const {
     return *m_node->m_grad;
 }

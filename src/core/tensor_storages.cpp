@@ -376,9 +376,25 @@ TensorStorage TensorStorage::s_unsqueeze(
 
     TensorStorage out{ out_shape };
 
-    // iterate over output logical indices
+    // iterate over output logical indices and map to input multi-dim coords
+    std::vector<size_t> in_md(a.m_shape.size());
     for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
-        out.get_entry_ref(out_i) = a.get_entry_ref(out_i);
+        // Special-case scalar input: read by logical index 0
+        if (a.m_shape.empty()) {
+            out.get_entry_ref(out_i) = a.get_entry_ref(0);
+            continue;
+        }
+
+        std::vector<size_t> out_md = out.logical_to_md(out_i);
+
+        // map out_md -> in_md by skipping the inserted singleton dim
+        size_t j = 0;
+        for (size_t i = 0; i < out_md.size(); ++i) {
+            if (i == dim) continue; // skip the singleton
+            in_md[j++] = out_md[i];
+        }
+
+        out.get_entry_ref(out_i) = a.get_entry_ref(in_md);
     }
 
     return out;
@@ -410,18 +426,19 @@ TensorStorage TensorStorage::s_repeat(
 
     TensorStorage out{ out_shape };
 
-    size_t old_dim_stride = a.m_strides[dim];
-    size_t old_numel = a.m_numel;
-    a.m_strides[dim] = 0;
-    a.m_numel = out.m_numel;
-
-    // iterate over output logical indices
+    // iterate over output logical indices and map to input multi-dim coords
+    std::vector<size_t> in_md(a.m_shape.size());
     for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
-        out.get_entry_ref(out_i) = a.get_entry_ref(out_i);
-    }
+        std::vector<size_t> out_md = out.logical_to_md(out_i);
 
-    a.m_strides[dim] = old_dim_stride;
-    a.m_numel = old_numel;
+        // input coord equals output coord except at repeated dim which maps to 0
+        for (size_t i = 0; i < out_md.size(); ++i) {
+            in_md[i] = out_md[i];
+        }
+        in_md[dim] = 0;
+
+        out.get_entry_ref(out_i) = a.get_entry_ref(in_md);
+    }
 
     return out;
 }
@@ -437,16 +454,39 @@ TensorStorage TensorStorage::s_squeeze(
             )
         );
     }
+    if (a.m_shape[dim] != 1) {
+        throw std::invalid_argument(
+            std::format("Squeezed dimension {} must be singleton. Got size {}.", dim, a.m_shape[dim])
+        );
+    }
 
     // build output shape
     std::vector<size_t> out_shape = reduce_shape(a.m_shape, dim);
 
     TensorStorage out{ out_shape };
 
-    // iterate over output logical indices
+    // iterate over output logical indices and map to input multi-dim coords
+    std::vector<size_t> in_md(a.m_shape.size());
     for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
+        // Special-case scalar input (shouldn't normally happen here, but be defensive)
+        if (a.m_shape.empty()) {
+            out.get_entry_ref(out_i) = a.get_entry_ref(0);
+            continue;
+        }
 
-        out.get_entry_ref(out_i) = a.get_entry_ref(out_i);
+        std::vector<size_t> out_md = out.logical_to_md(out_i);
+
+        // map out_md -> in_md by inserting the singleton coord (0) at position dim
+        size_t j = 0;
+        for (size_t i = 0; i < a.m_shape.size(); ++i) {
+            if (i == dim) {
+                in_md[i] = 0;
+            } else {
+                in_md[i] = out_md[j++];
+            }
+        }
+
+        out.get_entry_ref(out_i) = a.get_entry_ref(in_md);
     }
 
     return out;
