@@ -149,10 +149,12 @@ public:
 class BackwardSum : public BackwardReduce {
 public:
     size_t m_dim;
+    size_t m_original_times;
     
     BackwardSum(
         Tensor reduced_tensor,
-        const size_t dim
+        const size_t dim,
+        const size_t original_times
     );
 
     std::ostream& print(std::ostream& os) const override;
@@ -184,6 +186,20 @@ public:
     size_t m_dim;
     
     BackwardSqueeze(
+        Tensor viewed_tensor,
+        const size_t dim
+    );
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+};
+
+class BackwardRepeat : public BackwardView {
+public:
+    const size_t m_dim;
+    
+    BackwardRepeat(
         Tensor viewed_tensor,
         const size_t dim
     );

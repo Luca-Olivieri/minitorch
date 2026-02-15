@@ -14,6 +14,7 @@
 #include "ops/test_ops.h"
 #include "views/test_unsqueeze.h"
 #include "views/test_squeeze.h"
+#include "views/test_repeat.h"
 #include "reduces/test_sum.h"
 
 void test_tensors_with_dims0() {
@@ -71,6 +72,7 @@ int main() {
     test_tensor_log();
     test_unsqueeze();
     test_squeeze();
+    test_repeat();
     test_storage_sum();
     
     if (failed_tests == 0) {

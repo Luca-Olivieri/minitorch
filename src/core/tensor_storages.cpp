@@ -378,9 +378,50 @@ TensorStorage TensorStorage::s_unsqueeze(
 
     // iterate over output logical indices
     for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
-
         out.get_entry_ref(out_i) = a.get_entry_ref(out_i);
     }
+
+    return out;
+}
+
+TensorStorage TensorStorage::s_repeat(
+    TensorStorage& a,
+    const size_t dim,
+    const size_t times
+) {
+    if (dim >= a.m_shape.size()) {
+        throw std::invalid_argument(
+            std::format("Expanded dimension {} out of range for shape of length {}.",
+            dim, a.m_shape.size()
+            )
+        );
+    }
+    if (a.m_shape[dim] != 1) {
+        throw std::invalid_argument(
+            std::format("Expanded dimension {} must be singleton. Got shqpe {}.",
+            dim, a.m_shape.size()
+            )
+        );
+    }
+
+    // build output shape
+    std::vector<size_t> out_shape = a.m_shape;
+    out_shape[dim] = times;
+
+    TensorStorage out{ out_shape };
+
+    size_t old_dim_stride = a.m_strides[dim];
+    size_t old_numel = a.m_numel;
+    a.m_strides[dim] = 0;
+    a.m_numel = out.m_numel;
+
+    // iterate over output logical indices
+    for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
+        out.get_entry_ref(out_i) = a.get_entry_ref(out_i);
+    }
+
+    a.m_strides[dim] = old_dim_stride;
+    a.m_numel = old_numel;
 
     return out;
 }

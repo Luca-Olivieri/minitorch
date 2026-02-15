@@ -95,10 +95,12 @@ void BackwardLog::compute_operands_grad(
 
 BackwardSum::BackwardSum(
     Tensor reduced_tensor,
-    const size_t dim
+    const size_t dim,
+    const size_t original_times
 ):
     BackwardReduce(reduced_tensor),
-    m_dim {dim} {}
+    m_dim {dim},
+    m_original_times {original_times} {}
 
 std::ostream& BackwardSum::print(std::ostream& os) const {
     return os << "BackwardSum";
@@ -108,8 +110,10 @@ void BackwardSum::compute_operands_grad(
     [[maybe_unused]] const Tensor& out,
     [[maybe_unused]] bool create_graph
 ) {
-    // Tensor& x = m_operands[0];
-    // x.accumulate_grad(out.grad() / x, create_graph);
+    Tensor& x = m_operands[0];
+    // Use the gradient of the output (out.grad()) and broadcast it back
+    // to the input shape by unsqueezing and repeating along the reduced dim.
+    x.accumulate_grad(out.grad().unsqueeze(m_dim).repeat(m_dim, m_original_times), create_graph);
 }
 
 BackwardUnsqueeze::BackwardUnsqueeze(
@@ -148,4 +152,25 @@ void BackwardSqueeze::compute_operands_grad(
 ) {
     Tensor& x = m_operands[0];
     x.accumulate_grad(out.grad().unsqueeze(m_dim), create_graph);
+}
+
+BackwardRepeat::BackwardRepeat(
+    Tensor viewed_tensor,
+    const size_t dim
+):
+    BackwardView(viewed_tensor),
+    m_dim {dim} {}
+
+std::ostream& BackwardRepeat::print(std::ostream& os) const {
+    return os << "BackwardRepeat";
+}
+
+void BackwardRepeat::compute_operands_grad(
+    const Tensor& out,
+    bool create_graph
+) {
+    Tensor& x = m_operands[0];
+    // Sum over the repeated dimension then restore the singleton dimension
+    // so the gradient shape matches the original tensor's shape.
+    x.accumulate_grad(out.grad().sum(m_dim).unsqueeze(m_dim), create_graph);
 }

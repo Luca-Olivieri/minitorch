@@ -186,7 +186,8 @@ Tensor Tensor::sum(
     );
     out->m_bw_op = std::make_unique<BackwardSum>(
         *this,
-        dim
+        dim,
+        this->m_node->m_storage.m_shape[dim]
     );
 
     return Tensor(out);
@@ -223,6 +224,27 @@ Tensor Tensor::squeeze(
     );
 
     out->m_bw_op = std::make_unique<BackwardSqueeze>(
+        *this,
+        dim
+    );
+
+    return Tensor(out);
+}
+
+Tensor Tensor::repeat(
+    const size_t dim,
+    const size_t times
+) const {
+    TensorStorage out_storage = TensorStorage::s_repeat(
+        m_node->m_storage, 
+        dim,
+        times
+    );
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+        std::move(out_storage)
+    );
+
+    out->m_bw_op = std::make_unique<BackwardRepeat>(
         *this,
         dim
     );

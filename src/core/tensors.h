@@ -131,6 +131,11 @@ public:
     Tensor squeeze(
         const size_t dim
     ) const;
+    
+    Tensor repeat(
+        const size_t dim,
+        const size_t times
+    ) const;
 
 private:
 };

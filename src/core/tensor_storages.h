@@ -136,6 +136,12 @@ public:
         const size_t dim
     );
     
+    static TensorStorage s_repeat(
+        TensorStorage& a,
+        const size_t dim,
+        const size_t times
+    );
+    
 private:
     TensorStorage(
         std::vector<size_t> shape,

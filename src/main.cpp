@@ -70,17 +70,11 @@ int main()
     // std::cout << a << '\n';
     // std::cout << a.m_node->m_storage.m_strides << '\n';
 
-    Tensor a { {2, 3, 4} };
-    a.linspace_inplace(0.0f, 23.0f);
+    Tensor a = Tensor::linspace({1, 2, 3}, 1.0f, 6.0f);
 
-    std::cout << a << '\n';
+    Tensor b = a.repeat(0, 5);
 
-    Tensor s = a.sum(1);
-    std::cout << s << '\n';
-
-    Tensor n = Tensor::linspace({1, 3}, 1.0f, 6.0f);
-    Tensor n1 = n.squeeze(0);
-    std::cout << n1.shape() << '\n';
+    std::cout << b << '\n';
     
     return 0;
 }
