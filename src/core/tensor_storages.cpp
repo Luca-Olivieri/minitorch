@@ -9,8 +9,8 @@
 #include "formatting.h"
 
 TensorStorage::TensorStorage(
-    std::vector<size_t> shape,
-    float value
+        const std::vector<size_t>& shape,
+        const float value
 ): m_offset(0) {
 
     assert_positive_dims(shape);
@@ -28,9 +28,9 @@ TensorStorage::TensorStorage(
 }
 
 TensorStorage::TensorStorage(
-    std::vector<size_t> shape,
-    float start,
-    float end
+        const std::vector<size_t>& shape,
+        const float start,
+        const float end
 ): m_offset(0) {
 
     assert_positive_dims(shape);
@@ -47,9 +47,9 @@ TensorStorage::TensorStorage(
 }
 
 TensorStorage TensorStorage::linspace(
-    std::vector<size_t> shape,
-    float start,
-    float end
+    const std::vector<size_t>& shape,
+    const float start,
+    const float end
 ) {
     return TensorStorage(shape, start, end);
 }
@@ -142,17 +142,15 @@ std::vector<size_t> TensorStorage::logical_to_md(
     return md;
 }
 
-
-
 float& TensorStorage::get_entry_ref(
-    size_t l_index
-) {
+    const size_t l_index
+) const {
     return (*m_flat_data)[logical_to_flat(l_index)];
 }
 
 float& TensorStorage::get_entry_ref(
     const std::vector<size_t>& md_index
-) {
+) const {
     // Scalar case
     if (m_shape.empty()) {
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
@@ -170,13 +168,13 @@ bool TensorStorage::is_contiguous() const {
 }
 
 TensorStorage TensorStorage::fill(
-    float value
-) {
+    const float value
+) const {
     return TensorStorage(m_shape, value);
 }
 
 void TensorStorage::fill_inplace(
-    float value
+    const float value
 ) {
     for (size_t i = 0; i < m_numel; i++) {
         get_entry_ref(i) = value;
@@ -184,17 +182,17 @@ void TensorStorage::fill_inplace(
 }
 
 TensorStorage TensorStorage::linspace(
-    float start,
-    float end
-) {
+    const float start,
+    const float end
+) const {
     TensorStorage out { m_shape };
     out.linspace_inplace(start, end);
     return out;
 }
 
 void TensorStorage::linspace_inplace(
-    float start,
-    float end
+    const float start,
+    const float end
 ) {
     float delta = (end-start)/(static_cast<float>(m_numel-1));
     for (size_t i = 0; i < m_numel; i++) {
@@ -202,7 +200,7 @@ void TensorStorage::linspace_inplace(
     }
 }
 
-float& TensorStorage::item() {
+float& TensorStorage::item() const {
     if (m_numel != 1) {
         throw std::runtime_error(std::format("Cannot call item() on a non-singleton tensor (shape {}).", m_shape));
     }
@@ -225,42 +223,59 @@ bool TensorStorage::are_shapes_equal(
     return a.m_shape == b.m_shape;
 }
 
-TensorStorage TensorStorage::s_mult(const TensorStorage& a, const TensorStorage& b) {
+TensorStorage TensorStorage::s_mult(
+        const TensorStorage& a, 
+        const TensorStorage& b
+) {
     return s_apply_op(
         [](float x, float y) { return x * y; }, 
         a, b
     );
 }
 
-TensorStorage TensorStorage::s_div(const TensorStorage& a, const TensorStorage& b) {
+TensorStorage TensorStorage::s_div(
+        const TensorStorage& a,
+        const TensorStorage& b
+) {
     return s_apply_op(
         [](float x, float y) { return x / y; }, 
         a, b
     );
 }
 
-TensorStorage TensorStorage::s_add(const TensorStorage& a, const TensorStorage& b) {
+TensorStorage TensorStorage::s_add(
+        const TensorStorage& a,
+        const TensorStorage& b
+) {
     return s_apply_op(
         [](float x, float y) { return x + y; }, 
         a, b
     );
 }
 
-TensorStorage& TensorStorage::s_add_inplace(TensorStorage& a, const TensorStorage& b) {
+TensorStorage& TensorStorage::s_add_inplace(
+        TensorStorage& a,
+        const TensorStorage& b
+) {
     return s_apply_op_inplace(
         [](float x, float y) { return x + y; }, 
         a, b
     );
 }
 
-TensorStorage TensorStorage::s_minus(const TensorStorage& a) {
+TensorStorage TensorStorage::s_minus(
+        const TensorStorage& a
+) {
     return s_apply_op(
         [](float x) { return -x; }, 
         a
     );
 }
 
-TensorStorage TensorStorage::s_sub(const TensorStorage& a, const TensorStorage& b) {
+TensorStorage TensorStorage::s_sub(
+        const TensorStorage& a,
+        const TensorStorage& b
+) {
     return TensorStorage::s_add(a, TensorStorage::s_minus(b));
 }
 
@@ -271,7 +286,9 @@ TensorStorage TensorStorage::s_pow(const TensorStorage& base, const TensorStorag
     );
 }
 
-TensorStorage TensorStorage::s_log(const TensorStorage& arg) {
+TensorStorage TensorStorage::s_log(
+        const TensorStorage& arg
+) {
     return s_apply_op(
         [](float arg_) { return std::log(arg_); }, 
         arg
@@ -279,8 +296,8 @@ TensorStorage TensorStorage::s_log(const TensorStorage& arg) {
 }
 
  std::vector<size_t> TensorStorage::reduce_shape(
-    const std::vector<size_t>& shape,
-    const size_t dim
+        const std::vector<size_t>& shape,
+        const size_t dim
 ) {
     std::vector<size_t> out_shape = shape;
     
@@ -293,8 +310,8 @@ TensorStorage TensorStorage::s_log(const TensorStorage& arg) {
 }
 
 std::vector<size_t> TensorStorage::unsqueeze_shape(
-    const std::vector<size_t>& shape,
-    const size_t dim
+        const std::vector<size_t>& shape,
+        const size_t dim
 ) {
     std::vector<size_t> out_shape = shape;
 
@@ -307,9 +324,9 @@ std::vector<size_t> TensorStorage::unsqueeze_shape(
 }
 
 void TensorStorage::populate_in_md_for_accum(
-    std::vector<size_t>& in_md,
-    const std::vector<size_t>& out_md,
-    const size_t dim
+        std::vector<size_t>& in_md,
+        const std::vector<size_t>& out_md,
+        const size_t dim
 ) {
     // copy output coords into input coords (skip reduced dim)
     for (size_t i = 0, j = 0; i < in_md.size(); ++i) {
@@ -319,8 +336,8 @@ void TensorStorage::populate_in_md_for_accum(
 }
 
 TensorStorage TensorStorage::s_sum(
-    TensorStorage& a,
-    const size_t dim
+        const TensorStorage& a,
+        const size_t dim
 ) {
     if (dim >= a.m_shape.size()) {
         throw std::invalid_argument(
@@ -360,8 +377,8 @@ TensorStorage TensorStorage::s_sum(
 }
 
 TensorStorage TensorStorage::s_unsqueeze(
-    TensorStorage& a,
-    const size_t dim
+        const TensorStorage& a,
+        const size_t dim
 ) {
     if (dim > a.m_shape.size()) {
         throw std::invalid_argument(
@@ -401,9 +418,9 @@ TensorStorage TensorStorage::s_unsqueeze(
 }
 
 TensorStorage TensorStorage::s_repeat(
-    TensorStorage& a,
-    const size_t dim,
-    const size_t times
+        const TensorStorage& a,
+        const size_t dim,
+        const size_t times
 ) {
     if (dim >= a.m_shape.size()) {
         throw std::invalid_argument(
@@ -444,8 +461,8 @@ TensorStorage TensorStorage::s_repeat(
 }
 
 TensorStorage TensorStorage::s_squeeze(
-    TensorStorage& a,
-    const size_t dim
+        const TensorStorage& a,
+        const size_t dim
 ) {
     if (dim >= a.m_shape.size()) {
         throw std::invalid_argument(

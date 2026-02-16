@@ -20,8 +20,8 @@ std::ostream& BackwardAdd::print(std::ostream& os) const {
 
 void BackwardAdd::compute_operands_grad(
     const Tensor& out,
-    bool create_graph)
-{
+    bool create_graph
+) {
     m_operands[0].accumulate_grad(out.grad(), create_graph);
     m_operands[1].accumulate_grad(out.grad(), create_graph);
 }
@@ -87,8 +87,8 @@ std::ostream& BackwardLog::print(std::ostream& os) const {
 
 void BackwardLog::compute_operands_grad(
         const Tensor& out,
-        bool create_graph)
-{
+        bool create_graph
+) {
     Tensor& x = m_operands[0];
     x.accumulate_grad(out.grad() / x, create_graph);
 }
@@ -107,8 +107,8 @@ std::ostream& BackwardSum::print(std::ostream& os) const {
 }
 
 void BackwardSum::compute_operands_grad(
-    [[maybe_unused]] const Tensor& out,
-    [[maybe_unused]] bool create_graph
+    const Tensor& out,
+    bool create_graph
 ) {
     Tensor& x = m_operands[0];
     // Use the gradient of the output (out.grad()) and broadcast it back

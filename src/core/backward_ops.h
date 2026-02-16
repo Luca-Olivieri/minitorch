@@ -48,19 +48,6 @@ public:
             "Error: All arguments must be implicitly convertible to Tensor.");
     }
 
-    /*
-    void init_operands_grad_if_none() {
-        for (size_t i {0}; i<N; i++) {
-            Tensor& operand = m_operands[i];
-
-            if (!operand.m_node->m_grad) {
-                operand.m_node->m_grad = std::make_shared<TensorNode>(operand.shape());
-                operand.m_node->m_grad->m_requires_grad = false;
-            }
-        }
-    }
-    */
-
     void reset_all_grads() override {
         for (size_t i {0}; i<N; i++) {
             Tensor& operand = m_operands[i];
