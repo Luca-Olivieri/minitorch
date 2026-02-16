@@ -43,12 +43,12 @@ public:
         bool create_graph = false
     );
 
-    std::map<TensorNode*, int> compute_in_degree();
+    std::map<TensorNode*, int> compute_in_degree() const;
 
     void topological_backprop(
         std::map<TensorNode*, int>& in_degree,
         bool create_graph
-    );
+    ) const;
     
     void fill_inplace(
         float value
@@ -77,6 +77,8 @@ public:
     void reset_grad();
     
     void zero_grad();
+
+    void detach();
 
     template <auto Op, typename BW_OP, typename... Tensors>
     Tensor apply_op_ag(
@@ -136,6 +138,8 @@ public:
         const size_t dim,
         const size_t times
     ) const;
+    
+    Tensor clone() const;
 
     Tensor matmul(
         const Tensor& other

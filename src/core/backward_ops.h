@@ -209,5 +209,71 @@ public:
     void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
 };
 
+class BackwardClone : public BackwardView {
+public:
+    size_t m_dim;
+    
+    BackwardClone(
+        Tensor viewed_tensor
+    );
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+};
+
+template <size_t N>
+class NBackwardComposite : public NBackwardOp<N> {
+public:
+    using NBackwardOp<N>::m_operands;
+    Tensor m_internal_head;
+
+    template <typename... Tensors>
+    explicit NBackwardComposite(
+        Tensor internal_head,
+        Tensors... operands
+    ): 
+        NBackwardOp<N>(operands...),
+        m_internal_head(internal_head) {}
+    
+    void compute_operands_grad(
+        const Tensor& out,
+        bool create_graph
+    ) {
+        auto original_operands_bw_ops = save_and_detach_operands_bw_ops();
+
+        m_internal_head.accumulate_grad(out.grad(), create_graph);
+        
+        std::map<TensorNode*, int> in_degree { m_internal_head.compute_in_degree() };
+        m_internal_head.topological_backprop(in_degree, create_graph);
+
+        restore_operands_bw_ops(std::move(original_operands_bw_ops));
+    }
+
+private:
+    std::array<std::unique_ptr<BackwardOp>, N> save_and_detach_operands_bw_ops() {
+        std::array<std::unique_ptr<BackwardOp>, N> original_operands_bw_ops;
+        for (size_t i {0}; i < m_operands.size(); i++) {
+            original_operands_bw_ops[i] = std::move(m_operands[i].m_node->m_bw_op);
+            m_operands[i].detach();
+        }
+        return original_operands_bw_ops;
+    }
+
+    void restore_operands_bw_ops(
+        std::array<std::unique_ptr<BackwardOp>, N> original_operands_bw_ops
+    ) {
+        for (size_t i {0}; i < m_operands.size(); i++) {
+            m_operands[i].m_node->m_bw_op = std::move(original_operands_bw_ops[i]);
+        }
+    }
+};
+
+class BackwardMatMul : public NBackwardComposite<2> {
+public:
+    using NBackwardComposite<s_N>::NBackwardComposite;
+
+    std::ostream& print(std::ostream& os) const override;
+};
 
 #endif

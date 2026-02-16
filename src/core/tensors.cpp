@@ -110,6 +110,10 @@ void Tensor::zero_grad() {
     }
 }
 
+void Tensor::detach() {
+    m_node->m_bw_op = nullptr;
+}
+
 void Tensor::accumulate_grad(const Tensor& gradient, bool create_graph) {
     if (!m_node->m_grad) {
         // Initialize with zeros
@@ -252,6 +256,17 @@ Tensor Tensor::repeat(
     return Tensor(out);
 }
 
+Tensor Tensor::clone() const {
+    TensorStorage out_storage = m_node->m_storage.clone();
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+        std::move(out_storage)
+    );
+
+    out->m_bw_op = std::make_unique<BackwardClone>(*this);
+
+    return Tensor(out);
+}
+
 Tensor Tensor::matmul(
     const Tensor& other
 ) {
@@ -276,7 +291,18 @@ Tensor Tensor::matmul(
     Tensor b_expanded = other.unsqueeze(0).repeat(0, m); // [1,k,n] -> [m,k,n]
 
     Tensor prod = a_expanded * b_expanded; // elementwise [m,k,n]
-    Tensor out = prod.sum(1); // sum over k -> [m,n]
+    Tensor internal_out = prod.sum(1); // sum over k -> [m,n]
+
+    TensorStorage out_storage = internal_out.m_node->m_storage.clone();
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+        std::move(out_storage)
+    );
+
+    out->m_bw_op = std::make_unique<BackwardMatMul>(
+        internal_out,
+        *this,
+        other
+    );
 
     return out;
 }
@@ -289,7 +315,7 @@ const std::vector<size_t>& Tensor::shape() {
     return m_node->m_storage.m_shape;
 }
 
-std::map<TensorNode*, int> Tensor::compute_in_degree() {
+std::map<TensorNode*, int> Tensor::compute_in_degree() const {
     std::map<TensorNode*, int> in_degree;
     std::queue<TensorNode*> bfs_queue;
     std::set<TensorNode*> visited;
@@ -323,7 +349,7 @@ std::map<TensorNode*, int> Tensor::compute_in_degree() {
 void Tensor::topological_backprop(
     std::map<TensorNode*, int>& in_degree,
     bool create_graph
-) {
+) const {
     // 2. Process in topological order
     std::queue<TensorNode*> process_queue;
     process_queue.push(m_node.get());

@@ -174,3 +174,24 @@ void BackwardRepeat::compute_operands_grad(
     // so the gradient shape matches the original tensor's shape.
     x.accumulate_grad(out.grad().sum(m_dim).unsqueeze(m_dim), create_graph);
 }
+
+BackwardClone::BackwardClone(
+    Tensor viewed_tensor
+):
+    BackwardView(viewed_tensor) {}
+
+std::ostream& BackwardClone::print(std::ostream& os) const {
+    return os << "BackwardClone";
+}
+
+void BackwardClone::compute_operands_grad(
+    const Tensor& out,
+    bool create_graph
+) {
+    Tensor& x = m_operands[0];
+    x.accumulate_grad(out.grad(), create_graph);
+}
+
+std::ostream& BackwardMatMul::print(std::ostream& os) const {
+    return os << "BackwardMatMul";
+}
