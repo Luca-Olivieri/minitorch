@@ -17,12 +17,13 @@ public:
 
     virtual std::ostream& print(std::ostream& os) const = 0;
     friend std::ostream& operator<<(std::ostream& os, const BackwardOp& op);
-
-    // virtual void init_operands_grad_if_none() = 0;
     
     virtual void reset_all_grads() = 0;
     
-    virtual void compute_operands_grad(const Tensor& out, bool create_graph = false) = 0;
+    virtual void compute_operands_grad(
+        const Tensor& out,
+        const bool create_graph = false
+    ) = 0;
 
     virtual std::vector<Tensor> get_operands() const = 0;
 };
@@ -36,7 +37,7 @@ public:
         // 1. Variadic Template Constructor
     template <typename... Tensors>
     explicit NBackwardOp(
-        Tensors... operands
+            const Tensors... operands
     ): m_operands{{operands...}} { // Optimization note: Move semantics (Tensors&&... and std::forward) could be used here for efficiency to avoid atomic ref-count increments on shared_ptr
         // 2. Compile-time Arity Check
         static_assert(sizeof...(Tensors) == N, 
@@ -71,7 +72,10 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardMinus : public NBackwardOp<1> {
@@ -80,7 +84,10 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardSub : public NBackwardOp<2> {
@@ -89,7 +96,10 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardMult : public NBackwardOp<2> {
@@ -98,7 +108,10 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardPow : public NBackwardOp<2> {
@@ -107,7 +120,10 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardDiv : public NBackwardOp<2> {
@@ -116,7 +132,10 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardLog : public NBackwardOp<1> {
@@ -125,7 +144,10 @@ public:
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardReduce : public NBackwardOp<1> {
@@ -135,18 +157,21 @@ public:
 
 class BackwardSum : public BackwardReduce {
 public:
-    size_t m_dim;
-    size_t m_original_times;
+    const size_t m_dim;
+    const size_t m_original_times;
     
     BackwardSum(
-        Tensor reduced_tensor,
-        const size_t dim,
-        const size_t original_times
+            const Tensor reduced_tensor,
+            const size_t dim,
+            const size_t original_times
     );
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardView : public NBackwardOp<1> {
@@ -156,30 +181,36 @@ public:
 
 class BackwardUnsqueeze : public BackwardView {
 public:
-    size_t m_dim;
+    const size_t m_dim;
     
     BackwardUnsqueeze(
-        Tensor viewed_tensor,
-        const size_t dim
+            const Tensor viewed_tensor,
+            const size_t dim
     );
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardSqueeze : public BackwardView {
 public:
-    size_t m_dim;
+    const size_t m_dim;
     
     BackwardSqueeze(
-        Tensor viewed_tensor,
-        const size_t dim
+            const Tensor viewed_tensor,
+            const size_t dim
     );
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardRepeat : public BackwardView {
@@ -187,13 +218,16 @@ public:
     const size_t m_dim;
     
     BackwardRepeat(
-        Tensor viewed_tensor,
-        const size_t dim
+            const Tensor viewed_tensor,
+            const size_t dim
     );
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 class BackwardClone : public BackwardView {
@@ -201,12 +235,15 @@ public:
     size_t m_dim;
     
     BackwardClone(
-        Tensor viewed_tensor
+        const Tensor viewed_tensor
     );
 
     std::ostream& print(std::ostream& os) const override;
     
-    void compute_operands_grad(const Tensor& out, bool create_graph = false) override;
+    void compute_operands_grad(
+            const Tensor& out,
+            const bool create_graph = false
+    ) override;
 };
 
 template <size_t N>
@@ -217,17 +254,17 @@ public:
 
     template <typename... Tensors>
     explicit NBackwardComposite(
-        Tensor internal_head,
-        Tensors... operands
+            const Tensor internal_head,
+            const Tensors... operands
     ): 
         NBackwardOp<N>(operands...),
         m_internal_head(internal_head) {}
     
     void compute_operands_grad(
-        const Tensor& out,
-        bool create_graph
+            const Tensor& out,
+            const bool create_graph
     ) {
-        auto original_operands_bw_ops = save_and_detach_operands_bw_ops();
+        auto original_operands_bw_ops {std::move(save_and_detach_operands_bw_ops())};
 
         m_internal_head.accumulate_grad(out.grad(), create_graph);
         
@@ -244,11 +281,11 @@ private:
             original_operands_bw_ops[i] = std::move(m_operands[i].m_node->m_bw_op);
             m_operands[i].detach();
         }
-        return original_operands_bw_ops;
+        return std::move(original_operands_bw_ops);
     }
 
     void restore_operands_bw_ops(
-        std::array<std::unique_ptr<BackwardOp>, N> original_operands_bw_ops
+            std::array<std::unique_ptr<BackwardOp>, N>&& original_operands_bw_ops
     ) {
         for (size_t i {0}; i < m_operands.size(); i++) {
             m_operands[i].m_node->m_bw_op = std::move(original_operands_bw_ops[i]);
