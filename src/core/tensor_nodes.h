@@ -16,12 +16,12 @@ public:
     std::shared_ptr<Tensor> m_grad { nullptr };
 
     TensorNode(
-        const std::vector<size_t> shape,
-        const float value = 0.0f
+            const std::vector<size_t> shape,
+            const float value = 0.0f
     );
 
     TensorNode(
-        TensorStorage&& storage
+            TensorStorage&& storage
     );
 };
 

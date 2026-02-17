@@ -279,7 +279,7 @@ private:
         std::array<std::unique_ptr<GradFn>, N> original_operands_bw_ops;
         for (size_t i {0}; i < m_operands.size(); i++) {
             original_operands_bw_ops[i] = std::move(m_operands[i].m_node->m_grad_fn);
-            m_operands[i].detach();
+            m_operands[i].detach_inplace();
         }
         return std::move(original_operands_bw_ops);
     }

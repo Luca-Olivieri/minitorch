@@ -8,8 +8,8 @@
 #include "tensor_storages.h"
 
 Tensor::Tensor(
-    std::vector<size_t> shape,
-    float value
+        const std::vector<size_t> shape,
+        const float value
 ) {
     m_node = std::make_shared<TensorNode>(
         shape,
@@ -18,12 +18,12 @@ Tensor::Tensor(
 }
 
 Tensor::Tensor(
-    std::shared_ptr<TensorNode> node
+        const std::shared_ptr<TensorNode> node
 ): m_node{node} {}
 
 std::ostream& operator<<(
-    std::ostream& os,
-    const Tensor& tensor
+        std::ostream& os,
+        const Tensor& tensor
 ) {
     os << tensor.m_node->m_storage;
     if (tensor.m_node->m_grad_fn) {
@@ -32,27 +32,27 @@ std::ostream& operator<<(
     return os;
 }
 float& Tensor::operator[](
-    const std::vector<size_t>& md_index
-) {
+        const std::vector<size_t>& md_index
+) const {
     if (m_node->m_storage.m_shape.empty()) { // Scalar case
         throw std::invalid_argument(std::format("\nScalar tensor cannot be access by index. Got index {}", md_index));
     }
     return m_node->m_storage.get_entry_ref((md_index));
 }
 
-float& Tensor::item() {
+float& Tensor::item() const {
     return m_node->m_storage.item();
-}
+} 
 
 void Tensor::fill_inplace(
-    float value
+        const float value
 ) {
     m_node->m_storage.fill_inplace(value);
 }
 
 Tensor Tensor::fill(
-    float value
-) {
+        const float value
+) const {
     TensorStorage out = m_node->m_storage.fill(value);
     std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
         std::move(out)
@@ -61,16 +61,16 @@ Tensor Tensor::fill(
 }
 
 void Tensor::linspace_inplace(
-    float start,
-    float end
+        const float start,
+        const float end
 ) {
     m_node->m_storage.linspace_inplace(start, end);
 }
 
 Tensor Tensor::linspace(
-    float start,
-    float end
-) {
+        const float start,
+        const float end
+) const {
     TensorStorage out = m_node->m_storage.linspace(start, end);
     std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
         std::move(out)
@@ -79,9 +79,9 @@ Tensor Tensor::linspace(
 }
 
 Tensor Tensor::linspace(
-    std::vector<size_t> shape,
-    float start,
-    float end
+        const std::vector<size_t>& shape,
+        float start,
+        float end
 ) {
     TensorStorage out = TensorStorage::linspace(std::move(shape), start, end);
     std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
@@ -90,7 +90,7 @@ Tensor Tensor::linspace(
     return Tensor(out_node);
 }
 
-bool Tensor::is_contiguous() {
+bool Tensor::is_contiguous() const {
     return m_node->m_storage.is_contiguous();
 }
 
@@ -110,7 +110,7 @@ void Tensor::zero_grad() {
     }
 }
 
-void Tensor::detach() {
+void Tensor::detach_inplace() {
     m_node->m_grad_fn = nullptr;
 }
 
@@ -121,7 +121,7 @@ void Tensor::accumulate_grad(const Tensor& gradient, bool create_graph) {
         m_node->m_grad->fill_inplace(0.0f);
     }
 
-    Tensor current_grad(*m_node->m_grad);
+    const Tensor current_grad(*m_node->m_grad);
     Tensor new_grad = current_grad + gradient;
 
     if (!create_graph) {
@@ -135,52 +135,52 @@ void Tensor::accumulate_grad(const Tensor& gradient, bool create_graph) {
 }
 
 Tensor Tensor::operator+(
-    const Tensor& other
-) {
+        const Tensor& other
+) const {
     return apply_op_ag<TensorStorage::s_add, BackwardAdd>(other);
 }
 
 Tensor Tensor::operator/(
-    const Tensor& other
-) {
+        const Tensor& other
+) const {
     return apply_op_ag<TensorStorage::s_div, BackwardDiv>(other);
 }
 
 void Tensor::operator+=(
-    const Tensor& other
+        const Tensor& other
 ) {
     TensorStorage::s_add_inplace(m_node->m_storage, other.m_node->m_storage);
 }
 
-Tensor Tensor::operator-() {
+Tensor Tensor::operator-() const {
     return apply_op_ag<TensorStorage::s_minus, BackwardMinus>();
 }
 
 Tensor Tensor::operator-(
-    const Tensor& other
-) {
+        const Tensor& other
+) const {
     return apply_op_ag<TensorStorage::s_sub, BackwardSub>(other);
 }
 
 Tensor Tensor::operator*(
-    const Tensor& other
-) {
+        const Tensor& other
+) const {
     return apply_op_ag<TensorStorage::s_mult, BackwardMult>(other);
 }
 
 Tensor Tensor::pow(
-    const Tensor& other
-) {
+        const Tensor& other
+) const {
     return apply_op_ag<TensorStorage::s_pow, BackwardPow>(other);
 }
 
-Tensor Tensor::log() {
+Tensor Tensor::log() const {
     return apply_op_ag<TensorStorage::s_log, BackwardLog>();
 }
 
 Tensor Tensor::sum(
-    const size_t dim
-) {
+        const size_t dim
+) const {
     TensorStorage out_storage = TensorStorage::s_sum(
         m_node->m_storage, 
         dim
@@ -198,7 +198,7 @@ Tensor Tensor::sum(
 }
 
 Tensor Tensor::unsqueeze(
-    const size_t dim
+        const size_t dim
 ) const {
     TensorStorage out_storage = TensorStorage::s_unsqueeze(
         m_node->m_storage, 
@@ -217,7 +217,7 @@ Tensor Tensor::unsqueeze(
 }
 
 Tensor Tensor::squeeze(
-    const size_t dim
+        const size_t dim
 ) const {
     TensorStorage out_storage = TensorStorage::s_squeeze(
         m_node->m_storage, 
@@ -236,8 +236,8 @@ Tensor Tensor::squeeze(
 }
 
 Tensor Tensor::repeat(
-    const size_t dim,
-    const size_t times
+        const size_t dim,
+        const size_t times
 ) const {
     TensorStorage out_storage = TensorStorage::s_repeat(
         m_node->m_storage, 
@@ -268,8 +268,8 @@ Tensor Tensor::clone() const {
 }
 
 Tensor Tensor::matmul(
-    const Tensor& other
-) {
+        const Tensor& other
+) const {
     const std::vector<size_t>& a_shape = this->m_node->m_storage.m_shape;
     const std::vector<size_t>& b_shape = other.m_node->m_storage.m_shape;
 
@@ -277,21 +277,21 @@ Tensor Tensor::matmul(
         throw std::invalid_argument(std::format("matmul requires 2D tensors, got {}D and {}D", a_shape.size(), b_shape.size()));
     }
 
-    size_t m = a_shape[0];
-    size_t k = a_shape[1];
-    size_t kb = b_shape[0];
-    size_t n = b_shape[1];
+    const size_t m = a_shape[0];
+    const size_t k = a_shape[1];
+    const size_t kb = b_shape[0];
+    const size_t n = b_shape[1];
 
     if (k != kb) {
         throw std::invalid_argument(std::format("matmul inner dimensions must match ({} != {})", k, kb));
     }
 
     // Use unsqueeze->repeat->mult->sum pipeline
-    Tensor a_expanded = this->unsqueeze(2).repeat(2, n); // [m,k,1] -> [m,k,n]
-    Tensor b_expanded = other.unsqueeze(0).repeat(0, m); // [1,k,n] -> [m,k,n]
+    const Tensor a_expanded = this->unsqueeze(2).repeat(2, n); // [m,k,1] -> [m,k,n]
+    const Tensor b_expanded = other.unsqueeze(0).repeat(0, m); // [1,k,n] -> [m,k,n]
 
-    Tensor prod = a_expanded * b_expanded; // elementwise [m,k,n]
-    Tensor internal_out = prod.sum(1); // sum over k -> [m,n]
+    const Tensor prod = a_expanded * b_expanded; // elementwise [m,k,n]
+    const Tensor internal_out = prod.sum(1); // sum over k -> [m,n]
 
     TensorStorage out_storage = internal_out.m_node->m_storage.clone();
     std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
@@ -311,7 +311,7 @@ Tensor Tensor::grad() const {
     return *m_node->m_grad;
 }
 
-const std::vector<size_t>& Tensor::shape() {
+const std::vector<size_t>& Tensor::shape() const {
     return m_node->m_storage.m_shape;
 }
 
@@ -331,7 +331,7 @@ std::map<TensorNode*, int> Tensor::compute_in_degree() const {
         bfs_queue.pop();
         
         if (u->m_grad_fn) {
-            std::vector<Tensor> operands = u->m_grad_fn->get_operands();
+            const std::vector<Tensor> operands = u->m_grad_fn->get_operands();
             for(auto& op : operands) {
                 TensorNode* v = op.m_node.get();
                 in_degree[v]++;
@@ -347,10 +347,10 @@ std::map<TensorNode*, int> Tensor::compute_in_degree() const {
 }
 
 void Tensor::topological_backprop(
-    std::map<TensorNode*, int>& in_degree,
-    bool create_graph
+        std::map<TensorNode*, int>& in_degree,
+        const bool create_graph
 ) const {
-    // 2. Process in topological order
+    // Process in topological order
     std::queue<TensorNode*> process_queue;
     process_queue.push(m_node.get());
     
@@ -377,7 +377,9 @@ void Tensor::topological_backprop(
     }
 }
 
-void Tensor::backward(bool create_graph) {
+void Tensor::backward(
+        const bool create_graph
+) {
     m_node->m_grad = std::make_shared<Tensor>(m_node->m_storage.m_shape);
     m_node->m_grad->fill_inplace(1.0f);
     

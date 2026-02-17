@@ -14,76 +14,78 @@ public:
     friend class TensorNode;
 
     Tensor(
-        std::vector<size_t> shape,
-        float value = 0.0f
+            const std::vector<size_t> shape,
+            const float value = 0.0f
     );
     
     Tensor(
-        std::shared_ptr<TensorNode> node
+            const std::shared_ptr<TensorNode> node
     );
 
     friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor);
     
-    float& operator[](const std::vector<size_t>& md_index);
+    float& operator[](
+            const std::vector<size_t>& md_index
+    ) const;
 
-    float& item();
+    float& item() const;
 
-    bool is_contiguous();
+    bool is_contiguous() const;
 
     Tensor grad() const;
 
-    const std::vector<size_t>& shape();
+    const std::vector<size_t>& shape() const;
 
     void backward(
-        bool create_graph = false
+            const bool create_graph = false
     );
 
     void accumulate_grad(
-        const Tensor& gradient,
-        bool create_graph = false
+            const Tensor& gradient,
+            const bool create_graph = false
     );
 
     std::map<TensorNode*, int> compute_in_degree() const;
 
     void topological_backprop(
-        std::map<TensorNode*, int>& in_degree,
-        bool create_graph
+            std::map<TensorNode*, int>& in_degree,
+            const bool create_graph
     ) const;
     
     void fill_inplace(
-        float value
+            const float value
     );
 
     Tensor fill(
-        float value
-    );
+            const float value
+    ) const;
 
     void linspace_inplace(
-        float start,
-        float end
+            const float start,
+            const float end
     );
 
     Tensor linspace(
-        float start,
-        float end
-    );
+            const float start,
+            const float end
+    ) const;
 
     static Tensor linspace(
-        std::vector<size_t> shape,
-        float start,
-        float end
+            const std::vector<size_t>& shape,
+            const float start,
+            const float end
     );
 
     void reset_grad();
     
     void zero_grad();
 
-    void detach();
+    void detach_inplace();
 
     template <auto Op, typename BW_OP, typename... Tensors>
     Tensor apply_op_ag(
-        const Tensors&... others
-    ) {
+            const Tensors&... others
+    ) const {
         TensorStorage out_storage = Op(m_node->m_storage, others.m_node->m_storage...);
         std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(std::move(out_storage));
         out->m_grad_fn = std::make_unique<BW_OP>(
@@ -95,55 +97,55 @@ public:
     }
 
     Tensor operator+(
-        const Tensor& other
-    );
+            const Tensor& other
+    ) const;
     
     void operator+=(
-        const Tensor& other
+            const Tensor& other
     );
 
-    Tensor operator-();
+    Tensor operator-() const;
     
     Tensor operator-(
-        const Tensor& other
-    );
+            const Tensor& other
+    ) const;
     
     Tensor operator*(
-        const Tensor& other
-    );
+            const Tensor& other
+    ) const;
     
     Tensor operator/(
-        const Tensor& other
-    );
+            const Tensor& other
+    ) const;
     
     Tensor pow(
-        const Tensor& other
-    );
+            const Tensor& other
+    ) const;
     
-    Tensor log();
+    Tensor log() const;
     
     Tensor sum(
-        const size_t dim
-    );
+            const size_t dim
+    ) const;
     
     Tensor unsqueeze(
-        const size_t dim
+            const size_t dim
     ) const;
     
     Tensor squeeze(
-        const size_t dim
+            const size_t dim
     ) const;
     
     Tensor repeat(
-        const size_t dim,
-        const size_t times
+            const size_t dim,
+            const size_t times
     ) const;
     
     Tensor clone() const;
 
     Tensor matmul(
-        const Tensor& other
-    );
+            const Tensor& other
+    ) const;
 private:
 };
 
