@@ -1,6 +1,7 @@
 #include <queue>
 #include <map>
 #include <set>
+#include <algorithm>
 
 #include "tensors.h"
 #include "tensor_nodes.h"
@@ -9,11 +10,13 @@
 
 Tensor::Tensor(
         const std::vector<size_t> shape,
-        const float value
+        const float value,
+        const bool requires_grad
 ) {
     m_node = std::make_shared<TensorNode>(
         shape,
-        value
+        value,
+        requires_grad
     );
 }
 
@@ -80,12 +83,14 @@ Tensor Tensor::linspace(
 
 Tensor Tensor::linspace(
         const std::vector<size_t>& shape,
-        float start,
-        float end
+        const float start,
+        const float end,
+        const bool requires_grad
 ) {
     TensorStorage out = TensorStorage::linspace(std::move(shape), start, end);
     std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
-        std::move(out)
+        std::move(out),
+        requires_grad
     );
     return Tensor(out_node);
 }
@@ -112,6 +117,19 @@ void Tensor::zero_grad() {
 
 void Tensor::detach_inplace() {
     m_node->m_grad_fn = nullptr;
+}
+
+bool Tensor::compute_requires_grad_from_operands(
+    const std::vector<Tensor>& others
+) const {
+    std::vector<Tensor> operands = others;
+    operands.push_back(*this); // add current instance to operands
+    const bool requires_grad_or = std::any_of(
+        operands.begin(),
+        operands.end(),
+        [](Tensor t){ return t.m_node->m_requires_grad; }
+    );
+    return requires_grad_or;
 }
 
 void Tensor::accumulate_grad(
@@ -368,13 +386,16 @@ void Tensor::topological_backprop(
 void Tensor::backward(
         const bool retain_graph
 ) {
-    m_node->m_grad = std::make_shared<Tensor>(m_node->m_storage.m_shape);
-    m_node->m_grad->fill_inplace(1.0f);
-    
-    // Topological sort to ensure correctness for DAGs (shared nodes)
-    // Map to store in-degrees (number of parents in the computation graph that use this node)
-    
-    std::map<TensorNode*, int> in_degree { compute_in_degree() };
-
-    topological_backprop(in_degree, retain_graph);
+    if (m_node->m_requires_grad) {
+        m_node->m_grad = std::make_shared<Tensor>(m_node->m_storage.m_shape);
+        m_node->m_grad->fill_inplace(1.0f);
+        
+        // map to store in-degrees (number of parents in the computation graph that use this node)
+        std::map<TensorNode*, int> in_degree { compute_in_degree() };
+        // topological sort to ensure correctness for DAGs (shared nodes)
+        topological_backprop(in_degree, retain_graph);
+    }
+    else {
+        throw std::invalid_argument(std::format("\nCannot call backward on tensor with requires_grad=False. Likely, the graph has no leaf nodes requiring gradients."));
+    }
 }

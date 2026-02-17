@@ -15,7 +15,8 @@ public:
 
     Tensor(
             const std::vector<size_t> shape,
-            const float value = 0.0f
+            const float value = 0.0f,
+            const bool requires_grad = true
     );
     
     Tensor(
@@ -72,7 +73,8 @@ public:
     static Tensor linspace(
             const std::vector<size_t>& shape,
             const float start,
-            const float end
+            const float end,
+            const bool requires_grad = true
     );
 
     void reset_grad();
@@ -81,17 +83,25 @@ public:
 
     void detach_inplace();
 
+    bool compute_requires_grad_from_operands(
+        const std::vector<Tensor>& others
+    ) const;
+
     template <auto Op, typename BW_OP, typename... Tensors>
     Tensor apply_op_ag(
             const Tensors&... others
     ) const {
         TensorStorage out_storage = Op(m_node->m_storage, others.m_node->m_storage...);
-        std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(std::move(out_storage));
-        out->m_grad_fn = std::make_unique<BW_OP>(
-            m_node,       // First operand
-            others...  // others are Tensors
+        std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+            std::move(out_storage),
+            compute_requires_grad_from_operands(std::vector<Tensor>{others...})
         );
-
+        if (out->m_requires_grad) {
+            out->m_grad_fn = std::make_unique<BW_OP>(
+                m_node,     // first operand
+                others...   // others are Tensors
+            );
+        }
         return Tensor(out);
     }
 

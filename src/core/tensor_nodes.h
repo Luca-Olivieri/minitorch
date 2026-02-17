@@ -14,14 +14,17 @@ public:
     
     std::unique_ptr<GradFn> m_grad_fn { nullptr };
     std::shared_ptr<Tensor> m_grad { nullptr };
+    const bool m_requires_grad {true};
 
     TensorNode(
             const std::vector<size_t> shape,
-            const float value = 0.0f
+            const float value = 0.0f,
+            const bool requires_grad = true
     );
 
     TensorNode(
-            TensorStorage&& storage
+            TensorStorage&& storage,
+            const bool requires_grad = true
     );
 };
 
