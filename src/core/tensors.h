@@ -37,19 +37,18 @@ public:
     const std::vector<size_t>& shape() const;
 
     void backward(
-            const bool create_graph = false
+            const bool retain_graph = false
     );
 
     void accumulate_grad(
-            const Tensor& gradient,
-            const bool create_graph = false
+            const Tensor& gradient
     );
 
     std::map<TensorNode*, int> compute_in_degree() const;
 
     void topological_backprop(
             std::map<TensorNode*, int>& in_degree,
-            const bool create_graph
+            const bool retain_graph
     ) const;
     
     void fill_inplace(

@@ -21,8 +21,7 @@ public:
     virtual void reset_all_grads() = 0;
     
     virtual void compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph = false
+        const Tensor& out
     ) = 0;
 
     virtual std::vector<Tensor> get_operands() const = 0;
@@ -73,8 +72,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -85,8 +83,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -97,8 +94,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -109,8 +105,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -121,8 +116,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -133,8 +127,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -145,8 +138,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -169,8 +161,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -191,8 +182,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -208,8 +198,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -225,8 +214,7 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
 };
 
@@ -241,63 +229,8 @@ public:
     std::ostream& print(std::ostream& os) const override;
     
     void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph = false
+            const Tensor& out
     ) override;
-};
-
-template <size_t N>
-class NBackwardComposite : public NBackwardOp<N> {
-public:
-    using NBackwardOp<N>::m_operands;
-    Tensor m_internal_head;
-
-    template <typename... Tensors>
-    explicit NBackwardComposite(
-            const Tensor internal_head,
-            const Tensors... operands
-    ): 
-        NBackwardOp<N>(operands...),
-        m_internal_head(internal_head) {}
-    
-    void compute_operands_grad(
-            const Tensor& out,
-            const bool create_graph
-    ) {
-        auto original_operands_bw_ops {std::move(save_and_detach_operands_bw_ops())};
-
-        m_internal_head.accumulate_grad(out.grad(), create_graph);
-        
-        std::map<TensorNode*, int> in_degree { m_internal_head.compute_in_degree() };
-        m_internal_head.topological_backprop(in_degree, create_graph);
-
-        restore_operands_bw_ops(std::move(original_operands_bw_ops));
-    }
-
-private:
-    std::array<std::unique_ptr<GradFn>, N> save_and_detach_operands_bw_ops() {
-        std::array<std::unique_ptr<GradFn>, N> original_operands_bw_ops;
-        for (size_t i {0}; i < m_operands.size(); i++) {
-            original_operands_bw_ops[i] = std::move(m_operands[i].m_node->m_grad_fn);
-            m_operands[i].detach_inplace();
-        }
-        return std::move(original_operands_bw_ops);
-    }
-
-    void restore_operands_bw_ops(
-            std::array<std::unique_ptr<GradFn>, N>&& original_operands_bw_ops
-    ) {
-        for (size_t i {0}; i < m_operands.size(); i++) {
-            m_operands[i].m_node->m_grad_fn = std::move(original_operands_bw_ops[i]);
-        }
-    }
-};
-
-class BackwardMatMul : public NBackwardComposite<2> {
-public:
-    using NBackwardComposite<s_N>::NBackwardComposite;
-
-    std::ostream& print(std::ostream& os) const override;
 };
 
 #endif

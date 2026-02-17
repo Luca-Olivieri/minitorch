@@ -19,11 +19,10 @@ std::ostream& BackwardAdd::print(std::ostream& os) const {
 }
 
 void BackwardAdd::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
-    m_operands[0].accumulate_grad(out.grad(), create_graph);
-    m_operands[1].accumulate_grad(out.grad(), create_graph);
+    m_operands[0].accumulate_grad(out.grad());
+    m_operands[1].accumulate_grad(out.grad());
 }
 
 std::ostream& BackwardMinus::print(std::ostream& os) const {
@@ -31,10 +30,9 @@ std::ostream& BackwardMinus::print(std::ostream& os) const {
 }
 
 void BackwardMinus::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
-    m_operands[0].accumulate_grad(-out.grad(), create_graph);
+    m_operands[0].accumulate_grad(-out.grad());
 }
 
 std::ostream& BackwardSub::print(std::ostream& os) const {
@@ -42,11 +40,10 @@ std::ostream& BackwardSub::print(std::ostream& os) const {
 }
 
 void BackwardSub::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
-    m_operands[0].accumulate_grad(out.grad(), create_graph);
-    m_operands[1].accumulate_grad(-out.grad(), create_graph);
+    m_operands[0].accumulate_grad(out.grad());
+    m_operands[1].accumulate_grad(-out.grad());
 }
 
 std::ostream& BackwardMult::print(std::ostream& os) const {
@@ -54,13 +51,12 @@ std::ostream& BackwardMult::print(std::ostream& os) const {
 }
 
 void BackwardMult::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& a = m_operands[0];
     Tensor& b = m_operands[1];
-    a.accumulate_grad(b * out.grad(), create_graph);
-    b.accumulate_grad(a * out.grad(), create_graph);
+    a.accumulate_grad(b * out.grad());
+    b.accumulate_grad(a * out.grad());
 }
 
 std::ostream& BackwardDiv::print(std::ostream& os) const {
@@ -68,13 +64,12 @@ std::ostream& BackwardDiv::print(std::ostream& os) const {
 }
 
 void BackwardDiv::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& a = m_operands[0];
     Tensor& b = m_operands[1];
-    a.accumulate_grad(out.grad() / b, create_graph);
-    b.accumulate_grad(-a / (b * b) * out.grad(), create_graph);
+    a.accumulate_grad(out.grad() / b);
+    b.accumulate_grad(-a / (b * b) * out.grad());
 }
 
 std::ostream& BackwardPow::print(std::ostream& os) const {
@@ -82,18 +77,17 @@ std::ostream& BackwardPow::print(std::ostream& os) const {
 }
 
 void BackwardPow::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& base = m_operands[0];
     Tensor& exp = m_operands[1];
     Tensor ones(exp.shape());
     ones.fill_inplace(1.0f);
     
-    base.accumulate_grad((exp * base.pow(exp - ones)) * out.grad(), create_graph);
+    base.accumulate_grad((exp * base.pow(exp - ones)) * out.grad());
     
     Tensor log_base(base.log());
-    exp.accumulate_grad((base.pow(exp) * log_base) * out.grad(), create_graph);
+    exp.accumulate_grad((base.pow(exp) * log_base) * out.grad());
 }
 
 std::ostream& BackwardLog::print(std::ostream& os) const {
@@ -101,11 +95,10 @@ std::ostream& BackwardLog::print(std::ostream& os) const {
 }
 
 void BackwardLog::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& x = m_operands[0];
-    x.accumulate_grad(out.grad() / x, create_graph);
+    x.accumulate_grad(out.grad() / x);
 }
 
 BackwardSum::BackwardSum(
@@ -122,11 +115,10 @@ std::ostream& BackwardSum::print(std::ostream& os) const {
 }
 
 void BackwardSum::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& x = m_operands[0];
-    x.accumulate_grad(out.grad().unsqueeze(m_dim).repeat(m_dim, m_original_times), create_graph);
+    x.accumulate_grad(out.grad().unsqueeze(m_dim).repeat(m_dim, m_original_times));
 }
 
 BackwardUnsqueeze::BackwardUnsqueeze(
@@ -141,11 +133,10 @@ std::ostream& BackwardUnsqueeze::print(std::ostream& os) const {
 }
 
 void BackwardUnsqueeze::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& x = m_operands[0];
-    x.accumulate_grad(out.grad().squeeze(m_dim), create_graph);
+    x.accumulate_grad(out.grad().squeeze(m_dim));
 }
 
 BackwardSqueeze::BackwardSqueeze(
@@ -160,11 +151,10 @@ std::ostream& BackwardSqueeze::print(std::ostream& os) const {
 }
 
 void BackwardSqueeze::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& x = m_operands[0];
-    x.accumulate_grad(out.grad().unsqueeze(m_dim), create_graph);
+    x.accumulate_grad(out.grad().unsqueeze(m_dim));
 }
 
 BackwardRepeat::BackwardRepeat(
@@ -179,11 +169,10 @@ std::ostream& BackwardRepeat::print(std::ostream& os) const {
 }
 
 void BackwardRepeat::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& x = m_operands[0];
-    x.accumulate_grad(out.grad().sum(m_dim).unsqueeze(m_dim), create_graph);
+    x.accumulate_grad(out.grad().sum(m_dim).unsqueeze(m_dim));
 }
 
 BackwardClone::BackwardClone(
@@ -196,13 +185,8 @@ std::ostream& BackwardClone::print(std::ostream& os) const {
 }
 
 void BackwardClone::compute_operands_grad(
-        const Tensor& out,
-        const bool create_graph
+        const Tensor& out
 ) {
     Tensor& x = m_operands[0];
-    x.accumulate_grad(out.grad(), create_graph);
-}
-
-std::ostream& BackwardMatMul::print(std::ostream& os) const {
-    return os << "BackwardMatMul";
+    x.accumulate_grad(out.grad());
 }
