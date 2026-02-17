@@ -1,9 +1,10 @@
 #include <iostream>
 
+#include "core/formatting.h"
 #include "core/tensors.h"
 #include "core/tensor_nodes.h"
 #include "core/tensor_storages.h"
-#include "core/formatting.h"
+#include "src/core/nn/compute.h"
 
 Tensor forward_1st(
     Tensor& inputs
@@ -59,21 +60,18 @@ void optimize_2nd_deriv() {
     std::cout << x << '\n';
 }
 
+void try_linear() {
+    Tensor x = Tensor::linspace({4, 12}, 0.1f, 0.9f);
+    mt::nn::Linear lin1(12, 18);
+    Tensor y = lin1.forward(x);
+    std::cout << y << '\n';
+}
+
 int main()
 {
-    optimize_1st_deriv();
+    // optimize_1st_deriv();
     // optimize_2nd_deriv();
-
-    // Tensor a { Tensor::linspace({2, 2, 3}, 0.0f, 11.0f) };
-
-    // std::cout << a << '\n';
-    // std::cout << a.m_node->m_storage.m_strides << '\n';
-
-    // Tensor a = Tensor::linspace({1, 2, 3}, 1.0f, 6.0f);
-
-    // Tensor b = a.repeat(0, 5);
-
-    // std::cout << b << '\n';
+    try_linear();
     
     return 0;
 }
