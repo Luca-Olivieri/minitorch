@@ -71,6 +71,7 @@ int main() {
     test_tensor_div();
     test_tensor_pow();
     test_chained_ops();
+    test_chained_ops_more();
     test_tensor_log();
     test_unsqueeze();
     test_squeeze();

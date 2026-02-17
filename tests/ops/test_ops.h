@@ -68,8 +68,8 @@ void test_chained_ops() {
     
     ASSERT_EQ_APPROX(z[{1}], -1.17865f, 1e-4, "Forward check index 1");
 
-    // Backward
-    z.backward();
+    // Backward (explicitly do not retain graph)
+    z.backward(false);
     
     Tensor gx = x.grad();
     Tensor gy = y.grad();
@@ -113,3 +113,63 @@ void test_chained_ops() {
 }
 
 #endif
+
+void test_chained_ops_more() {
+    std::cout << "\n===[ test_ops.h - more chained tests ]===\n";
+
+    // p, q, r are vectors of length 3
+    Tensor p({3});
+    p[{0}] = 1.0f; p[{1}] = 2.0f; p[{2}] = 3.0f;
+
+    Tensor q({3});
+    q[{0}] = 0.5f; q[{1}] = -1.0f; q[{2}] = 2.0f;
+
+    Tensor r({3});
+    r[{0}] = 2.0f; r[{1}] = 1.0f; r[{2}] = 0.5f;
+
+    Tensor two({3});
+    two.fill_inplace(2.0f);
+
+    // Chain: u = p + q
+    //        v = u * r
+    //        w = v^2
+    //        s = sum(w)
+    //        t = log(s)
+    //        y = -t
+
+    Tensor u = p + q;
+    Tensor v = u * r;
+    Tensor w = v.pow(two);
+    Tensor s = w.sum(0);
+    Tensor t = s.log();
+    Tensor y = -t;
+
+    // Forward checks
+    // s = 9 + 1 + 6.25 = 16.25 -> log = ~2.788095 -> y = -2.788095
+    ASSERT_EQ_APPROX(y.item(), -2.788095f, 1e-5, "Forward scalar y");
+
+    // Backward (do not retain graph)
+    y.backward(false);
+
+    Tensor gp = p.grad();
+    Tensor gq = q.grad();
+    Tensor gr = r.grad();
+
+    // Expected (derived):
+    // dy/dp_i = -2*(p_i+q_i)*r_i^2 / s
+    // dy/dq_i = same as dy/dp_i
+    // dy/dr_i = -2*(p_i+q_i)^2 * r_i / s  (equivalently -2*u_i^2*r_i/s)
+
+    // Numeric expectations computed in test design
+    ASSERT_EQ_APPROX(gp[{0}], -0.7384615f, 1e-5, "grad p[0]");
+    ASSERT_EQ_APPROX(gq[{0}], -0.7384615f, 1e-5, "grad q[0]");
+    ASSERT_EQ_APPROX(gr[{0}], -0.55384615f, 1e-5, "grad r[0]");
+
+    ASSERT_EQ_APPROX(gp[{1}], -0.1230769f, 1e-6, "grad p[1]");
+    ASSERT_EQ_APPROX(gq[{1}], -0.1230769f, 1e-6, "grad q[1]");
+    ASSERT_EQ_APPROX(gr[{1}], -0.1230769f, 1e-6, "grad r[1]");
+
+    ASSERT_EQ_APPROX(gp[{2}], -0.15384615f, 1e-6, "grad p[2]");
+    ASSERT_EQ_APPROX(gq[{2}], -0.15384615f, 1e-6, "grad q[2]");
+    ASSERT_EQ_APPROX(gr[{2}], -1.5384615f, 1e-5, "grad r[2]");
+}
