@@ -2,7 +2,7 @@
 #define MODULES_H
 
 #include <memory>
-#include <unordered_map>
+#include <map>
 
 #include "src/core/tensors.h"
 
@@ -28,7 +28,7 @@ namespace mt::nn
         );
 
     protected:
-        std::unordered_map<std::string, std::shared_ptr<AbstractModule>> m_modules;
+        std::map<std::string, std::shared_ptr<AbstractModule>> m_modules;
     };
 
     class Module : public AbstractModule {
@@ -38,6 +38,6 @@ namespace mt::nn
                 std::shared_ptr<AbstractModule> module
         ) override;
     };
-} // namespace name
+}
 
 #endif
