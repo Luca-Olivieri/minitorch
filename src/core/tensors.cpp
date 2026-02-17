@@ -135,16 +135,18 @@ bool Tensor::compute_requires_grad_from_operands(
 void Tensor::accumulate_grad(
         const Tensor& gradient
 ) {
-    if (!m_node->m_grad) {
-        // Initialize with zeros
-        m_node->m_grad = std::make_shared<Tensor>(m_node->m_storage.m_shape);
-        m_node->m_grad->fill_inplace(0.0f);
+    if (m_node->m_requires_grad) {
+        if (!m_node->m_grad) {
+            // Initialize with zeros
+            m_node->m_grad = std::make_shared<Tensor>(m_node->m_storage.m_shape);
+            m_node->m_grad->fill_inplace(0.0f);
+        }
+    
+        const Tensor current_grad(*m_node->m_grad);
+        Tensor new_grad = current_grad + gradient;
+    
+        m_node->m_grad->m_node = new_grad.m_node;    
     }
-
-    const Tensor current_grad(*m_node->m_grad);
-    Tensor new_grad = current_grad + gradient;
-
-    m_node->m_grad->m_node = new_grad.m_node;    
 }
 
 Tensor Tensor::operator+(
