@@ -5,6 +5,7 @@
 #include "core/tensor_nodes.h"
 #include "core/tensor_storages.h"
 #include "src/core/nn/compute.h"
+#include "src/core/nn/activations.h"
 
 Tensor forward_1st(
     Tensor& inputs
@@ -63,8 +64,13 @@ void optimize_2nd_deriv() {
 void try_linear() {
     Tensor x = Tensor::linspace({4, 12}, 0.1f, 0.9f);
     mt::nn::Linear lin1(12, 18);
+    mt::nn::ReLU relu{};
     Tensor y = lin1.forward(x);
-    std::cout << y << '\n';
+    Tensor z = relu.forward(y);
+    z.backward();
+    std::cout << x.grad() << '\n';
+    std::cout << lin1.m_weight.grad() << '\n';
+    std::cout << lin1.m_bias.grad() << '\n';
 }
 
 int main()

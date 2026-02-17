@@ -190,3 +190,25 @@ void BackwardClone::compute_operands_grad(
     Tensor& x = m_operands[0];
     x.accumulate_grad(out.grad());
 }
+
+BackwardReLU::BackwardReLU(
+        const Tensor in_tensor
+):
+    BackwardAct(in_tensor) {}
+
+std::ostream& BackwardReLU::print(std::ostream& os) const {
+    return os << "BackwardReLU";
+}
+
+void BackwardReLU::compute_operands_grad(
+        const Tensor& out
+) {
+    Tensor& x = m_operands[0];
+    Tensor pos_mask(out.shape(), 0.0f);
+    for (size_t i {0}; i < out.m_node->m_storage.m_numel; ++i) {
+        if (out.m_node->m_storage.get_entry_ref(i) > 0.0f) {
+            pos_mask.m_node->m_storage.get_entry_ref(i) = 1.0f;
+        }
+    }
+    x.accumulate_grad(pos_mask*out.grad());
+}

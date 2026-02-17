@@ -233,4 +233,22 @@ public:
     ) override;
 };
 
+class BackwardAct : public NBackwardOp<1> {
+public:
+    using NBackwardOp<s_N>::NBackwardOp;
+};
+
+class BackwardReLU : public BackwardAct {
+public:    
+    BackwardReLU(
+            const Tensor in_tensor
+    );
+
+    std::ostream& print(std::ostream& os) const override;
+    
+    void compute_operands_grad(
+            const Tensor& out
+    ) override;
+};
+
 #endif
