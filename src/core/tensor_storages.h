@@ -175,12 +175,12 @@ private:
 
     template <typename Func, typename... Tensors>
     static TensorStorage s_apply_op(
-        const Func op,
-        const Tensors&... operands
+            const Func op,
+            const Tensors&... operands
     ) {
         // 2. Get metadata from the first tensor (using a trick to access the first element of a pack)
-        auto& first = [] (auto& head, [[maybe_unused]] auto&... tail) -> auto& { return head; }(operands...);
-        size_t numel = first.m_numel;
+        const auto& first = [] (auto& head, [[maybe_unused]] auto&... tail) -> auto& { return head; }(operands...);
+        const size_t numel = first.m_numel;
         TensorStorage out(first.m_shape);
 
         // 3. Optional: Shape safety check using Fold Expressions
@@ -199,12 +199,12 @@ private:
     
     template <typename Func, typename... Tensors>
     static TensorStorage& s_apply_op_inplace(
-        const Func op,
-        Tensors&... operands
+            const Func op,
+            Tensors&... operands
     ) {
         // 2. Get metadata from the first tensor (using a trick to access the first element of a pack)
         auto& first = [] (auto& head, [[maybe_unused]] auto&... tail) -> auto& { return head; }(operands...);
-        size_t numel = first.m_numel;
+        const size_t numel = first.m_numel;
         TensorStorage& out = first;
 
         // if (out.m_requires_grad) {
