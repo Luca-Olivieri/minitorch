@@ -3,7 +3,7 @@
 #include <math.h>
 #include <memory>
 
-#include "backward_ops.h"
+#include "grad_fns.h"
 #include "formatting.h"
 #include "tensor_nodes.h"
 #include "tensors.h"

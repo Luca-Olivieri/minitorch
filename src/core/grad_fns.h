@@ -1,5 +1,5 @@
-#ifndef BACKWARD_OPS
-#define BACKWARD_OPS
+#ifndef GRAD_FNS_H
+#define GRAD_FNS_H
 
 #include <iostream>
 #include <memory>
