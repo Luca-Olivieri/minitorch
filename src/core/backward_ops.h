@@ -9,14 +9,14 @@
 #include "tensor_nodes.h"
 #include "tensors.h"
 
-class BackwardOp {
+class GradFn {
 public:
-    BackwardOp();
+    GradFn();
 
-    virtual ~BackwardOp() = default;
+    virtual ~GradFn() = default;
 
     virtual std::ostream& print(std::ostream& os) const = 0;
-    friend std::ostream& operator<<(std::ostream& os, const BackwardOp& op);
+    friend std::ostream& operator<<(std::ostream& os, const GradFn& op);
     
     virtual void reset_all_grads() = 0;
     
@@ -29,7 +29,7 @@ public:
 };
 
 template <size_t N>
-class NBackwardOp: public BackwardOp {
+class NBackwardOp: public GradFn {
 public:
     static constexpr size_t s_N = N; // expose N as a static member
     std::array<Tensor, N> m_operands;
@@ -275,20 +275,20 @@ public:
     }
 
 private:
-    std::array<std::unique_ptr<BackwardOp>, N> save_and_detach_operands_bw_ops() {
-        std::array<std::unique_ptr<BackwardOp>, N> original_operands_bw_ops;
+    std::array<std::unique_ptr<GradFn>, N> save_and_detach_operands_bw_ops() {
+        std::array<std::unique_ptr<GradFn>, N> original_operands_bw_ops;
         for (size_t i {0}; i < m_operands.size(); i++) {
-            original_operands_bw_ops[i] = std::move(m_operands[i].m_node->m_bw_op);
+            original_operands_bw_ops[i] = std::move(m_operands[i].m_node->m_grad_fn);
             m_operands[i].detach();
         }
         return std::move(original_operands_bw_ops);
     }
 
     void restore_operands_bw_ops(
-            std::array<std::unique_ptr<BackwardOp>, N>&& original_operands_bw_ops
+            std::array<std::unique_ptr<GradFn>, N>&& original_operands_bw_ops
     ) {
         for (size_t i {0}; i < m_operands.size(); i++) {
-            m_operands[i].m_node->m_bw_op = std::move(original_operands_bw_ops[i]);
+            m_operands[i].m_node->m_grad_fn = std::move(original_operands_bw_ops[i]);
         }
     }
 };

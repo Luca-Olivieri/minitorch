@@ -86,7 +86,7 @@ public:
     ) {
         TensorStorage out_storage = Op(m_node->m_storage, others.m_node->m_storage...);
         std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(std::move(out_storage));
-        out->m_bw_op = std::make_unique<BW_OP>(
+        out->m_grad_fn = std::make_unique<BW_OP>(
             m_node,       // First operand
             others...  // others are Tensors
         );

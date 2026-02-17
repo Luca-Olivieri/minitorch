@@ -26,8 +26,8 @@ std::ostream& operator<<(
     const Tensor& tensor
 ) {
     os << tensor.m_node->m_storage;
-    if (tensor.m_node->m_bw_op) {
-        os << " " << *tensor.m_node->m_bw_op;
+    if (tensor.m_node->m_grad_fn) {
+        os << " " << *tensor.m_node->m_grad_fn;
     }
     return os;
 }
@@ -105,13 +105,13 @@ void Tensor::zero_grad() {
     if (m_node->m_grad) {
         reset_grad();
     }
-    if (m_node->m_bw_op) {
-        m_node->m_bw_op->reset_all_grads();
+    if (m_node->m_grad_fn) {
+        m_node->m_grad_fn->reset_all_grads();
     }
 }
 
 void Tensor::detach() {
-    m_node->m_bw_op = nullptr;
+    m_node->m_grad_fn = nullptr;
 }
 
 void Tensor::accumulate_grad(const Tensor& gradient, bool create_graph) {
@@ -126,8 +126,8 @@ void Tensor::accumulate_grad(const Tensor& gradient, bool create_graph) {
 
     if (!create_graph) {
         // Detach
-        if (new_grad.m_node->m_bw_op) {
-            new_grad.m_node->m_bw_op = nullptr;
+        if (new_grad.m_node->m_grad_fn) {
+            new_grad.m_node->m_grad_fn = nullptr;
         }
     }
 
@@ -188,7 +188,7 @@ Tensor Tensor::sum(
     std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
         std::move(out_storage)
     );
-    out->m_bw_op = std::make_unique<BackwardSum>(
+    out->m_grad_fn = std::make_unique<BackwardSum>(
         *this,
         dim,
         this->m_node->m_storage.m_shape[dim]
@@ -208,7 +208,7 @@ Tensor Tensor::unsqueeze(
         std::move(out_storage)
     );
 
-    out->m_bw_op = std::make_unique<BackwardUnsqueeze>(
+    out->m_grad_fn = std::make_unique<BackwardUnsqueeze>(
         *this,
         dim
     );
@@ -227,7 +227,7 @@ Tensor Tensor::squeeze(
         std::move(out_storage)
     );
 
-    out->m_bw_op = std::make_unique<BackwardSqueeze>(
+    out->m_grad_fn = std::make_unique<BackwardSqueeze>(
         *this,
         dim
     );
@@ -248,7 +248,7 @@ Tensor Tensor::repeat(
         std::move(out_storage)
     );
 
-    out->m_bw_op = std::make_unique<BackwardRepeat>(
+    out->m_grad_fn = std::make_unique<BackwardRepeat>(
         *this,
         dim
     );
@@ -262,7 +262,7 @@ Tensor Tensor::clone() const {
         std::move(out_storage)
     );
 
-    out->m_bw_op = std::make_unique<BackwardClone>(*this);
+    out->m_grad_fn = std::make_unique<BackwardClone>(*this);
 
     return Tensor(out);
 }
@@ -298,7 +298,7 @@ Tensor Tensor::matmul(
         std::move(out_storage)
     );
 
-    out->m_bw_op = std::make_unique<BackwardMatMul>(
+    out->m_grad_fn = std::make_unique<BackwardMatMul>(
         internal_out,
         *this,
         other
@@ -330,8 +330,8 @@ std::map<TensorNode*, int> Tensor::compute_in_degree() const {
         TensorNode* u = bfs_queue.front();
         bfs_queue.pop();
         
-        if (u->m_bw_op) {
-            std::vector<Tensor> operands = u->m_bw_op->get_operands();
+        if (u->m_grad_fn) {
+            std::vector<Tensor> operands = u->m_grad_fn->get_operands();
             for(auto& op : operands) {
                 TensorNode* v = op.m_node.get();
                 in_degree[v]++;
@@ -358,14 +358,14 @@ void Tensor::topological_backprop(
         TensorNode* u = process_queue.front();
         process_queue.pop();
         
-        if (u->m_bw_op) {
+        if (u->m_grad_fn) {
             // Push accumulated gradient to children
-            u->m_bw_op->compute_operands_grad(
+            u->m_grad_fn->compute_operands_grad(
                 Tensor(u->shared_from_this()),
                 create_graph
             );
             
-            std::vector<Tensor> operands = u->m_bw_op->get_operands();
+            std::vector<Tensor> operands = u->m_grad_fn->get_operands();
             for (auto& op : operands) {
                 TensorNode* v = op.m_node.get();
                 in_degree[v]--;

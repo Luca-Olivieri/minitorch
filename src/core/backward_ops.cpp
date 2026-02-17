@@ -8,9 +8,9 @@
 #include "tensor_nodes.h"
 #include "tensors.h"
 
-BackwardOp::BackwardOp() {}
+GradFn::GradFn() {}
 
-std::ostream& operator<<(std::ostream& os, const BackwardOp& op) {
+std::ostream& operator<<(std::ostream& os, const GradFn& op) {
     return op.print(os);
 }
 
