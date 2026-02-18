@@ -61,7 +61,7 @@ void optimize_2nd_deriv() {
     std::cout << x << '\n';
 }
 
-void try_linear() {
+void try_nn() {
     Tensor x = Tensor::linspace({4, 12}, 0.1f, 0.9f);
     mt::nn::Linear lin1(12, 18);
     mt::nn::ReLU relu{};
@@ -77,18 +77,7 @@ int main()
 {
     // optimize_1st_deriv();
     // optimize_2nd_deriv();
-    // try_linear();
-
-    Tensor a = Tensor::linspace({2, 3}, 1.0f, 6.0f);
-    Tensor b = Tensor::linspace({2, 3}, 6.0f, 1.0f);
-
-    Tensor y = Tensor::maximum(a, b);
-
-    y.backward();
-    
-    std::cout << y << '\n';
-    std::cout << a.grad() << '\n';
-    std::cout << b.grad() << '\n';
+    try_nn();
     
     return 0;
 }

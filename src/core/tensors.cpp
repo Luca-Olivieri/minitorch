@@ -341,25 +341,47 @@ Tensor Tensor::matmul(
     const std::vector<size_t>& a_shape = this->m_node->m_storage.m_shape;
     const std::vector<size_t>& b_shape = other.m_node->m_storage.m_shape;
 
-    if (a_shape.size() != 2 || b_shape.size() != 2) {
-        throw std::invalid_argument(std::format("matmul requires 2D tensors, got {}D and {}D", a_shape.size(), b_shape.size()));
+    const size_t a_ndim = a_shape.size();
+    const size_t b_ndim = b_shape.size();
+
+    if (!((a_ndim == 1 || a_ndim == 2) && (b_ndim == 1 || b_ndim == 2))) {
+        throw std::invalid_argument(std::format("matmul requires 1D or 2D tensors, got {}D and {}D", a_ndim, b_ndim));
     }
 
-    const size_t m = a_shape[0];
-    const size_t k = a_shape[1];
-    const size_t kb = b_shape[0];
-    const size_t n = b_shape[1];
+    // Convert 1D inputs to 2D views: a [K] -> [1,K], b [K] -> [K,1]
+    const bool a_was_1d = (a_ndim == 1);
+    const bool b_was_1d = (b_ndim == 1);
+
+    const Tensor a2 = a_was_1d ? this->unsqueeze(0) : *this; // [1,K] or [M,K]
+    const Tensor b2 = b_was_1d ? other.unsqueeze(1) : other; // [K,1] or [K,N]
+
+    const std::vector<size_t>& a2_shape = a2.m_node->m_storage.m_shape;
+    const std::vector<size_t>& b2_shape = b2.m_node->m_storage.m_shape;
+
+    const size_t m = a2_shape[0];
+    const size_t k = a2_shape[1];
+    const size_t kb = b2_shape[0];
+    const size_t n = b2_shape[1];
 
     if (k != kb) {
         throw std::invalid_argument(std::format("matmul inner dimensions must match ({} != {})", k, kb));
     }
 
-    // Use unsqueeze->repeat->mult->sum pipeline
-    const Tensor a_expanded = this->unsqueeze(2).repeat(2, n); // [m,k,1] -> [m,k,n]
-    const Tensor b_expanded = other.unsqueeze(0).repeat(0, m); // [1,k,n] -> [m,k,n]
+    // Use unsqueeze->repeat->mult->sum pipeline on 2D views
+    const Tensor a_expanded = a2.unsqueeze(2).repeat(2, n); // [m,k,1] -> [m,k,n]
+    const Tensor b_expanded = b2.unsqueeze(0).repeat(0, m); // [1,k,n] -> [m,k,n]
 
     const Tensor prod = a_expanded * b_expanded; // elementwise [m,k,n]
-    const Tensor out = prod.sum(1); // sum over k -> [m,n]
+    Tensor out = prod.sum(1); // sum over k -> [m,n]
+
+    // Squeeze result back to original dimensionality
+    if (a_was_1d && b_was_1d) {
+        out = out.squeeze(0).squeeze(0); // scalar
+    } else if (a_was_1d) {
+        out = out.squeeze(0); // shape [N]
+    } else if (b_was_1d) {
+        out = out.squeeze(1); // shape [M]
+    }
 
     return out;
 }

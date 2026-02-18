@@ -17,7 +17,7 @@
 #include "views/test_squeeze.h"
 #include "views/test_repeat.h"
 #include "reduces/test_sum.h"
-#include "nn/test_activations.h"
+#include "nn/activations/test_ReLU.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -68,7 +68,6 @@ int main() {
     test_tensor_neg();
     test_tensor_sub();
     test_tensor_mult();
-    test_tensor_matmul();
     test_tensor_div();
     test_tensor_pow();
     test_chained_ops();
@@ -79,6 +78,7 @@ int main() {
     test_repeat();
     test_relu_forward_backward();
     test_storage_sum();
+    test_tensor_matmul();
     
     if (failed_tests == 0) {
         std::cout << "\nAll tests passed!\n";
