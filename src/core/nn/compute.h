@@ -4,7 +4,7 @@
 #include "modules.h"
 
 namespace mt::nn {
-    class Linear : public Module {
+    class Linear : public Module, public Forward1 {
     public:
         Tensor m_weight = Tensor(nullptr);
         Tensor m_bias = Tensor(nullptr);
@@ -16,7 +16,7 @@ namespace mt::nn {
         );
 
         Tensor forward(
-            const Tensor& input
+                const Tensor& inputs
         ) const override;
     };
 }

@@ -153,6 +153,10 @@ public:
             const size_t dim
     ) const;
     
+    Tensor mean(
+            const size_t dim
+    ) const;
+    
     Tensor unsqueeze(
             const size_t dim
     ) const;

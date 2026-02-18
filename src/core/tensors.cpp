@@ -265,6 +265,26 @@ Tensor Tensor::sum(
     return Tensor(out);
 }
 
+Tensor Tensor::mean(
+        const size_t dim
+) const {
+    // Compute mean by reusing sum followed by elementwise scaling by 1/N.
+    // This avoids introducing a dedicated BackwardMean or a s_mean storage op.
+    Tensor s = this->sum(dim);
+    const float denom = static_cast<float>(this->m_node->m_storage.m_shape[dim]);
+
+    // Create a tensor of the same shape as `s` filled with 1/denom and mark
+    // it non-differentiable so gradients only flow back through `s`.
+    TensorStorage scale_storage = s.m_node->m_storage.fill(1.0f / denom);
+    std::shared_ptr<TensorNode> scale_node = std::make_shared<TensorNode>(
+        std::move(scale_storage),
+        false
+    );
+    Tensor scale(scale_node);
+
+    return s * scale;
+}
+
 Tensor Tensor::unsqueeze(
         const size_t dim
 ) const {

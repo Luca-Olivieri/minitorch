@@ -15,13 +15,9 @@ namespace mt::nn
         virtual ~AbstractModule() = default;
         
         virtual std::shared_ptr<AbstractModule> register_module(
-            std::string name,
-            std::shared_ptr<AbstractModule> module
+                std::string name,
+                std::shared_ptr<AbstractModule> module
         ) = 0;
-
-        virtual Tensor forward(
-            const Tensor& input
-        ) const = 0;
 
         void requires_grad_(
             const bool requires_grad = true
@@ -37,6 +33,15 @@ namespace mt::nn
                 std::string name,
                 std::shared_ptr<AbstractModule> module
         ) override;
+    };
+
+    class Forward1 {
+    public:
+        virtual ~Forward1() = default;
+        
+        virtual Tensor forward(
+            const Tensor& inputs
+        ) const = 0;
     };
 }
 

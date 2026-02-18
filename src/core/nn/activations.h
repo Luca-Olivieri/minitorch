@@ -4,7 +4,7 @@
 #include "modules.h"
 
 namespace mt::nn {
-    class ReLU : public Module {
+    class ReLU : public Module, public Forward1 {
     public:
         ReLU();
 

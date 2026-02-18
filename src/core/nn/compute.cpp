@@ -14,13 +14,13 @@ Linear::Linear(
 }
 
 Tensor Linear::forward(
-    const Tensor& input
+    const Tensor& inputs
 ) const {
-    Tensor mult = Tensor::matmul(input, m_weight);
-    if (input.shape().size() == 1) {
+    Tensor mult = Tensor::matmul(inputs, m_weight);
+    if (inputs.shape().size() == 1) {
         return mult + m_bias;
     }
     else {
-        return mult + m_bias.unsqueeze(0).repeat(0, input.shape()[0]);
+        return mult + m_bias.unsqueeze(0).repeat(0, inputs.shape()[0]);
     }
 }
