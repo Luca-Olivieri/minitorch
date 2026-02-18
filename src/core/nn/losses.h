@@ -28,6 +28,16 @@ namespace mt::nn {
                 const Tensor& targets
         ) const override;
     };
+
+    class BCELossWithLogits : public Loss {
+    public:
+        BCELossWithLogits();
+
+        Tensor forward(
+                const Tensor& inputs,
+                const Tensor& targets
+        ) const override;
+    };
 }
 
 #endif

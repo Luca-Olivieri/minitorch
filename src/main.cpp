@@ -4,8 +4,10 @@
 #include "core/tensors.h"
 #include "core/tensor_nodes.h"
 #include "core/tensor_storages.h"
+#include "src/core/nn/modules.h"
 #include "src/core/nn/compute.h"
 #include "src/core/nn/activations.h"
+#include "src/core/nn/losses.h"
 
 Tensor forward_1st(
     Tensor& inputs
@@ -73,11 +75,92 @@ void try_nn() {
     std::cout << lin1.m_bias.grad() << '\n';
 }
 
+void try_xor() {
+    
+    Tensor x({4, 2}, 0.0f, false);
+    x[{0, 0}] = 0.0f; x[{0, 1}] = 0.0f;
+    x[{1, 0}] = 0.0f; x[{1, 1}] = 1.0f;
+    x[{2, 0}] = 1.0f; x[{2, 1}] = 0.0f;
+    x[{3, 0}] = 1.0f; x[{3, 1}] = 1.0f;
+    
+    Tensor gts({4}, 0.0f, false);
+    gts[{0}] = 0.0f;
+    gts[{1}] = 1.0f;
+    gts[{2}] = 1.0f;
+    gts[{3}] = 0.0f;
+
+    mt::nn::Linear lin1(2, 4);
+    mt::nn::ReLU relu{};
+    mt::nn::Linear lin2(4, 3);
+    mt::nn::Linear lin3(3, 1);
+
+    mt::nn::BCELossWithLogits criterion{};
+
+    float base_lr = 1e-1f;
+
+    Tensor lrs_lin1_weight(lin1.m_weight.shape(), base_lr, false);
+    Tensor lrs_lin1_bias(lin1.m_bias.shape(), base_lr, false);
+    Tensor lrs_lin2_weight(lin2.m_weight.shape(), base_lr, false);
+    Tensor lrs_lin2_bias(lin2.m_bias.shape(), base_lr, false);
+    Tensor lrs_lin3_weight(lin3.m_weight.shape(), base_lr, false);
+    Tensor lrs_lin3_bias(lin3.m_bias.shape(), base_lr, false);
+
+    {
+        Tensor y1_ = lin1.forward(x);
+        Tensor y2_ = relu.forward(y1_);
+        Tensor y3_ = lin2.forward(y2_);
+        Tensor y4_ = relu.forward(y3_);
+        Tensor out_ = lin3.forward(y4_);
+        Tensor prs_ = out_.squeeze(1);
+        std::cout << prs_ << '\n';
+        
+        std::cout << criterion.forward(prs_, gts);
+    }
+
+    for (size_t i = 0; i < 2000; i++) {
+        Tensor y1 = lin1.forward(x);
+        Tensor y2 = relu.forward(y1);
+        Tensor y3 = lin2.forward(y2);
+        Tensor y4 = relu.forward(y3);
+        Tensor out = lin3.forward(y4);
+        Tensor prs = out.squeeze(1);
+
+        Tensor loss = criterion.forward(prs, gts);
+        loss.backward();
+
+        lin1.m_weight += -lrs_lin1_weight * lin1.m_weight.grad();
+        lin1.m_bias += -lrs_lin1_bias * lin1.m_bias.grad();
+        lin2.m_weight += -lrs_lin2_weight * lin2.m_weight.grad();
+        lin2.m_bias += -lrs_lin2_bias * lin2.m_bias.grad();
+        lin3.m_weight += -lrs_lin3_weight * lin3.m_weight.grad();
+        lin3.m_bias += -lrs_lin3_bias * lin3.m_bias.grad();
+        lin1.m_weight.zero_grad();
+        lin1.m_bias.zero_grad();
+        lin2.m_weight.zero_grad();
+        lin2.m_bias.zero_grad();
+        lin3.m_weight.zero_grad();
+        lin3.m_bias.zero_grad();
+    }
+
+    {
+        Tensor y1_ = lin1.forward(x);
+        Tensor y2_ = relu.forward(y1_);
+        Tensor y3_ = lin2.forward(y2_);
+        Tensor y4_ = relu.forward(y3_);
+        Tensor out_ = lin3.forward(y4_);
+        Tensor prs_ = out_.squeeze(1);
+        std::cout << prs_ << '\n';
+        
+        std::cout << criterion.forward(prs_, gts);
+    }
+}
+
 int main()
 {
     // optimize_1st_deriv();
     // optimize_2nd_deriv();
-    try_nn();
+    // try_nn();
+    try_xor();
     
     return 0;
 }
