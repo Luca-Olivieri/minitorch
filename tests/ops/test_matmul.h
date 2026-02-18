@@ -21,7 +21,8 @@ void test_tensor_matmul() {
         B[{1,0}] = 9.0f; B[{1,1}] = 10.0f;
         B[{2,0}] = 11.0f; B[{2,1}] = 12.0f;
 
-        Tensor C = A.matmul(B);
+        Tensor C = Tensor::matmul(A, B);
+
         // Verify expansion pipeline values
         // Expected C = [[ 58,  64],[139,154]]
         ASSERT_EQ(C[{0,0}], 58.0f, "matmul 0,0");
@@ -37,7 +38,7 @@ void test_tensor_matmul() {
         Tensor b({3,1});
         b[{0,0}] = 4.0f; b[{1,0}] = 5.0f; b[{2,0}] = 6.0f;
 
-        Tensor r = a.matmul(b);
+        Tensor r = Tensor::matmul(a, b);
         ASSERT_EQ(r[{0,0}], 32.0f, "1x3 @ 3x1 dot result");
     }
 
@@ -45,7 +46,7 @@ void test_tensor_matmul() {
     {
         Tensor x({2,2});
         Tensor y({3,3});
-        ASSERT_THROWS(x.matmul(y), std::invalid_argument);
+        ASSERT_THROWS(Tensor::matmul(x, y), std::invalid_argument);
     }
 
     // 4. Backward gradients for 2x3 @ 3x2
@@ -60,7 +61,7 @@ void test_tensor_matmul() {
         B[{1,0}] = 9.0f; B[{1,1}] = 10.0f;
         B[{2,0}] = 11.0f; B[{2,1}] = 12.0f;
 
-        Tensor C = A.matmul(B);
+        Tensor C = Tensor::matmul(A, B);
         C.backward();
 
         // Expected A grad: each row = sum over B rows -> [15,19,23]
@@ -90,7 +91,7 @@ void test_tensor_matmul() {
         Tensor v({3});
         v[{0}] = 7.0f; v[{1}] = 9.0f; v[{2}] = 11.0f;
 
-        Tensor r = A.matmul(v);
+        Tensor r = Tensor::matmul(A, v);
         ASSERT_EQ(r[{0}], 58.0f, "matmul matrix@vector 0");
         ASSERT_EQ(r[{1}], 139.0f, "matmul matrix@vector 1");
 
@@ -119,7 +120,7 @@ void test_tensor_matmul() {
         B[{1,0}] = 9.0f; B[{1,1}] = 10.0f;
         B[{2,0}] = 11.0f; B[{2,1}] = 12.0f;
 
-        Tensor r = u.matmul(B);
+        Tensor r = Tensor::matmul(u, B);
         ASSERT_EQ(r[{0}], 58.0f, "matmul vector@matrix 0");
         ASSERT_EQ(r[{1}], 64.0f, "matmul vector@matrix 1");
 
@@ -146,7 +147,7 @@ void test_tensor_matmul() {
         Tensor q({3});
         q[{0}] = 4.0f; q[{1}] = 5.0f; q[{2}] = 6.0f;
 
-        Tensor s = p.matmul(q);
+        Tensor s = Tensor::matmul(p, q);
         ASSERT_EQ(s.item(), 32.0f, "vector·vector dot");
 
         s.backward();

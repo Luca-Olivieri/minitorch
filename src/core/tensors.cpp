@@ -336,10 +336,11 @@ Tensor Tensor::clone() const {
 }
 
 Tensor Tensor::matmul(
-        const Tensor& other
-) const {
-    const std::vector<size_t>& a_shape = this->m_node->m_storage.m_shape;
-    const std::vector<size_t>& b_shape = other.m_node->m_storage.m_shape;
+        const Tensor& a,
+        const Tensor& b
+) {
+    const std::vector<size_t>& a_shape = a.m_node->m_storage.m_shape;
+    const std::vector<size_t>& b_shape = b.m_node->m_storage.m_shape;
 
     const size_t a_ndim = a_shape.size();
     const size_t b_ndim = b_shape.size();
@@ -352,8 +353,8 @@ Tensor Tensor::matmul(
     const bool a_was_1d = (a_ndim == 1);
     const bool b_was_1d = (b_ndim == 1);
 
-    const Tensor a2 = a_was_1d ? this->unsqueeze(0) : *this; // [1,K] or [M,K]
-    const Tensor b2 = b_was_1d ? other.unsqueeze(1) : other; // [K,1] or [K,N]
+    const Tensor a2 = a_was_1d ? a.unsqueeze(0) : a; // [1,K] or [M,K]
+    const Tensor b2 = b_was_1d ? b.unsqueeze(1) : b; // [K,1] or [K,N]
 
     const std::vector<size_t>& a2_shape = a2.m_node->m_storage.m_shape;
     const std::vector<size_t>& b2_shape = b2.m_node->m_storage.m_shape;

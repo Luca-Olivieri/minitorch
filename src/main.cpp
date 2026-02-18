@@ -62,7 +62,7 @@ void optimize_2nd_deriv() {
 }
 
 void try_nn() {
-    Tensor x = Tensor::linspace({4, 12}, 0.1f, 0.9f);
+    Tensor x = Tensor::linspace({12}, 0.1f, 0.9f);
     mt::nn::Linear lin1(12, 18);
     mt::nn::ReLU relu{};
     Tensor y = lin1.forward(x);

@@ -16,5 +16,11 @@ Linear::Linear(
 Tensor Linear::forward(
     const Tensor& input
 ) const {
-    return input.matmul(m_weight) + m_bias.unsqueeze(0).repeat(0, input.shape()[0]);
+    Tensor mult = Tensor::matmul(input, m_weight);
+    if (input.shape().size() == 1) {
+        return mult + m_bias;
+    }
+    else {
+        return mult + m_bias.unsqueeze(0).repeat(0, input.shape()[0]);
+    }
 }

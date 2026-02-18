@@ -168,9 +168,10 @@ public:
     
     Tensor clone() const;
 
-    Tensor matmul(
-            const Tensor& other
-    ) const;
+    static Tensor matmul(
+            const Tensor& a,
+            const Tensor& b
+    );
 private:
 };
 
