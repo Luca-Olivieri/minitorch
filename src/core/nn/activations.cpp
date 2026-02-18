@@ -21,7 +21,7 @@ Tensor ReLU::forward(
     );
     if (out->m_requires_grad) {
         out->m_grad_fn = std::make_unique<BackwardReLU>(
-            input.m_node     // first operand
+            input     // first operand
         );
     }
     return Tensor(out);

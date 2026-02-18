@@ -17,6 +17,7 @@
 #include "views/test_squeeze.h"
 #include "views/test_repeat.h"
 #include "reduces/test_sum.h"
+#include "nn/test_activations.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -76,6 +77,7 @@ int main() {
     test_unsqueeze();
     test_squeeze();
     test_repeat();
+    test_relu_forward_backward();
     test_storage_sum();
     
     if (failed_tests == 0) {
