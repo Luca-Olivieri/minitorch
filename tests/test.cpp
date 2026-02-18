@@ -18,6 +18,7 @@
 #include "views/test_repeat.h"
 #include "reduces/test_sum.h"
 #include "nn/activations/test_ReLU.h"
+#include "nn/test_nn.h"
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
@@ -79,6 +80,8 @@ int main() {
     test_relu_forward_backward();
     test_storage_sum();
     test_tensor_matmul();
+    test_linear_relu_forward_backward();
+    test_two_layer_linear_relu_linear_backward();
     
     if (failed_tests == 0) {
         std::cout << "\nAll tests passed!\n";
