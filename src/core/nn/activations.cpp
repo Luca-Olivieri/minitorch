@@ -9,20 +9,6 @@ ReLU::ReLU() {}
 Tensor ReLU::forward(
     const Tensor& input
 ) const {
-    TensorStorage out_storage = input.m_node->m_storage.clone();
-    for (size_t i {0}; i < out_storage.m_numel; ++i) {
-        if (input.m_node->m_storage.get_entry_ref(i) < 0.0f) {
-            out_storage.get_entry_ref(i) = 0.0f;
-        }
-    }
-    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
-        std::move(out_storage),
-        Tensor::compute_requires_grad_from_operands({input})
-    );
-    if (out->m_requires_grad) {
-        out->m_grad_fn = std::make_unique<BackwardReLU>(
-            input     // first operand
-        );
-    }
-    return Tensor(out);
+    Tensor zeros(input.shape(), 0.0f, false);
+    return Tensor::maximum(input, zeros); // dy/dx = 0 when x = 0
 }
