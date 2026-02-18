@@ -104,6 +104,26 @@ public:
     static TensorStorage s_log(
             const TensorStorage& arg
     );
+    
+    static TensorStorage s_maximum(
+            const TensorStorage& a,
+            const TensorStorage& b
+    );
+    
+    static TensorStorage s_gt(
+            const TensorStorage& a,
+            const TensorStorage& b
+    );
+    
+    static TensorStorage s_gte(
+            const TensorStorage& a,
+            const TensorStorage& b
+    );
+    
+    static TensorStorage s_lte(
+            const TensorStorage& a,
+            const TensorStorage& b
+    );
 
     static std::vector<size_t> reduce_shape(
             const std::vector<size_t>& shape,

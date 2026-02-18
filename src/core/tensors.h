@@ -83,24 +83,23 @@ public:
 
     void detach_inplace();
 
-    bool compute_requires_grad_from_operands(
+    static bool compute_requires_grad_from_operands(
         const std::vector<Tensor>& others
-    ) const;
+    );
 
-    template <auto Op, typename BW_OP, typename... Tensors>
-    Tensor apply_op_ag(
-            const Tensors&... others
-    ) const {
-        TensorStorage out_storage = Op(m_node->m_storage, others.m_node->m_storage...);
+    template <auto Op, typename GradFn_T, typename... Tensors>
+    static Tensor apply_op_ag(
+            const Tensors&... operands
+    ) {
+        TensorStorage out_storage = Op(operands.m_node->m_storage...);
         std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
             std::move(out_storage),
-            compute_requires_grad_from_operands(std::vector<Tensor>{others...})
+            compute_requires_grad_from_operands({operands...})
         );
-        if (out->m_requires_grad) {
-            out->m_grad_fn = std::make_unique<BW_OP>(
-                m_node,     // first operand
-                others...   // others are Tensors
-            );
+        if constexpr (!std::is_same_v<GradFn_T, void>) {
+            if (out->m_requires_grad) {
+                out->m_grad_fn = std::make_unique<GradFn_T>(operands...);
+            }
         }
         return Tensor(out);
     }
@@ -132,6 +131,23 @@ public:
     ) const;
     
     Tensor log() const;
+
+    static Tensor maximum(
+            const Tensor& a,
+            const Tensor& b
+    );
+
+    Tensor operator>(
+            const Tensor& other
+    ) const;
+    
+    Tensor operator>=(
+            const Tensor& other
+    ) const;
+    
+    Tensor operator<=(
+            const Tensor& other
+    ) const;
     
     Tensor sum(
             const size_t dim

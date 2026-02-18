@@ -101,6 +101,21 @@ void BackwardLog::compute_operands_grad(
     x.accumulate_grad(out.grad() / x);
 }
 
+std::ostream& BackwardMaximum::print(std::ostream& os) const {
+    return os << "BackwardMaximum";
+}
+
+void BackwardMaximum::compute_operands_grad(
+        const Tensor& out
+) {
+    Tensor& a = m_operands[0];
+    Tensor& b = m_operands[1];
+    Tensor a_mask = a > b;
+    Tensor b_mask = a <= b;
+    a.accumulate_grad(a_mask * out.grad());
+    b.accumulate_grad(b_mask * out.grad());
+}
+
 BackwardSum::BackwardSum(
         const Tensor reduced_tensor,
         const size_t dim,

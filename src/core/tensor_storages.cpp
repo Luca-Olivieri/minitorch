@@ -300,6 +300,46 @@ TensorStorage TensorStorage::s_log(
     );
 }
 
+TensorStorage TensorStorage::s_maximum(
+        const TensorStorage& a,
+        const TensorStorage& b
+) {
+    return s_apply_op(
+        [](float a, float b) { return a > b ? a : b; }, 
+        a, b
+    );
+}
+
+TensorStorage TensorStorage::s_gt(
+        const TensorStorage& a,
+        const TensorStorage& b
+) {
+    return s_apply_op(
+        [](float a, float b) { return a > b ? 1.0f : 0.0f; }, 
+        a, b
+    );
+}
+
+TensorStorage TensorStorage::s_gte(
+        const TensorStorage& a,
+        const TensorStorage& b
+) {
+    return s_apply_op(
+        [](float a, float b) { return a >= b ? 1.0f : 0.0f; }, 
+        a, b
+    );
+}
+
+TensorStorage TensorStorage::s_lte(
+        const TensorStorage& a,
+        const TensorStorage& b
+) {
+    return s_apply_op(
+        [](float a, float b) { return a <= b ? 1.0f : 0.0f; }, 
+        a, b
+    );
+}
+
  std::vector<size_t> TensorStorage::reduce_shape(
         const std::vector<size_t>& shape,
         const size_t dim

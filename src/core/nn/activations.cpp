@@ -17,7 +17,7 @@ Tensor ReLU::forward(
     }
     std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
         std::move(out_storage),
-        input.compute_requires_grad_from_operands(std::vector<Tensor>{})
+        Tensor::compute_requires_grad_from_operands({input})
     );
     if (out->m_requires_grad) {
         out->m_grad_fn = std::make_unique<BackwardReLU>(

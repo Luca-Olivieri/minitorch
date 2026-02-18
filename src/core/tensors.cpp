@@ -120,10 +120,8 @@ void Tensor::detach_inplace() {
 }
 
 bool Tensor::compute_requires_grad_from_operands(
-    const std::vector<Tensor>& others
-) const {
-    std::vector<Tensor> operands = others;
-    operands.push_back(*this); // add current instance to operands
+        const std::vector<Tensor>& operands
+) {
     const bool requires_grad_or = std::any_of(
         operands.begin(),
         operands.end(),
@@ -152,45 +150,100 @@ void Tensor::accumulate_grad(
 Tensor Tensor::operator+(
         const Tensor& other
 ) const {
-    return apply_op_ag<TensorStorage::s_add, BackwardAdd>(other);
+    return apply_op_ag<TensorStorage::s_add, BackwardAdd>(
+        *this, 
+        other
+    );
 }
 
 Tensor Tensor::operator/(
         const Tensor& other
 ) const {
-    return apply_op_ag<TensorStorage::s_div, BackwardDiv>(other);
+    return apply_op_ag<TensorStorage::s_div, BackwardDiv>(
+        *this, 
+        other
+    );
 }
 
 void Tensor::operator+=(
         const Tensor& other
 ) {
-    TensorStorage::s_add_inplace(m_node->m_storage, other.m_node->m_storage);
+    TensorStorage::s_add_inplace(
+        m_node->m_storage,
+        other.m_node->m_storage
+    );
 }
 
 Tensor Tensor::operator-() const {
-    return apply_op_ag<TensorStorage::s_minus, BackwardMinus>();
+    return apply_op_ag<TensorStorage::s_minus, BackwardMinus>(*this);
 }
 
 Tensor Tensor::operator-(
         const Tensor& other
 ) const {
-    return apply_op_ag<TensorStorage::s_sub, BackwardSub>(other);
+    return apply_op_ag<TensorStorage::s_sub, BackwardSub>(
+        *this,
+        other
+    );
 }
 
 Tensor Tensor::operator*(
         const Tensor& other
 ) const {
-    return apply_op_ag<TensorStorage::s_mult, BackwardMult>(other);
+    return apply_op_ag<TensorStorage::s_mult, BackwardMult>(
+        *this,
+        other
+    );
 }
 
 Tensor Tensor::pow(
         const Tensor& other
 ) const {
-    return apply_op_ag<TensorStorage::s_pow, BackwardPow>(other);
+    return apply_op_ag<TensorStorage::s_pow, BackwardPow>(
+        *this,
+        other
+    );
 }
 
 Tensor Tensor::log() const {
-    return apply_op_ag<TensorStorage::s_log, BackwardLog>();
+    return apply_op_ag<TensorStorage::s_log, BackwardLog>(*this);
+}
+
+Tensor Tensor::maximum(
+        const Tensor& a,
+        const Tensor& b
+) {
+    return apply_op_ag<TensorStorage::s_maximum, BackwardMaximum>(
+        a,
+        b
+    );
+}
+
+Tensor Tensor::operator>(
+        const Tensor& other
+) const {
+    return apply_op_ag<TensorStorage::s_gt, void>(
+        *this,
+        other
+    );
+}
+
+Tensor Tensor::operator>=(
+        const Tensor& other
+) const {
+    return apply_op_ag<TensorStorage::s_gte, void>(
+        *this,
+        other
+    );
+}
+
+Tensor Tensor::operator<=(
+        const Tensor& other
+) const {
+    return apply_op_ag<TensorStorage::s_lte, void>(
+        *this,
+        other
+    );
 }
 
 Tensor Tensor::sum(
