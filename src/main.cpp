@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "core/reproducibility.h"
 #include "core/formatting.h"
 #include "core/tensors.h"
 #include "core/tensor_nodes.h"
@@ -66,6 +67,8 @@ void optimize_2nd_deriv() {
 void try_nn() {
     Tensor x = Tensor::linspace({12}, 0.1f, 0.9f);
     mt::nn::Linear lin1(12, 18);
+    mt::nn::kaiming_normal_inplace(lin1.m_weight, get_rng());
+    
     mt::nn::ReLU relu{};
     Tensor y = lin1.forward(x);
     Tensor z = relu.forward(y);
@@ -90,9 +93,12 @@ void try_xor() {
     gts[{3}] = 0.0f;
 
     mt::nn::Linear lin1(2, 4);
+    mt::nn::kaiming_normal_inplace(lin1.m_weight, get_rng());
     mt::nn::ReLU relu{};
     mt::nn::Linear lin2(4, 3);
+    mt::nn::kaiming_normal_inplace(lin2.m_weight, get_rng());
     mt::nn::Linear lin3(3, 1);
+    mt::nn::xavier_normal_inplace(lin3.m_weight, get_rng());
 
     mt::nn::BCELossWithLogits criterion{};
 
