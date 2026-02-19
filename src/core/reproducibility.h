@@ -1,12 +1,26 @@
 #ifndef REPRODUCIBILITY_H
 #define REPRODUCIBILITY_H
 
+#include "src/vendors/json.hpp"
+
 #include <random>
 #include <sstream>
+#include <fstream>
 #include <string>
 
-inline constexpr unsigned int seed = 42u;
+using json = nlohmann::json;
 
+inline json read_json(
+    const std::string& path
+) {
+    std::ifstream file(path);
+    json j;
+    file >> j;
+    return j;
+}
+
+const json config = read_json("/Users/lucaolivieri/Library/CloudStorage/GoogleDrive-luca.olivieri37@gmail.com/My Drive/coding/C++/minitorch/config/config.json");
+const unsigned int seed = config.value("seed", 42u);
 
 inline std::mt19937 &prototype_rng() {
 	static std::mt19937 proto(seed);

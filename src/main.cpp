@@ -167,6 +167,6 @@ int main()
     // optimize_2nd_deriv();
     // try_nn();
     try_xor();
-    
+
     return 0;
 }
