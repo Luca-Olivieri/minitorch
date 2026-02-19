@@ -36,6 +36,8 @@ public:
     Tensor grad() const;
 
     const std::vector<size_t>& shape() const;
+    
+    size_t numel() const;
 
     void backward(
             const bool retain_graph = false

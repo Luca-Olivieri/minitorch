@@ -415,6 +415,10 @@ const std::vector<size_t>& Tensor::shape() const {
     return m_node->m_storage.m_shape;
 }
 
+size_t Tensor::numel() const {
+    return m_node->m_storage.m_numel;
+}
+
 std::map<TensorNode*, int> Tensor::compute_in_degree() const {
     std::map<TensorNode*, int> in_degree;
     std::queue<TensorNode*> bfs_queue;

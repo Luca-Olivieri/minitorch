@@ -11,6 +11,8 @@ void test_linear_relu_forward_backward() {
 
     // Linear initialized with weight=0.1 and bias=-0.5 in constructor
     mt::nn::Linear lin(2, 3, true);
+    lin.m_weight.fill_inplace(0.1f);
+    lin.m_bias.fill_inplace(-0.5f);
 
     // Input chosen so that linear output is positive (so ReLU passes gradient)
     Tensor x({2});
@@ -50,6 +52,11 @@ void test_two_layer_linear_relu_linear_backward() {
     mt::nn::Linear l1(2, 2, true);
     mt::nn::Linear l2(2, 1, true);
     mt::nn::ReLU relu;
+
+    l1.m_weight.fill_inplace(0.1f);
+    l1.m_bias.fill_inplace(-0.5f);
+    l2.m_weight.fill_inplace(0.1f);
+    l2.m_bias.fill_inplace(-0.5f);
 
     Tensor x({2});
     x[{0}] = 100.0f; // large so outputs stay positive through both layers

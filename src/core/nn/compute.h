@@ -19,6 +19,12 @@ namespace mt::nn {
                 const Tensor& inputs
         ) const override;
     };
+
+    void xavier_uniform_inplace(
+        Tensor& x,
+        const size_t in_features,
+        const size_t out_features
+    );
 }
 
 
