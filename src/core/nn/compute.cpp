@@ -11,15 +11,16 @@ namespace mt::nn {
         const size_t in_features,
         const size_t out_features,
         const bool bias
-    
     ) {
         // Xavier/Glorot uniform initialization to break symmetry between units
         m_weight = Tensor({in_features, out_features}, 0.0f, true);
+        m_parameters.emplace("weight", m_weight);
     
         xavier_uniform_inplace(m_weight, get_rng());
     
         if (bias) {
             m_bias = Tensor({out_features}, 0.0f, true);
+            m_parameters.emplace("bias", m_bias);
         }
     }
     

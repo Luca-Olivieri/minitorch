@@ -7,15 +7,27 @@
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) {
-    std::string out_string = "[";
+    os << "[";
     for (size_t i { 0 }; i < vector.size(); i++) {
-        out_string += std::to_string(vector[i]);
+        os << vector[i];
         if (i != vector.size()-1) {
-            out_string += ", ";
+            os << ", ";
         }
     }
-    out_string += "]";
-    return os << out_string;
+    os << "]";
+    return os;
+}
+
+template <typename K, typename V>
+inline std::ostream& operator<<(std::ostream& os, const std::pair<K, V>& p) {
+    if (typeid(p.first) == typeid(std::string)) {
+            os << "    \"" <<  p.first << "\"";
+        }
+        else {
+            os << "    " <<  p.first;
+        }
+    os << ": " << p.second;
+    return os;
 }
 
 template <typename K, typename V>
@@ -26,13 +38,7 @@ inline std::ostream& operator<<(
     os << "{\n";
     for (auto it = map.cbegin(); it != map.cend(); ++it)
     {
-        if (typeid(it->first) == typeid(std::string)) {
-            os << "    \"" <<  it->first << "\"";
-        }
-        else {
-            os << "    " <<  it->first;
-        }
-        os << ": " << it->second << ",\n";
+        os << *it << ",\n";
     }
     os << "}\n";
     return os;

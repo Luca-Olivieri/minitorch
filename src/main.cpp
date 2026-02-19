@@ -166,7 +166,22 @@ int main()
     // optimize_1st_deriv();
     // optimize_2nd_deriv();
     // try_nn();
-    try_xor();
+    // try_xor();
+
+    mt::nn::Module net {};
+
+    mt::nn::Linear a1 {2, 4};
+    mt::nn::Linear a2 {3, 2};
+    mt::nn::Linear b1 {3, 2};
+    mt::nn::Linear b2 {3, 2};
+
+    net.register_module("a_1", a1);
+    net.register_module("a_2", a2);
+
+    a2.register_module("b_1", b1);
+    a2.register_module("b_2", b2);
+
+    std::cout << net.parameters() << '\n'; 
 
     return 0;
 }
