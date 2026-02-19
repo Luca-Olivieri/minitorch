@@ -9,3 +9,6 @@
 *.dSYM
 main
 test
+
+# vendors
+src/vendors/*
