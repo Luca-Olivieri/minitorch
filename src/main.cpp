@@ -9,6 +9,9 @@
 #include "src/core/nn/compute.h"
 #include "src/core/nn/activations.h"
 #include "src/core/nn/losses.h"
+#include "src/core/nn/optimizers.h"
+
+namespace nn = mt::nn;
 
 Tensor forward_1st(
     Tensor& inputs
@@ -66,10 +69,10 @@ void optimize_2nd_deriv() {
 
 void try_nn() {
     Tensor x = Tensor::linspace({12}, 0.1f, 0.9f);
-    mt::nn::Linear lin1(12, 18);
-    mt::nn::kaiming_normal_inplace(lin1.m_weight, get_rng());
+    nn::Linear lin1(12, 18);
+    nn::kaiming_normal_inplace(lin1.m_weight, get_rng());
     
-    mt::nn::ReLU relu{};
+    nn::ReLU relu{};
     Tensor y = lin1.forward(x);
     Tensor z = relu.forward(y);
     z.backward();
@@ -92,69 +95,72 @@ void try_xor() {
     gts[{2}] = 1.0f;
     gts[{3}] = 0.0f;
 
-    mt::nn::Linear lin1(2, 4);
-    mt::nn::kaiming_normal_inplace(lin1.m_weight, get_rng());
-    mt::nn::ReLU relu{};
-    mt::nn::Linear lin2(4, 3);
-    mt::nn::kaiming_normal_inplace(lin2.m_weight, get_rng());
-    mt::nn::Linear lin3(3, 1);
-    mt::nn::xavier_normal_inplace(lin3.m_weight, get_rng());
+    class FFN: public nn::Module, nn::Forward1 {
+    public:
+        nn::Linear lin1;
+        nn::ReLU relu;
+        nn::Linear lin2;
+        nn::Linear lin3;
 
-    mt::nn::BCELossWithLogits criterion{};
+        FFN():
+            lin1(2, 4),
+            relu{},
+            lin2(4, 3),
+            lin3(3, 1) {
+                register_module("lin1", lin1);
+                register_module("lin2", lin2);
+                register_module("lin3", lin3);
+                reset_parameters();
+            }
 
-    float base_lr = 1e-1f;
+        Tensor forward(
+                const Tensor& inputs
+        ) const {
+            Tensor y1 = lin1.forward(inputs);
+            Tensor y2 = relu.forward(y1);
+            Tensor y3 = lin2.forward(y2);
+            Tensor y4 = relu.forward(y3);
+            Tensor out = lin3.forward(y4);
+            Tensor prs = out.squeeze(1);
+            return prs;
+        }
 
-    Tensor lrs_lin1_weight(lin1.m_weight.shape(), base_lr, false);
-    Tensor lrs_lin1_bias(lin1.m_bias.shape(), base_lr, false);
-    Tensor lrs_lin2_weight(lin2.m_weight.shape(), base_lr, false);
-    Tensor lrs_lin2_bias(lin2.m_bias.shape(), base_lr, false);
-    Tensor lrs_lin3_weight(lin3.m_weight.shape(), base_lr, false);
-    Tensor lrs_lin3_bias(lin3.m_bias.shape(), base_lr, false);
+        void reset_parameters() {
+            nn::kaiming_uniform_inplace(lin1.m_weight, get_rng());
+            lin1.m_bias.fill_inplace(0.0f);
+            nn::kaiming_uniform_inplace(lin2.m_weight, get_rng());
+            lin2.m_bias.fill_inplace(0.0f);
+            nn::kaiming_uniform_inplace(lin3.m_weight, get_rng());
+            lin3.m_bias.fill_inplace(0.0f);
+        }
+    };
+
+    FFN ffn{};
+
+    nn::BCELossWithLogits criterion{};
+    auto params = ffn.parameters();
+    std::cout << params << '\n';
+    SGD optimizer(params, 1e-1f);
 
     {
-        Tensor y1_ = lin1.forward(x);
-        Tensor y2_ = relu.forward(y1_);
-        Tensor y3_ = lin2.forward(y2_);
-        Tensor y4_ = relu.forward(y3_);
-        Tensor out_ = lin3.forward(y4_);
-        Tensor prs_ = out_.squeeze(1);
+        Tensor prs_ = ffn.forward(x);
         std::cout << prs_ << '\n';
         
         std::cout << criterion.forward(prs_, gts);
     }
 
     for (size_t i = 0; i < 2000; i++) {
-        Tensor y1 = lin1.forward(x);
-        Tensor y2 = relu.forward(y1);
-        Tensor y3 = lin2.forward(y2);
-        Tensor y4 = relu.forward(y3);
-        Tensor out = lin3.forward(y4);
-        Tensor prs = out.squeeze(1);
+        Tensor prs = ffn.forward(x);
 
         Tensor loss = criterion.forward(prs, gts);
         loss.backward();
-
-        lin1.m_weight += -lrs_lin1_weight * lin1.m_weight.grad();
-        lin1.m_bias += -lrs_lin1_bias * lin1.m_bias.grad();
-        lin2.m_weight += -lrs_lin2_weight * lin2.m_weight.grad();
-        lin2.m_bias += -lrs_lin2_bias * lin2.m_bias.grad();
-        lin3.m_weight += -lrs_lin3_weight * lin3.m_weight.grad();
-        lin3.m_bias += -lrs_lin3_bias * lin3.m_bias.grad();
-        lin1.m_weight.zero_grad();
-        lin1.m_bias.zero_grad();
-        lin2.m_weight.zero_grad();
-        lin2.m_bias.zero_grad();
-        lin3.m_weight.zero_grad();
-        lin3.m_bias.zero_grad();
+        
+        optimizer.step();
+        optimizer.zero_grad();
     }
 
     {
-        Tensor y1_ = lin1.forward(x);
-        Tensor y2_ = relu.forward(y1_);
-        Tensor y3_ = lin2.forward(y2_);
-        Tensor y4_ = relu.forward(y3_);
-        Tensor out_ = lin3.forward(y4_);
-        Tensor prs_ = out_.squeeze(1);
+        Tensor prs_ = ffn.forward(x);
         std::cout << prs_ << '\n';
         
         std::cout << criterion.forward(prs_, gts);
@@ -166,22 +172,7 @@ int main()
     // optimize_1st_deriv();
     // optimize_2nd_deriv();
     // try_nn();
-    // try_xor();
-
-    mt::nn::Module net {};
-
-    mt::nn::Linear a1 {2, 4};
-    mt::nn::Linear a2 {3, 2};
-    mt::nn::Linear b1 {3, 2};
-    mt::nn::Linear b2 {3, 2};
-
-    net.register_module("a_1", a1);
-    net.register_module("a_2", a2);
-
-    a2.register_module("b_1", b1);
-    a2.register_module("b_2", b2);
-
-    std::cout << net.parameters() << '\n'; 
+    try_xor();
 
     return 0;
 }

@@ -33,7 +33,7 @@ namespace mt::nn {
         }
         else {
             return mult + m_bias.unsqueeze(0).repeat(0, inputs.shape()[0]);
-        }    
+        }
     }
     
     void xavier_uniform_inplace(

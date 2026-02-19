@@ -87,15 +87,20 @@ public:
             const TensorStorage& b
     );
 
+    static TensorStorage s_minus(
+            const TensorStorage& a
+    );
+
     static TensorStorage s_sub(
             const TensorStorage& a,
             const TensorStorage& b
     );
-    
-    static TensorStorage s_minus(
-            const TensorStorage& a
+
+    static TensorStorage& s_sub_inplace(
+            TensorStorage& a,
+            const TensorStorage& b
     );
-    
+
     static TensorStorage s_pow(
             const TensorStorage& base,
             const TensorStorage& exp

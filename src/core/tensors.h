@@ -113,6 +113,10 @@ public:
     void operator+=(
             const Tensor& other
     );
+    
+    void operator-=(
+            const Tensor& other
+    );
 
     Tensor operator-() const;
     
@@ -122,6 +126,10 @@ public:
     
     Tensor operator*(
             const Tensor& other
+    ) const;
+    
+    Tensor operator*(
+            float scalar
     ) const;
     
     Tensor operator/(

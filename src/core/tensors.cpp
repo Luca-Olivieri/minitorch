@@ -187,6 +187,15 @@ Tensor Tensor::operator-(
     );
 }
 
+void Tensor::operator-=(
+        const Tensor& other
+) {
+    TensorStorage::s_sub_inplace(
+        m_node->m_storage,
+        other.m_node->m_storage
+    );
+}
+
 Tensor Tensor::operator*(
         const Tensor& other
 ) const {
@@ -194,6 +203,13 @@ Tensor Tensor::operator*(
         *this,
         other
     );
+}
+
+Tensor Tensor::operator*(
+        float scalar
+) const {
+    Tensor other(this->shape(), scalar);
+    return *this * other;
 }
 
 Tensor Tensor::pow(

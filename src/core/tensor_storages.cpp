@@ -281,6 +281,16 @@ TensorStorage TensorStorage::s_sub(
     return TensorStorage::s_add(a, TensorStorage::s_minus(b));
 }
 
+TensorStorage& TensorStorage::s_sub_inplace(
+        TensorStorage& a,
+        const TensorStorage& b
+) {
+    return s_apply_op_inplace(
+        [](float x, float y) { return x - y; }, 
+        a, b
+    );
+}
+
 TensorStorage TensorStorage::s_pow(
         const TensorStorage& base,
         const TensorStorage& exp
