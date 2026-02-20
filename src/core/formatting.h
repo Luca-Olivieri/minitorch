@@ -4,6 +4,9 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <tuple>
+#include <type_traits>
+#include <string>
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) {
@@ -18,14 +21,24 @@ inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) 
     return os;
 }
 
+template <typename... Ts>
+inline std::ostream& operator<<(std::ostream& os, const std::tuple<Ts...>& tuple) {
+    os << "[";
+    std::apply([&os](const Ts&... elems){
+        size_t idx = 0;
+        ((os << (idx++ ? ", " : "") << elems), ...);
+    }, tuple);
+    os << "]";
+    return os;
+}
+
 template <typename K, typename V>
 inline std::ostream& operator<<(std::ostream& os, const std::pair<K, V>& p) {
-    if (typeid(p.first) == typeid(std::string)) {
-            os << "    \"" <<  p.first << "\"";
-        }
-        else {
-            os << "    " <<  p.first;
-        }
+    if constexpr (std::is_same_v<std::decay_t<K>, std::string>) {
+        os << "    \"" << p.first << "\"";
+    } else {
+        os << "    " << p.first;
+    }
     os << ": " << p.second;
     return os;
 }
