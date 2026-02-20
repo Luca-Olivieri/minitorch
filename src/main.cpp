@@ -1,4 +1,5 @@
 #include <iostream>
+#include <map>
 
 #include "core/reproducibility.h"
 #include "core/formatting.h"
@@ -10,6 +11,23 @@
 #include "src/core/nn/activations.h"
 #include "src/core/nn/losses.h"
 #include "src/core/nn/optimizers.h"
+#include "src/data/datasets.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+#include "src/vendors/csv.h"
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace nn = mt::nn;
 
@@ -36,37 +54,6 @@ void optimize_1st_deriv() {
     std::cout << x << '\n';
 }
 
-Tensor forward_2nd(
-    Tensor& inputs
-) {
-    Tensor exp_2 { inputs.shape(), 2.0f };
-    
-    Tensor exp_3{ inputs.shape(), 3.0f };
-
-    return inputs.pow(exp_3) - inputs.pow(exp_2);
-}
-
-void optimize_2nd_deriv() {
-    Tensor x {{3, 2}};
-    x.linspace_inplace(0.1f, 0.9f);
-
-    Tensor lrs { x.shape(), 1e-2f };
-
-    for (size_t i = 0; i < 500; i++) {
-        Tensor o {forward_2nd(x)};
-        o.backward();
-        
-        Tensor grad_x { x.grad() };
-        x.zero_grad();
-        grad_x.backward();
-        
-        x += -lrs * x.grad();
-        x.zero_grad();
-    }
-
-    std::cout << x << '\n';
-}
-
 void try_nn() {
     Tensor x = Tensor::linspace({12}, 0.1f, 0.9f);
     nn::Linear lin1(12, 18);
@@ -80,6 +67,67 @@ void try_nn() {
     std::cout << lin1.m_weight.grad() << '\n';
     std::cout << lin1.m_bias.grad() << '\n';
 }
+
+class IrisDataset: public data::ClassificationDataset {
+public:
+    IrisDataset(
+        const std::string& path
+    ) {
+        m_csv_reader = std::make_unique<io::CSVReader<6>>(
+            std::move(path)
+        );
+
+        m_csv_reader->read_header(
+        io::ignore_extra_column,
+        "Id", 
+        "SepalLengthCm",
+        "SepalWidthCm",
+        "PetalLengthCm",
+        "PetalWidthCm",
+        "Species"
+        );
+
+        m_len = 0;
+
+        flower_to_class.emplace("Iris-setosa", 0.0f);
+        flower_to_class.emplace("Iris-versicolor", 1.0f);
+        flower_to_class.emplace("Iris-setosa", 2.0f);
+    }
+
+    std::tuple<Tensor, Tensor> getitem(
+            size_t index
+    ) const {
+        unsigned int id;
+        float sepal_length;
+        float sepal_width;
+        float petal_length;
+        float petal_width;
+        std::string species;
+
+        Tensor input({4});
+        Tensor gt{std::vector<size_t>()}; // scalar
+
+        size_t curr = 0;
+        while (m_csv_reader->read_row(id, sepal_length, sepal_width, petal_length, petal_width, species)) {
+            if (curr == index) {
+                input[{0}] = sepal_length; input[{1}] = sepal_length; input[{2}] = petal_length; input[{3}] = petal_width;
+                break;
+            }
+            curr++;
+        }
+
+        gt.item() = flower_to_class.at(species);
+
+        return {input, gt};
+    }
+
+    size_t len() const {
+        return m_len;
+    }
+private:
+    std::unique_ptr<io::CSVReader<6>> m_csv_reader;
+    std::map<std::string, float> flower_to_class;
+};
 
 void try_xor() {
     
@@ -140,7 +188,7 @@ void try_xor() {
     nn::BCELossWithLogits criterion{};
     auto params = ffn.parameters();
     std::cout << params << '\n';
-    SGD optimizer(params, 1e-1f);
+    SGD optimizer(params, config["base_lr"]);
 
     {
         Tensor prs_ = ffn.forward(x);
@@ -172,7 +220,12 @@ int main()
     // optimize_1st_deriv();
     // optimize_2nd_deriv();
     // try_nn();
-    try_xor();
+    // try_xor();
+
+    IrisDataset ds("data/Iris.csv");
+
+    std::cout << ds.getitem(0);
+
 
     return 0;
 }
