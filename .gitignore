@@ -11,4 +11,4 @@ main
 test
 
 # vendors
-src/vendors/*
+src/vendors
