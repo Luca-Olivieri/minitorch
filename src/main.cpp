@@ -12,22 +12,7 @@
 #include "src/core/nn/losses.h"
 #include "src/core/nn/optimizers.h"
 #include "src/data/datasets.h"
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-int-float-conversion"
-#pragma clang diagnostic ignored "-Wsign-conversion"
-#elif defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#endif
-#include "src/vendors/csv.h"
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+#include "src/io/csv.h"
 
 namespace nn = mt::nn;
 
@@ -72,51 +57,41 @@ class IrisDataset: public data::ClassificationDataset {
 public:
     IrisDataset(
         const std::string& path
-    ) {
-        m_csv_reader = std::make_unique<io::CSVReader<6>>(
-            std::move(path)
-        );
-
-        m_csv_reader->read_header(
-        io::ignore_extra_column,
-        "Id", 
-        "SepalLengthCm",
-        "SepalWidthCm",
-        "PetalLengthCm",
-        "PetalWidthCm",
-        "Species"
-        );
+    ): m_csv_reader(path) {
 
         m_len = 0;
 
         flower_to_class.emplace("Iris-setosa", 0.0f);
         flower_to_class.emplace("Iris-versicolor", 1.0f);
-        flower_to_class.emplace("Iris-setosa", 2.0f);
+        flower_to_class.emplace("Iris-virginica", 2.0f);
     }
 
     std::tuple<Tensor, Tensor> getitem(
             size_t index
-    ) const {
-        unsigned int id;
-        float sepal_length;
-        float sepal_width;
-        float petal_length;
-        float petal_width;
-        std::string species;
+    ) {
+        std::string line = m_csv_reader.read_line(index);
+        std::stringstream ss(line);
+        std::string value;
 
         Tensor input({4});
-        Tensor gt{std::vector<size_t>()}; // scalar
+        // discard 'Id' column
+        std::getline(ss, value, ',');
 
-        size_t curr = 0;
-        while (m_csv_reader->read_row(id, sepal_length, sepal_width, petal_length, petal_width, species)) {
-            if (curr == index) {
-                input[{0}] = sepal_length; input[{1}] = sepal_length; input[{2}] = petal_length; input[{3}] = petal_width;
-                break;
-            }
-            curr++;
-        }
+        std::getline(ss, value, ',');
+        input[{0}] = std::stof(value);
 
-        gt.item() = flower_to_class.at(species);
+        std::getline(ss, value, ',');
+        input[{1}] = std::stof(value);
+        
+        std::getline(ss, value, ',');
+        input[{2}] = std::stof(value);
+        
+        std::getline(ss, value, ',');
+        input[{3}] = std::stof(value);
+
+        Tensor gt{std::vector<size_t>()};
+        std::getline(ss, value, ',');
+        gt.item() = flower_to_class.at(value);
 
         return {input, gt};
     }
@@ -125,7 +100,7 @@ public:
         return m_len;
     }
 private:
-    std::unique_ptr<io::CSVReader<6>> m_csv_reader;
+    io::CSVReader m_csv_reader;
     std::map<std::string, float> flower_to_class;
 };
 
@@ -222,10 +197,11 @@ int main()
     // try_nn();
     // try_xor();
 
-    IrisDataset ds("data/Iris.csv");
+    std::string iris_path = "data/Iris.csv";
 
-    std::cout << ds.getitem(0);
+    IrisDataset ds(iris_path);
 
+    std::cout << ds.getitem(150);
 
     return 0;
 }
