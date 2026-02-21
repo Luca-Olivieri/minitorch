@@ -189,4 +189,10 @@ public:
 private:
 };
 
+namespace mt {
+    Tensor stack(
+        const std::vector<Tensor>& tensors
+    );
+}
+
 #endif

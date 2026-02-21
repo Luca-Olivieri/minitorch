@@ -517,3 +517,43 @@ void Tensor::backward(
         throw std::invalid_argument(std::format("\nCannot call backward on tensor with requires_grad=False. Likely, the graph has no leaf nodes requiring gradients."));
     }
 }
+
+namespace mt {
+    Tensor stack(
+        const std::vector<Tensor>& tensors
+    ) {
+        if (tensors.empty()) {
+            throw std::invalid_argument(std::format("stack requires at least one tensor"));
+        }
+
+        const TensorStorage& first_storage = tensors[0].m_node->m_storage;
+        const std::vector<size_t>& first_shape = first_storage.m_shape;
+        const size_t slice_numel = first_storage.m_numel;
+
+        // Ensure all tensors have the same shape
+        for (const auto& t : tensors) {
+            if (t.m_node->m_storage.m_shape != first_shape) {
+                throw std::invalid_argument(std::format("All tensors must have the same shape to stack"));
+            }
+        }
+
+        // New shape: prepend the number of tensors as the first dimension
+        std::vector<size_t> out_shape;
+        out_shape.reserve(first_shape.size() + 1);
+        out_shape.push_back(tensors.size());
+        out_shape.insert(out_shape.end(), first_shape.begin(), first_shape.end());
+
+        TensorStorage out_storage(out_shape);
+
+        // Copy data for each tensor into the corresponding slice
+        auto& dst_vec = *out_storage.m_flat_data;
+        for (size_t i = 0; i < tensors.size(); ++i) {
+            const auto& src_vec = *tensors[i].m_node->m_storage.m_flat_data;
+            auto offset = static_cast<std::vector<float>::difference_type>(i * slice_numel);
+            std::copy(src_vec.begin(), src_vec.end(), dst_vec.begin() + offset);
+        }
+
+        std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(std::move(out_storage));
+        return Tensor(out_node);
+    }
+}
