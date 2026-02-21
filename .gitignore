@@ -15,3 +15,6 @@ src/vendors
 
 # data
 /data
+
+# Samply
+profile.json.gz
