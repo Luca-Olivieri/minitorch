@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <chrono>
 
 #include "core/reproducibility.h"
 #include "core/formatting.h"
@@ -22,11 +23,12 @@ void try_covertype() {
     class CovertypeDataset: public mt::data::ClassificationDataset {
     public:
         CovertypeDataset(
-            const std::string& path
+            const std::string& path,
+            size_t limit = 0
         ): m_csv_reader(path) {
 
             // m_len = m_csv_reader.size();
-            m_len = 1000;
+            m_len = limit ? limit : m_csv_reader.size();
         }
 
         std::tuple<Tensor, Tensor> getitem(
@@ -122,23 +124,58 @@ void try_covertype() {
         }
     };
 
-    CovertypeDataset train_ds(config["covertype_train_path"]);
-    CovertypeDataset val_ds(config["covertype_val_path"]);
+    auto START = std::chrono::high_resolution_clock::now();
+
+    const size_t limit = 100;
+
+    CovertypeDataset train_ds(config["covertype_train_path"], limit);
+    CovertypeDataset val_ds(config["covertype_val_path"], limit);
+
+    std::cout << std::format("Dataset set up (took {} s)",
+        static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+    ) << '\n';
+
+    START = std::chrono::high_resolution_clock::now();
 
     mt::data::DataLoader<Tensor, Tensor> train_dl(train_ds, 4, true, get_rng());
     mt::data::DataLoader<Tensor, Tensor> val_dl(val_ds, 4, false, get_rng());
 
+    std::cout << std::format("Dataloaders set up (took {} s)",
+        static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+    ) << '\n';
+
+    START = std::chrono::high_resolution_clock::now();
+
     CovertypeClassifier model{};
+
+    std::cout << std::format("Model set up (took {} s)",
+        static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+    ) << '\n';
+
+    START = std::chrono::high_resolution_clock::now();
 
     nn::CrossEntropyLoss criterion{};
     auto params = model.parameters();
     SGD optimizer(params, config["base_lr"]);
 
-    const size_t num_epochs = 10;
+    std::cout << std::format("Criterion and optimizer set up (took {} s)",
+        static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+    ) << '\n';
 
-    std::cout << "Initial loss: " << model.evaluate(val_dl, criterion).item() << '\n';
+    START = std::chrono::high_resolution_clock::now();
+
+    auto init_val_loss = model.evaluate(val_dl, criterion);
+
+    std::cout << std::format("Initial loss: {} (took {} s)",
+        init_val_loss.item(),
+        static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+    ) << '\n';
+
+    const size_t num_epochs = 2;
 
     for (size_t epoch { 0 }; epoch < num_epochs; ++epoch) {
+
+        START = std::chrono::high_resolution_clock::now();
 
         for (size_t step { 0 }; step < train_dl.size(); ++step) {
             auto [inputs, gts] = train_dl.get_batch(step);
@@ -157,22 +194,39 @@ void try_covertype() {
             optimizer.step();
             optimizer.zero_grad();
         }
+
+        std::cout << std::format("[Epoch {}/{}] Training done: (took {} s)",
+            epoch+1,
+            num_epochs,
+            static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+        ) << '\n';
+
+        START = std::chrono::high_resolution_clock::now();
         
-        std::cout << std::format("[Epoch {}/{}] val. loss: {}", epoch+1, num_epochs, model.evaluate(val_dl, criterion).item()) << '\n';
+        auto epoch_val_loss = model.evaluate(val_dl, criterion);
+        
+        std::cout << std::format("[Epoch {}/{}] val. loss: {} (took {} s)",
+            epoch+1,
+            num_epochs,
+            epoch_val_loss.item(),
+            static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+        ) << '\n';
 
         train_dl.reshuffle();
     }
 
-    std::cout << "Final training loss: " << model.evaluate(train_dl, criterion).item() << '\n';
+    START = std::chrono::high_resolution_clock::now();
+
+    auto final_train_loss = model.evaluate(train_dl, criterion);
+
+    std::cout << std::format("Final training loss: {} (took {} s)",
+        final_train_loss.item(),
+        static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
+    ) << '\n';
 }
 
 int main()
 {
-    // optimize_1st_deriv();
-    // optimize_2nd_deriv();
-    // try_nn();
-    // try_xor();
-    // try_iris();
     try_covertype();
 
     return 0;
