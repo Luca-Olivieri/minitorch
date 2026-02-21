@@ -38,6 +38,15 @@ namespace mt::nn {
                 const Tensor& targets
         ) const override;
     };
+    class CrossEntropyLoss : public Loss {
+    public:
+        CrossEntropyLoss();
+
+        Tensor forward(
+                const Tensor& inputs,
+                const Tensor& targets
+        ) const override;
+    };
 }
 
 #endif

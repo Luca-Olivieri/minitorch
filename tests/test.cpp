@@ -20,6 +20,7 @@
 #include "reduces/test_mean.h"
 #include "nn/activations/test_ReLU.h"
 #include "nn/losses/test_MSELoss.h"
+#include "nn/losses/test_CrossEntropyLoss.h"
 #include "nn/test_nn.h"
 
 void test_tensors_with_dims0() {
@@ -86,6 +87,7 @@ int main() {
     test_linear_relu_forward_backward();
     test_two_layer_linear_relu_linear_backward();
     test_mse_loss_forward_backward();
+    test_crossentropy_loss_forward_backward();
     
     if (failed_tests == 0) {
         std::cout << "\nAll tests passed!\n";

@@ -1,4 +1,5 @@
 #include "losses.h"
+#include "activations.h"
 #include "src/core/formatting.h"
 #include <cmath>
 
@@ -35,6 +36,38 @@ namespace mt::nn {
         Tensor log_term = (exp_term + ones).log();
     
         Tensor loss = max_val - (inputs * targets) + log_term;
+        return loss.mean(0);
+    }
+    
+    CrossEntropyLoss::CrossEntropyLoss() {}
+    
+    Tensor CrossEntropyLoss::forward(
+            const Tensor& inputs,
+            const Tensor& targets
+    ) const {
+        const size_t ndim = inputs.shape().size();
+        if (ndim == 0) {
+            Tensor probs = Softmax().forward(inputs);
+            Tensor logp = probs.log();
+            Tensor loss = -(targets * logp);
+            return loss.mean(0);
+        }
+
+        const size_t dim = ndim - 1; // softmax over last dimension
+
+        // compute probabilities via softmax
+        Tensor probs = Softmax().forward(inputs);
+
+        // log probabilities
+        Tensor log_probs = probs.log();
+
+        // elementwise multiply with targets (expects one-hot targets)
+        Tensor mul = targets * log_probs;
+
+        // sum over class dimension and take negative
+        Tensor summed = mul.sum(dim);
+        Tensor loss = -summed;
+
         return loss.mean(0);
     }
 }
