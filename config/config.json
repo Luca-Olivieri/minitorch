@@ -1,5 +1,7 @@
 {
     "seed": 42,
     "base_lr": 0.01,
-    "iris_path": "data/Iris.csv"
+    "iris_path": "data/Iris.csv",
+    "covertype_val_path": "data/covertype_val.csv",
+    "covertype_train_path": "data/covertype_train.csv"
 }
