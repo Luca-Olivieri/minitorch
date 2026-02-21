@@ -46,6 +46,10 @@ namespace mt::data {
             }
         }
 
+        size_t size() const {
+            return m_num_batches;
+        }
+
         // Reshuffle indices when shuffle mode is enabled.
         void reshuffle() {
             if (!m_shuffle) return;

@@ -360,6 +360,55 @@ Tensor Tensor::repeat(
     return Tensor(out);
 }
 
+Tensor Tensor::one_hot(
+        size_t num_classes
+) const {
+    const std::vector<size_t>& in_shape = m_node->m_storage.m_shape;
+    const size_t in_numel = m_node->m_storage.m_numel;
+
+    // Build output shape by appending classes as the last dimension
+    std::vector<size_t> out_shape = in_shape;
+    out_shape.push_back(num_classes);
+
+    TensorStorage out_storage(out_shape); // zero-initialized
+
+    // Helper: convert logical index -> multi-dim coordinates for input
+    for (size_t i = 0; i < in_numel; ++i) {
+        const float raw = m_node->m_storage.get_entry_ref(i);
+        const long idx_long = static_cast<long>(raw);
+        if (idx_long < 0 || static_cast<size_t>(idx_long) >= num_classes) {
+            throw std::invalid_argument(std::format("one_hot index {} out of range [0, {}]", raw, num_classes-1));
+        }
+        const size_t cls = static_cast<size_t>(idx_long);
+
+        if (in_shape.empty()) {
+            // Scalar input -> output is 1D of length num_classes
+            std::vector<size_t> out_md{cls};
+            out_storage.get_entry_ref(out_md) = 1.0f;
+            continue;
+        }
+
+        // compute multi-dim coords for the input logical index
+        std::vector<size_t> in_md(in_shape.size());
+        size_t curr = i;
+        for (size_t d = in_shape.size(); d-- > 0; ) {
+            in_md[d] = curr % in_shape[d];
+            curr /= in_shape[d];
+        }
+
+        // append class dim
+        in_md.push_back(cls);
+        out_storage.get_entry_ref(in_md) = 1.0f;
+    }
+
+    std::shared_ptr<TensorNode> out_node = std::make_shared<TensorNode>(
+        std::move(out_storage),
+        false // non-differentiable
+    );
+
+    return Tensor(out_node);
+}
+
 Tensor Tensor::clone() const {
     TensorStorage out_storage = m_node->m_storage.clone();
     std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(

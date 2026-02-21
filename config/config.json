@@ -1,5 +1,5 @@
 {
     "seed": 42,
-    "base_lr": 0.1,
+    "base_lr": 0.01,
     "iris_path": "data/Iris.csv"
 }

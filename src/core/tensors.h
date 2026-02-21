@@ -179,6 +179,10 @@ public:
             const size_t dim,
             const size_t times
     ) const;
+
+    Tensor one_hot(
+        size_t num_classes
+    ) const;
     
     Tensor clone() const;
 

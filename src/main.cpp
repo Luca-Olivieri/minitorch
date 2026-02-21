@@ -12,6 +12,7 @@
 #include "src/core/nn/losses.h"
 #include "src/core/nn/optimizers.h"
 #include "src/data/datasets.h"
+#include "src/data/dataloaders.h"
 #include "src/io/csv.h"
 
 namespace nn = mt::nn;
@@ -53,13 +54,13 @@ void try_nn() {
     std::cout << lin1.m_bias.grad() << '\n';
 }
 
-class IrisDataset: public data::ClassificationDataset {
+class IrisDataset: public mt::data::ClassificationDataset {
 public:
     IrisDataset(
         const std::string& path
     ): m_csv_reader(path) {
 
-        m_len = 0;
+        m_len = m_csv_reader.size();
 
         flower_to_class.emplace("Iris-setosa", 0.0f);
         flower_to_class.emplace("Iris-versicolor", 1.0f);
@@ -190,18 +191,90 @@ void try_xor() {
     }
 }
 
+void try_iris() {
+
+    class IrisClassifier: public nn::Module, nn::Forward1 {
+    public:
+        nn::Linear lin1;
+        nn::ReLU relu;
+        nn::Linear lin2;
+        nn::Linear lin3;
+
+        IrisClassifier():
+            lin1(4, 20),
+            relu{},
+            lin2(20,30),
+            lin3(30, 3) {
+                register_module("lin1", lin1);
+                register_module("lin2", lin2);
+                register_module("lin3", lin3);
+                reset_parameters();
+            }
+
+        Tensor forward(
+                const Tensor& inputs
+        ) const {
+            Tensor y1 = lin1.forward(inputs);
+            Tensor y2 = relu.forward(y1);
+            Tensor y3 = lin2.forward(y2);
+            Tensor y4 = relu.forward(y3);
+            Tensor prs = lin3.forward(y4);
+            return prs;
+        }
+
+        void reset_parameters() {
+            nn::kaiming_uniform_inplace(lin1.m_weight, get_rng());
+            lin1.m_bias.fill_inplace(0.0f);
+            nn::kaiming_uniform_inplace(lin2.m_weight, get_rng());
+            lin2.m_bias.fill_inplace(0.0f);
+            nn::kaiming_uniform_inplace(lin3.m_weight, get_rng());
+            lin3.m_bias.fill_inplace(0.0f);
+        }
+    };
+
+    IrisDataset ds(config["iris_path"]);
+
+    mt::data::DataLoader<Tensor, Tensor> dl(ds, 4, true, get_rng());
+
+    IrisClassifier model{};
+
+    nn::CrossEntropyLoss criterion{};
+    auto params = model.parameters();
+    SGD optimizer(params, config["base_lr"]);
+
+    const size_t num_epochs = 10;
+
+    for (size_t epoch { 0 }; epoch < num_epochs; ++epoch) {
+
+        for (size_t step { 0 }; step < dl.size(); ++step) {
+            auto [inputs, gts] = dl.get_batch(step);
+            
+            Tensor prs = model.forward(inputs);
+
+            Tensor gts_oh = gts.one_hot(3);
+        
+            Tensor loss = criterion.forward(prs, gts_oh);
+            loss.backward();
+
+            if (step % 10 == 0) {
+                std::cout << loss << '\n';
+            }
+            
+            optimizer.step();
+            optimizer.zero_grad();
+        }
+
+        dl.reshuffle();
+    }
+}
+
 int main()
 {
     // optimize_1st_deriv();
     // optimize_2nd_deriv();
     // try_nn();
     // try_xor();
-
-    std::string iris_path = "data/Iris.csv";
-
-    IrisDataset ds(iris_path);
-
-    std::cout << ds.getitem(150);
+    try_iris();
 
     return 0;
 }
