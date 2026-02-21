@@ -12,6 +12,15 @@ namespace mt::nn {
             const Tensor& input
         ) const override;
     };
+    
+    class Softmax : public Module, public Forward1 {
+    public:
+        Softmax();
+
+        Tensor forward(
+            const Tensor& input
+        ) const override;
+    };
 }
 
 #endif
