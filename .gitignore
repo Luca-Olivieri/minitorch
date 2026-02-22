@@ -7,8 +7,10 @@
 
 # C++
 *.dSYM
-main
-test
+*.out
+
+# Make
+build
 
 # vendors
 src/vendors
