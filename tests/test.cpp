@@ -25,8 +25,8 @@
 
 void test_tensors_with_dims0() {
     // no tensor with 0 dims
-    ASSERT_THROWS(Tensor t({0, 1}), std::invalid_argument);
-    ASSERT_THROWS(Tensor t({4, 0}), std::invalid_argument);
+    ASSERT_THROWS(Tensor({1,0}), std::invalid_argument);
+    ASSERT_THROWS(Tensor({4, 0}), std::invalid_argument);
 }
 
 void test_tensor_access_errors() {
