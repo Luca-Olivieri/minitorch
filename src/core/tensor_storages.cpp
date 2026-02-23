@@ -21,7 +21,7 @@ TensorStorage::TensorStorage(
     m_shape = shape;
     m_strides = TensorStorage::s_init_strides(m_shape);
     
-    m_flat_data = std::make_unique<std::vector<float>>(
+    m_flat_data = std::make_shared<std::vector<float>>(
         m_numel,
         value
     );
@@ -41,7 +41,7 @@ TensorStorage::TensorStorage(
     m_shape = shape;
     m_strides = TensorStorage::s_init_strides(m_shape);
     
-    m_flat_data = std::make_unique<std::vector<float>>();
+    m_flat_data = std::make_shared<std::vector<float>>();
     m_flat_data->resize(m_numel);
     linspace_inplace(start, end);
 }

@@ -15,7 +15,7 @@ public:
     std::vector<size_t> m_strides;
     size_t m_offset;
     
-    std::unique_ptr<std::vector<float>> m_flat_data;
+    std::shared_ptr<std::vector<float>> m_flat_data;
 
     TensorStorage(
             const std::vector<size_t>& shape,
