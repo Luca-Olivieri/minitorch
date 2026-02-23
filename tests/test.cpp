@@ -16,6 +16,7 @@
 #include "views/test_unsqueeze.h"
 #include "views/test_squeeze.h"
 #include "views/test_repeat.h"
+#include "views/test_expand.h"
 #include "reduces/test_sum.h"
 #include "reduces/test_mean.h"
 #include "nn/activations/test_ReLU.h"
@@ -80,6 +81,7 @@ int main() {
     test_unsqueeze();
     test_squeeze();
     test_repeat();
+    test_expand();
     test_relu_forward_backward();
     test_storage_sum();
     test_storage_mean();

@@ -167,6 +167,12 @@ public:
             const size_t times
     );
     
+    static TensorStorage expand(
+            const TensorStorage& a,
+            const size_t dim,
+            const size_t times
+    );
+    
 private:
     TensorStorage(
             const std::vector<size_t>& shape,
@@ -214,10 +220,10 @@ private:
         }
 
         // 4. Computation loop
-        for (size_t i = 0; i < numel; i++) {
-            // The magic: "Unpack" the i-th element of every tensor into the lambda
-            (*out.m_flat_data)[i] = op((*operands.m_flat_data)[i]...);
-        }
+                for (size_t i = 0; i < numel; i++) {
+                        // The magic: "Unpack" the i-th element of every tensor into the lambda
+                        out.get_entry_ref(i) = op((operands.get_entry_ref(i))...);
+                }
 
         return out;
     }
@@ -242,10 +248,10 @@ private:
         }
 
         // 4. Computation loop
-        for (size_t i = 0; i < numel; i++) {
-            // The magic: "Unpack" the i-th element of every tensor into the lambda
-            (*out.m_flat_data)[i] = op((*operands.m_flat_data)[i]...);
-        }
+                for (size_t i = 0; i < numel; i++) {
+                        // The magic: "Unpack" the i-th element of every tensor into the lambda
+                        out.get_entry_ref(i) = op((operands.get_entry_ref(i))...);
+                }
         
         return out;
     }

@@ -479,6 +479,14 @@ TensorStorage TensorStorage::s_repeat(
         const size_t dim,
         const size_t times
 ) {
+    return TensorStorage::expand(a, dim, times);
+}
+
+TensorStorage TensorStorage::expand(
+        const TensorStorage& a,
+        const size_t dim,
+        const size_t times
+) {
     if (dim >= a.m_shape.size()) {
         throw std::invalid_argument(
             std::format("Expanded dimension {} out of range for shape of length {}.",
@@ -488,7 +496,7 @@ TensorStorage TensorStorage::s_repeat(
     }
     if (a.m_shape[dim] != 1) {
         throw std::invalid_argument(
-            std::format("Expanded dimension {} must be singleton. Got shqpe {}.",
+            std::format("Expanded dimension {} must be singleton. Got shape {}.",
             dim, a.m_shape.size()
             )
         );
@@ -500,21 +508,13 @@ TensorStorage TensorStorage::s_repeat(
 
     TensorStorage out{ out_shape };
 
-    std::vector<size_t> out_md;
-
-    // iterate over output logical indices and map to input multi-dim coords
-    std::vector<size_t> in_md(a.m_shape.size());
-    for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
-        out_md = out.logical_to_md(out_i);
-
-        // input coord equals output coord except at repeated dim which maps to 0
-        for (size_t i = 0; i < out_md.size(); ++i) {
-            in_md[i] = out_md[i];
-        }
-        in_md[dim] = 0;
-
-        out.get_entry_ref(out_i) = a.get_entry_ref(in_md);
-    }
+    // make a view: share the underlying flat data and keep the same offset
+    out.m_flat_data = a.m_flat_data;
+    out.m_offset = a.m_offset;
+    out.m_strides = a.m_strides;
+    // set expanded dimension stride to zero so every index maps to the same underlying element
+    out.m_strides[dim] = 0;
+    out.m_numel = TensorStorage::compute_numel_from_shape(out_shape);
 
     return out;
 }
