@@ -7,6 +7,9 @@ BUILD_DIR = build
 DEV_OBJDIR = $(BUILD_DIR)/dev
 RELEASE_OBJDIR = $(BUILD_DIR)/release
 
+CXXFLAGS_DEV = ...  -c
+CXXFLAGS_RELEASE = ... -MMD -MP -c
+
 SANITIZE = -fsanitize=address,undefined -fno-sanitize-recover=all
 
 # Compiler flags
@@ -25,9 +28,15 @@ CXXFLAGS_DEV =	-I. \
 				-g \
 				-O0 \
 				$(SANITIZE) \
+				-MMD -MP \
 				-c
 
-CXXFLAGS_RELEASE = -I. -std=c++23 -O3 -DNDEBUG -c # optimized for release
+CXXFLAGS_RELEASE = 	-I. \
+					-std=c++23 \
+					-O3 \
+					-DNDEBUG \
+					-MMD -MP \
+					-c
 
 # Map sources to object files
 DEV_OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(DEV_OBJDIR)/%.o,$(SRCS))
@@ -73,3 +82,7 @@ $(RELEASE_OBJDIR)/%.o: $(SRC_DIR)/%.cpp
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR) main_dev.out main_release.out tests/test.out
+
+# Include auto-generated dependency files
+-include $(DEV_OBJS:.o=.d)
+-include $(RELEASE_OBJS:.o=.d)
