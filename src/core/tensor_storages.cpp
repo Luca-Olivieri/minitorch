@@ -444,32 +444,28 @@ TensorStorage TensorStorage::s_unsqueeze(
         );
     }
 
-    std::vector<size_t> out_md;
-
     // build output shape
     const std::vector<size_t> out_shape = unsqueeze_shape(a.m_shape, dim);
     TensorStorage out{ out_shape };
 
-    // iterate over output logical indices and map to input multi-dim coords
-    std::vector<size_t> in_md(a.m_shape.size());
-    for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
-        // Special-case scalar input: read by logical index 0
-        if (a.m_shape.empty()) {
-            out.get_entry_ref(out_i) = a.get_entry_ref(0);
-            continue;
+    // make a view: share the underlying flat data and keep the same offset
+    out.m_flat_data = a.m_flat_data;
+    out.m_offset = a.m_offset;
+
+    // build out strides by inserting a zero stride for the new singleton dim
+    out.m_strides.clear();
+    out.m_strides.reserve(a.m_strides.size() + 1);
+    for (size_t i = 0; i < out_shape.size(); ++i) {
+        if (i == dim) {
+            out.m_strides.push_back(0);
+        } else {
+            // map to source stride: source index j
+            size_t src_idx = (i < dim) ? i : i - 1;
+            out.m_strides.push_back(a.m_strides[src_idx]);
         }
-
-        out_md = out.logical_to_md(out_i);
-
-        // map out_md -> in_md by skipping the inserted singleton dim
-        size_t j = 0;
-        for (size_t i = 0; i < out_md.size(); ++i) {
-            if (i == dim) continue; // skip the singleton
-            in_md[j++] = out_md[i];
-        }
-
-        out.get_entry_ref(out_i) = a.get_entry_ref(in_md);
     }
+
+    out.m_numel = TensorStorage::compute_numel_from_shape(out_shape);
 
     return out;
 }
@@ -541,29 +537,19 @@ TensorStorage TensorStorage::s_squeeze(
 
     TensorStorage out{ out_shape };
 
-    // iterate over output logical indices and map to input multi-dim coords
-    std::vector<size_t> in_md(a.m_shape.size());
-    for (size_t out_i = 0; out_i < out.m_numel; ++out_i) {
-        // Special-case scalar input (shouldn't normally happen here, but be defensive)
-        if (a.m_shape.empty()) {
-            out.get_entry_ref(out_i) = a.get_entry_ref(0);
-            continue;
-        }
+    // make a view: share the underlying flat data and keep the same offset
+    out.m_flat_data = a.m_flat_data;
+    out.m_offset = a.m_offset;
 
-        std::vector<size_t> out_md = out.logical_to_md(out_i);
-
-        // map out_md -> in_md by inserting the singleton coord (0) at position dim
-        size_t j = 0;
-        for (size_t i = 0; i < a.m_shape.size(); ++i) {
-            if (i == dim) {
-                in_md[i] = 0;
-            } else {
-                in_md[i] = out_md[j++];
-            }
-        }
-
-        out.get_entry_ref(out_i) = a.get_entry_ref(in_md);
+    // build out strides by removing the stride corresponding to the squeezed dim
+    out.m_strides.clear();
+    out.m_strides.reserve(a.m_strides.size() - 1);
+    for (size_t i = 0; i < a.m_strides.size(); ++i) {
+        if (i == dim) continue;
+        out.m_strides.push_back(a.m_strides[i]);
     }
+
+    out.m_numel = TensorStorage::compute_numel_from_shape(out_shape);
 
     return out;
 }
