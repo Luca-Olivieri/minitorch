@@ -11,8 +11,9 @@
 class TensorStorage {
 public:
     std::vector<size_t> m_shape;
-    size_t m_numel;
     std::vector<size_t> m_strides;
+    bool m_contiguous;
+    size_t m_numel;
     size_t m_offset;
     
     std::shared_ptr<std::vector<float>> m_flat_data;

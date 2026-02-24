@@ -11,7 +11,9 @@
 TensorStorage::TensorStorage(
         const std::vector<size_t>& shape,
         const float value
-): m_offset(0) {
+):
+    m_contiguous{ true },
+    m_offset(0) {
 
     assert_positive_dims(shape);
 
@@ -31,7 +33,9 @@ TensorStorage::TensorStorage(
         const std::vector<size_t>& shape,
         const float start,
         const float end
-): m_offset(0) {
+):
+    m_contiguous{ true },
+    m_offset(0) {
 
     assert_positive_dims(shape);
 
@@ -44,6 +48,7 @@ TensorStorage::TensorStorage(
     m_flat_data = std::make_shared<std::vector<float>>();
     m_flat_data->resize(m_numel);
     linspace_inplace(start, end);
+
 }
 
 TensorStorage TensorStorage::linspace(
@@ -108,17 +113,22 @@ size_t TensorStorage::logical_to_flat(
     if (l_index >= m_numel) {
         throw std::out_of_range(std::format("Index {} out of bounds for tensor of size {}.", l_index, m_numel));
     }
-    
-    size_t offset {m_offset};
-    size_t curr_index {l_index};
 
-    for (size_t i = m_shape.size(); i-- > 0; ) {
-        size_t dim_size = m_shape[i];
-        size_t coord = curr_index % dim_size;
-        curr_index /= dim_size;
-        offset += coord * m_strides[i];
+    if (m_contiguous) {
+        return l_index + m_offset;
+    } else {
+        size_t offset {m_offset};
+        size_t curr_index {l_index};
+    
+        for (size_t i = m_shape.size(); i-- > 0; ) {
+            size_t dim_size = m_shape[i];
+            size_t coord = curr_index % dim_size;
+            curr_index /= dim_size;
+            offset += coord * m_strides[i];
+        }
+        return offset;
     }
-    return offset;
+    
 }
 
 std::vector<size_t> TensorStorage::logical_to_md(
@@ -465,6 +475,8 @@ TensorStorage TensorStorage::s_unsqueeze(
         }
     }
 
+    out.m_contiguous = out.is_contiguous();
+
     out.m_numel = TensorStorage::compute_numel_from_shape(out_shape);
 
     return out;
@@ -510,6 +522,7 @@ TensorStorage TensorStorage::s_expand(
     out.m_strides = a.m_strides;
     // set expanded dimension stride to zero so every index maps to the same underlying element
     out.m_strides[dim] = 0;
+    out.m_contiguous = out.is_contiguous();
     out.m_numel = TensorStorage::compute_numel_from_shape(out_shape);
 
     return out;
@@ -548,6 +561,7 @@ TensorStorage TensorStorage::s_squeeze(
         if (i == dim) continue;
         out.m_strides.push_back(a.m_strides[i]);
     }
+    out.m_contiguous = out.is_contiguous();
 
     out.m_numel = TensorStorage::compute_numel_from_shape(out_shape);
 
