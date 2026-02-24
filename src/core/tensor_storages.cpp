@@ -475,10 +475,10 @@ TensorStorage TensorStorage::s_repeat(
         const size_t dim,
         const size_t times
 ) {
-    return TensorStorage::expand(a, dim, times);
+    return TensorStorage::s_expand(a, dim, times);
 }
 
-TensorStorage TensorStorage::expand(
+TensorStorage TensorStorage::s_expand(
         const TensorStorage& a,
         const size_t dim,
         const size_t times

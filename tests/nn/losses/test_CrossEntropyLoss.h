@@ -31,7 +31,7 @@ void test_crossentropy_loss_forward_backward() {
     Tensor e_const(inputs.shape(), std::exp(1.0f), false);
     Tensor exps = e_const.pow(inputs);
     Tensor sums = exps.sum(1);
-    Tensor denom = sums.unsqueeze(1).repeat(1, inputs.shape()[1]);
+    Tensor denom = sums.unsqueeze(1).expand(1, inputs.shape()[1]);
     Tensor probs = exps / denom;
 
     // NLL per sample: -sum(target * log(probs), dim=1)

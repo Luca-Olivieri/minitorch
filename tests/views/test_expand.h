@@ -14,9 +14,9 @@ void test_expand() {
         // Keep the original storage shared_ptr
         auto orig_data_ptr = t.m_node->m_storage.m_flat_data;
 
-        Tensor r = t.repeat(0, 4); // shape -> {4,2,3}
+        Tensor r = t.expand(0, 4); // shape -> {4,2,3}
 
-        // The repeated storage must share the same underlying flat_data
+        // The expanded storage must share the same underlying flat_data
         ASSERT_TRUE(r.m_node->m_storage.m_flat_data == orig_data_ptr, "expand shares underlying storage");
 
         // Mutating the view should affect the original (since it's a view)

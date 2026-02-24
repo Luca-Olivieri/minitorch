@@ -171,7 +171,7 @@ void try_covertype() {
         static_cast<double>((std::chrono::high_resolution_clock::now() - START).count())/1e9
     ) << '\n';
 
-    const size_t num_epochs = 2;
+    const size_t num_epochs = 10;
 
     for (size_t epoch { 0 }; epoch < num_epochs; ++epoch) {
 

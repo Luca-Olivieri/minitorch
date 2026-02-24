@@ -133,7 +133,7 @@ void BackwardSum::compute_operands_grad(
         const Tensor& out
 ) {
     Tensor& x = m_operands[0];
-    x.accumulate_grad(out.grad().unsqueeze(m_dim).repeat(m_dim, m_original_times));
+    x.accumulate_grad(out.grad().unsqueeze(m_dim).expand(m_dim, m_original_times));
 }
 
 BackwardUnsqueeze::BackwardUnsqueeze(

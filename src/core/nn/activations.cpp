@@ -32,7 +32,7 @@ namespace mt::nn {
 
         // sum over the target dimension and broadcast for division
         Tensor sums = exps.sum(dim);
-        Tensor denom = sums.unsqueeze(dim).repeat(dim, input.shape()[dim]);
+        Tensor denom = sums.unsqueeze(dim).expand(dim, input.shape()[dim]);
 
         return exps / denom;
     }

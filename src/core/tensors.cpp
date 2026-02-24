@@ -360,6 +360,27 @@ Tensor Tensor::repeat(
     return Tensor(out);
 }
 
+Tensor Tensor::expand(
+        const size_t dim,
+        const size_t times
+) const {
+    TensorStorage out_storage = TensorStorage::s_expand(
+        m_node->m_storage, 
+        dim,
+        times
+    );
+    std::shared_ptr<TensorNode> out = std::make_shared<TensorNode>(
+        std::move(out_storage)
+    );
+
+    out->m_grad_fn = std::make_unique<BackwardRepeat>(
+        *this,
+        dim
+    );
+
+    return Tensor(out);
+}
+
 Tensor Tensor::one_hot(
         size_t num_classes
 ) const {
@@ -453,9 +474,9 @@ Tensor Tensor::matmul(
         throw std::invalid_argument(std::format("matmul inner dimensions must match ({} != {})", k, kb));
     }
 
-    // Use unsqueeze->repeat->mult->sum pipeline on 2D views
-    const Tensor a_expanded = a2.unsqueeze(2).repeat(2, n); // [m,k,1] -> [m,k,n]
-    const Tensor b_expanded = b2.unsqueeze(0).repeat(0, m); // [1,k,n] -> [m,k,n]
+    // Use unsqueeze->expand->mult->sum pipeline on 2D views
+    const Tensor a_expanded = a2.unsqueeze(2).expand(2, n); // [m,k,1] -> [m,k,n]
+    const Tensor b_expanded = b2.unsqueeze(0).expand(0, m); // [1,k,n] -> [m,k,n]
 
     const Tensor prod = a_expanded * b_expanded; // elementwise [m,k,n]
     Tensor out = prod.sum(1); // sum over k -> [m,n]

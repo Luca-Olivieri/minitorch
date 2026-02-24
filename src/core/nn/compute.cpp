@@ -32,7 +32,7 @@ namespace mt::nn {
             return mult + m_bias;
         }
         else {
-            return mult + m_bias.unsqueeze(0).repeat(0, inputs.shape()[0]);
+            return mult + m_bias.unsqueeze(0).expand(0, inputs.shape()[0]);
         }
     }
     

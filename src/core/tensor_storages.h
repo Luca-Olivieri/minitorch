@@ -167,7 +167,7 @@ public:
             const size_t times
     );
     
-    static TensorStorage expand(
+    static TensorStorage s_expand(
             const TensorStorage& a,
             const size_t dim,
             const size_t times
