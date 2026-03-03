@@ -1,25 +1,24 @@
 #ifndef REPRODUCIBILITY_H
 #define REPRODUCIBILITY_H
 
-#include "src/vendors/json.hpp"
-
 #include <random>
 #include <sstream>
 #include <fstream>
 #include <string>
 
-using json = nlohmann::json;
+#include "src/vendors/json.hpp"
 
-inline json read_json(
-    const std::string& path
+using Json = nlohmann::json;
+
+inline Json read_json(
+	std::ifstream&& file
 ) {
-    std::ifstream file(path);
-    json j;
+    Json j;
     file >> j;
     return j;
 }
 
-const json config = read_json("/Users/lucaolivieri/Library/CloudStorage/GoogleDrive-luca.olivieri37@gmail.com/My Drive/coding/C++/minitorch/config/config.json");
+const Json config = read_json(std::ifstream ("config/config.json"));
 const unsigned int seed = config.value("seed", 42u);
 
 inline std::mt19937 &prototype_rng() {
